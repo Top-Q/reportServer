@@ -1,0 +1,351 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+			   width="772" height="622" chromeColor="#D4E4FB" color="#000000" contentBackgroundColor="#FFFFFF"
+			   title="Scenario Details" xmlns:common="il.co.topq.systems.report.views.components.reports.common.*"
+			   close="cancel_clickHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.general.ScenarioDetailsGetScenarioTestsEvent;
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.events.local.SaveScenarioPropertyEvent;
+			import il.co.topq.systems.report.events.scenario.ExportScenarioDetailsEvent;
+			import il.co.topq.systems.report.events.scenario.GetScenarioByIDEvent;
+			import il.co.topq.systems.report.events.scenario.UpdateScenarioEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.Scenario;
+			import il.co.topq.systems.report.models.valueobjects.ScenarioProperty;
+			import il.co.topq.systems.report.views.components.reports.common.PropertyEditor;
+			import il.co.topq.systems.report.views.components.reports.common.ScenarioPropertyEditor;
+			
+			import mx.collections.ArrayCollection;
+			import mx.collections.ArrayList;
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.events.IndexChangeEvent;
+			import spark.events.TextOperationEvent;
+
+			protected var _scenario:Scenario; //the original scenario object.
+			
+			[Bindable]
+			protected var _scenarioClone:Scenario; //a clone object if updated will send to update, otherwise the original data remains untouch.
+			
+			[Bindable]
+			private var exportOptions : ArrayList = new ArrayList(["Export to PDF","Export to Excel"]);
+			
+			[Embed(source="/assets/images/add.png")]
+			[Bindable]
+			public var add:Class;
+			
+			[Embed(source="/assets/images/delete.png")]
+			[Bindable]
+			public var remove:Class;
+			
+			[Embed(source="/assets/images/edit.png")]
+			[Bindable]
+			public var edit:Class;
+			
+			private var isEdit:Boolean = false; //will indicate if edit property or new property 
+			
+			[Bindable]
+			private var isScenarioDetailsChanged:Boolean = false;//will inidicate if a change made to data.
+			
+			protected function cancel_clickHandler(event:Event):void
+			{
+				if (isScenarioDetailsChanged){
+					Alert.show("Changes that were made will not be saved", "Scenario Details",
+						Alert.OK | Alert.CANCEL, null,alertListener, null, Alert.OK);
+				}else {
+					PopUpManager.removePopUp(this);
+				}
+			}
+			
+			private function alertListener(eventObj:CloseEvent):void {
+				if (eventObj.detail==Alert.OK) {
+					PopUpManager.removePopUp(this);
+				}
+			}
+			
+			protected function getPieData(fail:String,success:String,warn:String):ArrayCollection{
+								
+					return new ArrayCollection([
+					{Status:"Failed", Amount:fail},
+					{Status:"Pass", Amount:success},
+					{Status:"Warning", Amount:warn},]);				
+			}
+			
+			private function formatDateTestDetail(date:String):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY at HH:NN:SS";  
+				var d:Date = new Date(new Number(date));   
+				return df.format(d);
+			}
+			
+			protected function ButtonTestsClicked(event:MouseEvent):void
+			{
+				dispatchEvent(new ScenarioDetailsGetScenarioTestsEvent(_scenarioClone,true));
+			}
+			
+			protected function export_changeHandler(event:IndexChangeEvent):void
+			{				
+				var data:String = (event.currentTarget as ComboBox).selectedItem as String;
+				if (data == "Export to PDF"){
+					new ExportScenarioDetailsEvent("jsystem_scenario_detailed_report.pdf","pdf",this._scenarioClone.id).dispatch();
+				}else if (data == "Export to Excel"){
+					new ExportScenarioDetailsEvent("jsystem_scenario_detailed_report.xls","xls",this._scenarioClone.id).dispatch();
+				}
+				
+				tools.selectedItem = "Tools";
+			}
+			
+			protected function addNewProperty(event:MouseEvent):void
+			{
+				isScenarioDetailsChanged = true;
+				var propertyEditor:PropertyEditor = new ScenarioPropertyEditor();
+				propertyEditor.addEventListener(SaveScenarioPropertyEvent.SAVE_SCENARIO_PROPERTY_EVENT,savePropertyHandler);
+				PopUpManager.addPopUp(propertyEditor,this,true);
+				PopUpManager.centerPopUp(propertyEditor);
+			}
+			
+			protected function removeProperty(event:MouseEvent):void
+			{
+				isScenarioDetailsChanged = true;
+				var scenarioProperty:ScenarioProperty = scenarioPropertiesList.selectedItem as ScenarioProperty;
+				var scenarioPropertyIndex:int = _scenarioClone.scenarioProperties.getItemIndex(scenarioProperty);
+				_scenarioClone.scenarioProperties.removeItemAt(scenarioPropertyIndex);
+			}
+			
+			/**
+			 * this method will be called upon a click on the edit property button.<br>
+			 * It will set the key & value fields in property editor as the selected item.<br>
+			 */ 
+			protected function editProperty(event:Event):void
+			{	
+				isEdit = true;
+				isScenarioDetailsChanged = true;
+				var propertyEditor:PropertyEditor = new ScenarioPropertyEditor(( scenarioPropertiesList.selectedItem) as ScenarioProperty);
+				propertyEditor.addEventListener("saveScenarioPropertyEvent",savePropertyHandler);
+				PopUpManager.addPopUp(propertyEditor,this,true);
+				PopUpManager.centerPopUp(propertyEditor);
+			}
+			
+			/**
+			 * This method will be called upon a scenario property edit opertaion.<br>
+			 * It will remove the old property, and will add the new scenario property to the same index in the list as the<br>
+			 * previous property.
+			 */ 
+			private function updateProperty (event:SaveScenarioPropertyEvent):void {
+				
+				var scenarioProperty:ScenarioProperty = scenarioPropertiesList.selectedItem as ScenarioProperty;
+				var scenarioPropertyIndex:int = _scenarioClone.scenarioProperties.getItemIndex(scenarioProperty);
+				var tp:ScenarioProperty = (_scenarioClone.scenarioProperties.removeItemAt(scenarioPropertyIndex)) as ScenarioProperty;
+				tp = event.scenarioProperty ;//will now hold the new scenario property.
+				_scenarioClone.scenarioProperties.addItemAt(tp,scenarioPropertyIndex);//will put the new scenario property in the same index as the old one.
+			}
+			
+			/**
+			 * This method will be called upon the adding a new scenario property;<br>
+			 * It will add the new property into the scenario properties list.
+			 */ 
+			private function addTestProperty(scenarioProperty:ScenarioProperty):void
+			{
+				_scenarioClone.scenarioProperties.addItem(scenarioProperty);
+			}
+			
+			/**
+			 * This method will be called upon a save scenario property event accured in scenario property editor.<br>
+			 * It will differ its action from an edit mode to an adding new property mode.<br>
+			 * In case edit mode will call updateProperty and will set edit mode back to false.<br>
+			 */ 
+			protected function savePropertyHandler(event:SaveScenarioPropertyEvent):void
+			{
+				if (isEdit){
+					updateProperty(event);
+					isEdit = false;
+				}else {
+					addTestProperty(event.scenarioProperty);
+				}
+			}
+			
+			/**
+			 * This method will be called upon the button save click<br>
+			 * In case there was no change to the scenario details, it will do nothing,<br>
+			 * else a request will be sent to server to update the object.
+			 */ 
+			protected function buttonSave_clickHandler(event:MouseEvent):void
+			{
+				if (_scenarioClone.scenarioName.length > 0 )
+				{
+					if (isScenarioDetailsChanged){
+					isScenarioDetailsChanged = false;
+					new UpdateScenarioEvent(_scenarioClone.toXML(),updateScenarioResult,updateScenarioFault).dispatch();
+					}
+				}else {
+					Alert.show("Scenario name can't be empty","Invalid Scenario Name");
+				}
+			}
+			
+			public function updateScenarioResult(event:ResultEvent):void
+			{
+				Alert.show("Scenario updated successfully","Scenario Update", Alert.OK, null, updateScenarioAlertListner,null,Alert.OK);
+				var updateEvent:UpdateEvent = new UpdateEvent(true);
+				dispatchEvent(updateEvent);
+			}
+			
+			/**
+			 * This method will be called upon the confirmation of the scenario updated alert.<br>
+			 * It will result the removal of the scenarioDetails popup from screen.
+			 */ 
+			private function updateScenarioAlertListner(eventObj:CloseEvent):void
+			{
+				if (eventObj.detail==Alert.OK) {
+					PopUpManager.removePopUp(this);
+				}
+			}
+			
+			public function updateScenarioFault(info:Object):void
+			{
+				var model:ReportModelLocator = ReportModelLocator.getInstance();
+				var event:FaultEvent = FaultEvent(info);			
+				model.error.setMessage(event,"Could not update scenario");
+				model.applicationState.currentState = "ErrorPage";	
+			}
+			
+			protected function updateHandler(event:Event):void
+			{
+				new GetScenarioByIDEvent(_scenarioClone.id, updateCallbackResult, updateCallbackFault).dispatch();
+			}
+			
+			public function updateCallbackResult(event:ResultEvent): void
+			{
+				var scenario : XML = new XML(event.message.body);
+				_scenarioClone = new Scenario(scenario);
+				dispatchEvent(event);
+			}
+			
+			public function updateCallbackFault(info:Object): void
+			{
+				var event:FaultEvent = FaultEvent(info);
+				var model:ReportModelLocator = ReportModelLocator.getInstance();
+				model.error.setMessage(event,"Could not get retrieve scenario by ID");
+				model.applicationState.currentState = "ErrorPage";	
+			}
+			
+			/**
+			 * This method will be called upon a change accurance of any of the editable scenario details.
+			 */ 
+			protected function scenarioDetailsChangedEventHandler(event:TextOperationEvent):void {
+				isScenarioDetailsChanged = true;
+			}
+			
+			protected function refreshButtonClicked(event:MouseEvent):void
+			{
+				new GetScenarioByIDEvent(_scenarioClone.id, updateCallbackResult, updateCallbackFault).dispatch();
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:VGroup width="736" height="586" horizontalAlign="center" paddingTop="20"
+			  verticalAlign="middle">
+		<s:HGroup x="43" y="15" width="650" height="32" horizontalAlign="right" textAlign="right">
+			<s:ComboBox id="tools" height="100%" change="export_changeHandler(event)"
+						dataProvider="{exportOptions}" selectedItem="Tools" textAlign="left"/>
+			<s:Button x="468" y="221" buttonMode="true" click="refreshButtonClicked(event)"
+					  mouseChildren="false"
+					  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"
+					  toolTip="Refresh" useHandCursor="true"/>
+		</s:HGroup>
+	<s:HGroup verticalAlign="middle">
+	<mx:Form width="100%" height="90%" color="#000000" textAlign="left">
+		<mx:FormItem label="Scenario Name:" fontWeight="bold">
+			<s:TextInput width="230" editable="true" fontWeight="normal" text="@{_scenarioClone.scenarioName}" change="scenarioDetailsChangedEventHandler(event)"
+						 textAlign="center" toolTip="{_scenarioClone.scenarioName}"/>
+		</mx:FormItem>
+		<mx:FormItem label="Start Time:" fontWeight="bold">
+			<s:TextInput width="230" editable="false" fontWeight="normal" text="{formatDateTestDetail(_scenarioClone.startTime)}"
+						 textAlign="center"/>
+		</mx:FormItem>
+		<mx:FormItem label="No. Tests Pass:" fontWeight="bold">
+			
+			<s:TextInput width="230" editable="false" fontWeight="normal" text="{_scenarioClone.pass}"
+						 textAlign="center"/>
+		</mx:FormItem>
+		<mx:FormItem label="No. Tests Failed:" fontWeight="bold">
+			
+			<s:TextInput width="230" editable="false" fontWeight="normal" text="{_scenarioClone.fail}"
+						 textAlign="center"/>
+		</mx:FormItem>
+		<mx:FormItem label="No. Tests Warning:" fontWeight="bold">
+			<s:TextInput width="230" editable="false" fontWeight="normal" text="{_scenarioClone.warn}"
+						 textAlign="center"/>
+		</mx:FormItem>
+		<mx:FormItem label="Total:" fontWeight="bold">
+			<s:TextInput width="230" editable="false" fontWeight="normal" text="{_scenarioClone.total}"
+						 textAlign="center"/>
+		</mx:FormItem>
+	</mx:Form>
+		<mx:PieChart id="testsResultsPieChart" width="260" height="252" chromeColor="#041122"
+					 color="#3F68A1" dataProvider="{getPieData(_scenarioClone.fail,_scenarioClone.pass,_scenarioClone.warn)}"
+					 showDataTips="true">
+			<mx:series>
+				<mx:PieSeries field="Amount" labelPosition="callout" nameField="Status"/>
+			</mx:series>
+		</mx:PieChart>
+		</s:HGroup>
+		<s:HGroup x="46" width="645">
+		</s:HGroup>
+		<s:HGroup x="43" width="650" height="200">
+			<s:HGroup width="386" height="200">
+				<s:VGroup width="387" height="197">
+					<s:Label id="labelDescription" width="143" height="21" paddingBottom="4" paddingLeft="2" paddingTop="4"
+							 text="Description:"/>
+					<s:TextArea id="scenarioDescription" width="384" height="157" borderAlpha="0.5" editable="true" change="scenarioDetailsChangedEventHandler(event)"
+								text="@{_scenarioClone.description}"/>
+				</s:VGroup>
+			</s:HGroup>
+			<s:VGroup width="259" height="197">
+				<s:HGroup width="100%" height="21">
+					<s:Label width="100%" height="21" paddingBottom="4" paddingLeft="2" paddingTop="4"
+							 text="Properties:"/>
+					<s:HGroup height="100%">
+						<s:Image id="addImg" buttonMode="true" click="addNewProperty(event)"
+								 fillMode="scale" mouseChildren="false"
+								 scaleMode="stretch" source="{add}" toolTip="Add"
+								 useHandCursor="true"/>
+						<s:Image id="removeImg" buttonMode="true"
+								 click="removeProperty(event)" fillMode="scale"
+								 mouseChildren="false" scaleMode="stretch" source="{remove}"
+								 toolTip="Remove" useHandCursor="true" enabled="{scenarioPropertiesList.selectedIndex != -1}" />
+						<s:Image id="editImg" buttonMode="true" click="editProperty(event)"
+								 enabled="{scenarioPropertiesList.selectedIndex != -1}"
+								 fillMode="scale" mouseChildren="false" scaleMode="stretch"
+								 source="{edit}" toolTip="Edit" useHandCursor="true"/>
+					</s:HGroup>
+				</s:HGroup>
+				<s:List id="scenarioPropertiesList" width="100%" height="157" contentBackgroundAlpha="0.5"
+						dataProvider="{_scenarioClone.scenarioProperties}">
+				</s:List>
+			</s:VGroup>
+		</s:HGroup>
+		<s:HGroup x="42" width="652" height="10%" horizontalAlign="right">
+			<s:Button id="buttonSave" height="24" label="Save" chromeColor="#0A1E39"
+					  click="buttonSave_clickHandler(event)" color="#FFFFFF" focusColor="#85AED4"
+					  fontWeight="bold"/>
+			<s:Button id="buttonTests" height="24" label="Tests" chromeColor="#0A1E39"
+					  click="ButtonTestsClicked(event)" color="#FFFFFF" focusColor="#85AED4"
+					  fontWeight="bold"/>
+			<s:Button id="buttonCancel" height="24" label="Cancel" chromeColor="#0A1E39"
+					  click="cancel_clickHandler(event)" color="#FFFFFF" focusColor="#85AED4"
+					  fontWeight="bold"/>
+		</s:HGroup>
+	</s:VGroup>
+</s:TitleWindow>

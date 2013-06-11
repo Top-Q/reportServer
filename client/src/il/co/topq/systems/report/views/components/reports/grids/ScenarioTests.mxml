@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*"
+				   xmlns:common="il.co.topq.systems.report.views.components.reports.common.*"
+				   width="100%" height="100%"
+				   creationComplete="scenarioTests_CreationComplete(event)">
+	<fx:Script>
+	
+		
+		<![CDATA[
+			[Event(name="updateEvent", type="il.co.topq.systems.report.events.general.UpdateEvent")]
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.TestGridModel;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+		
+			[Bindable]
+			public var testGridModel:TestGridModel = ReportModelLocator.getTestGridModel();//testGrid model.
+			
+			[Bindable]
+			protected var title:String;
+			
+			protected function scenarioTests_CreationComplete(event:FlexEvent):void
+			{
+				addNavigationListners();
+				testsGrid.addEventListener(UpdateEvent.UPDATE_EVENT,updateTestHandler);
+			}
+			
+			protected function getResults():void {
+				Alert.show("must be implemented in extanding class");
+			}
+			
+			protected function updateTestHandler(event:Event):void
+			{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			/**
+			 * This method will add event listners to the Navigation component.
+			 * Will listen on next | previous clicks.
+			 **/
+			private function addNavigationListners():void {
+				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+			}
+			
+			protected function handleNextClicked(event:MouseEvent):void{
+				Alert.show("must be implemented in extanding class");
+			}
+			
+			protected  function handlePreviousClicked(event:MouseEvent):void{
+				Alert.show("must be implemented in extanding class");
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup width="100%" height="100%">
+		
+		<s:HGroup width="100%" height="10%" horizontalAlign="center" paddingLeft="10"
+				  paddingRight="10" verticalAlign="middle">
+			<s:HGroup width="100%" height="100%" horizontalAlign="left" verticalAlign="middle">
+				<s:Label fontSize="16" fontWeight="bold" text="{title}"/>
+				<s:HGroup width="100%" horizontalAlign="right">
+					<s:Spacer width="100%" height="100%"/>
+					<mx:LinkButton id="allTestsLinkButton" label="Show all Tests in System" enabled="true"  icon="@Embed(source='/assets/images/showAll.png')" />
+				</s:HGroup>
+			</s:HGroup>
+		<!--	<common:NewNavigation id="navigation" horizontalAlign="right"
+								  navModel="{testGridModel.navigation}" verticalAlign="bottom"/>-->
+		</s:HGroup>
+		<s:HGroup id="grids" width="100%" height="100%" verticalAlign="bottom">
+			<grids:TestsReportGrid id="testsGrid" dataProvider="{testGridModel.gridData.items}"/>
+		</s:HGroup>
+		<common:Navigation paddingBottom="8" width="100%" paddingTop="8"
+						   verticalAlign="middle" horizontalAlign="center"
+						   id="navigation" navModel="{testGridModel.navigation}"/>
+	</s:VGroup>
+</s:BorderContainer>

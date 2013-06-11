@@ -1,0 +1,232 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:reports="il.co.topq.systems.report.views.components.reports.*"
+				   xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*"
+				   xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+				   width="100%" height="100%" xmlns:common="il.co.topq.systems.report.views.components.reports.common.*"
+				   creationComplete="creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.test.ExportTestReportEvent;
+			import il.co.topq.systems.report.events.test.GetTestEvent;
+			import il.co.topq.systems.report.events.test.GetTestGroupEvent;
+			import il.co.topq.systems.report.events.test.GetTestGroupSizeEvent;
+			import il.co.topq.systems.report.events.test.GetTestSizeEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.TestGridModel;
+			import il.co.topq.systems.report.models.valueobjects.TestSummary;
+			import il.co.topq.systems.report.views.components.reports.grids.TestsReportGrid;
+			import il.co.topq.systems.report.views.components.reports.tools.CustomReportTimeRangeChooser;
+			import il.co.topq.systems.report.xml_utils.TestGroupXMLConverter;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			private var reportTitle:String = "Tests Group Report";
+			
+			[Bindable]
+			public var testGroupGridModel:TestGridModel = ReportModelLocator.getTestGridModel();
+			
+			[Bindable]
+			public var testGridModel:TestGridModel = ReportModelLocator.getTestGridModel();
+			
+			[Bindable]
+			private var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			private var timeRangeChooser:CustomReportTimeRangeChooser;
+			
+			public function getResults():void{
+				
+				new GetTestGroupSizeEvent(testGroupGridModel);
+				new GetTestGroupEvent(testGroupGridModel.testQuery,getTestGroupCallbackResult,getTestGroupCallbackFault).dispatch();
+				setReportTitle();
+			}
+			
+			public function getTestGroupCallbackResult(data:ResultEvent): void
+			{
+				var evt:ResultEvent = data as ResultEvent;
+				var xmlList:XMLList = (new XML(evt.message.body)).TestSummary;
+				testGroupGridModel.gridData.items = TestGroupXMLConverter.fromXMLList(xmlList); 
+			}
+			
+			public function getTestGroupCallbackFault(info:Object): void
+			{
+				var model:ReportModelLocator = ReportModelLocator.getInstance();
+				var event:FaultEvent = FaultEvent(info);
+				model.error.setMessage(event);
+				model.applicationState.currentState = "ErrorPage";
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				addNavigationListners();
+				initTestQuery();
+				getResults();
+			}
+			
+			private function initTestQuery():void {
+				testGroupGridModel.testQuery.sortingColumn.name = "testName";
+				testGroupGridModel.testQuery.sortingColumn.asc = true;
+				testGroupGridModel.testQuery.groupBy = model.systemSettings.groupBy;
+			}
+			
+			protected function handleNextClicked(event:MouseEvent):void{
+				if (testGroupGridModel.navigation.index < testGroupGridModel.gridData.numberOfPages){
+					testGroupGridModel.navigation.index++;
+					testGroupGridModel.testQuery.chunk.length = testGroupGridModel.gridConfiguration.numberOfRows;
+					testGroupGridModel.testQuery.chunk.startIndex = testGroupGridModel.navigation.index * testGroupGridModel.gridConfiguration.numberOfRows;
+					getResults();
+				}
+			}
+			
+			protected function handlePreviousClicked(event:MouseEvent):void{
+				if (testGroupGridModel.navigation.index > 0){
+					testGroupGridModel.navigation.index--;
+					testGroupGridModel.testQuery.chunk.length = testGroupGridModel.gridConfiguration.numberOfRows;
+					testGroupGridModel.testQuery.chunk.startIndex = testGroupGridModel.navigation.index * testGroupGridModel.gridConfiguration.numberOfRows;
+					getResults();
+				}
+			}
+			
+			/**
+			 * This method will add event listners to the Navigation component.
+			 * Will listen on next | previous clicks.
+			 **/
+			private function addNavigationListners():void {
+				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+			}
+			
+			protected function executionReportToolsChanged(event:IndexChangeEvent):void
+			{
+				var data:String = (event.currentTarget as ExecutionReportTools).selectedItem as String;
+				
+				if(data == "Export to Excel"){
+					new ExportTestReportEvent("jsystem_test_report.xls","xls",testGroupGridModel.testQuery).dispatch();
+				}else if (data == "Export to PDF"){
+					new ExportTestReportEvent("jsystem_test_report.pdf","pdf",testGroupGridModel.testQuery).dispatch();
+				}else if(data == "Time Range"){
+					if (timeRangeChooser == null){
+						timeRangeChooser= new CustomReportTimeRangeChooser();	
+					}					
+					PopUpManager.addPopUp(timeRangeChooser,this.parent);
+					PopUpManager.centerPopUp(timeRangeChooser);
+					timeRangeChooser.saveButton.addEventListener(MouseEvent.CLICK,getTimeRangeData);
+					timeRangeChooser.cleanButton.addEventListener(MouseEvent.CLICK,getTimeRangeData);
+				}else if (data =="Add Columns"){
+					testsGroupGrid.addGridColumns();
+				}
+				tools.selectedItem="Tools";
+			}
+			
+			public function getTimeRangeData(event:MouseEvent):void{	
+				testGroupGridModel.testQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+				PopUpManager.removePopUp(timeRangeChooser);
+				getResults();
+			}
+			
+			protected function refreshButtonClicked(event:MouseEvent):void
+			{
+//				getResults();
+				grids.removeAllElements();
+				grids.addElement(testsGroupGrid);
+			}
+			
+			/**
+			 * This method will set the report title according to the 
+			 * last filtered timeRange values.
+			 * in case no filter was made the defult will be preseted. 
+			 **/
+			protected function setReportTitle():void{
+				if (timeRangeChooser != null){
+					if ((timeRangeChooser.lowerDate.selectedDate != null) && (timeRangeChooser.upperDate.selectedDate != null)){
+						var from:String = formatDate(timeRangeChooser.lowerDate.selectedDate.getTime());
+						var to:String = formatDate(timeRangeChooser.upperDate.selectedDate.getTime());
+						reportTitle += " between " + from + " and " + to ;
+					}
+				}
+			}
+			
+			private function formatDate(date:Number):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY";  
+				var d:Date = new Date(date);   
+				return df.format(d);
+			}
+			
+			protected function checkBoxTestGroup_changeHandler(event:Event):void
+			{
+				if (checkBoxTestGroupParameters.selected){
+					if (checkBoxTestGroupScenario.selected){
+						testGroupGridModel.testQuery.groupBy = 4;
+					}else {
+						testGroupGridModel.testQuery.groupBy = 3;
+					}
+				}else if (checkBoxTestGroupScenario.selected){
+					testGroupGridModel.testQuery.groupBy = 2;
+				}
+				getResults();				
+			}
+			
+			protected function testsGroupGrid_doubleClickHandler(event:MouseEvent):void
+			{
+				var testSummary:TestSummary = ((event.currentTarget as TestsGroupReportGrid).selectedItem as TestSummary);
+
+				var testsGrid:TestsReportGrid = new TestsReportGrid();
+				testsGrid.dataProvider = testGridModel.gridData.items;
+				
+//				new GetTestSizeEvent(testGridModel).dispatch();
+//				new GetTestEvent(testGridModel).dispatch();		
+				grids.removeAllElements();
+				grids.addElement(testsGrid);
+					
+
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup width="100%" height="100%">
+		<s:HGroup width="100%" height="10%" horizontalAlign="center" paddingLeft="20"
+				  paddingRight="20" verticalAlign="middle">
+			<s:HGroup width="50%" height="100%" horizontalAlign="left" paddingRight="10"
+					  verticalAlign="middle">
+				<s:Label id="title" fontSize="16" fontWeight="bold" text="{reportTitle}"/>
+			</s:HGroup>
+			<s:HGroup width="50%" height="100%" horizontalAlign="right" paddingRight="10"
+					  verticalAlign="middle">
+				<s:CheckBox id="checkBoxName" label="Name" selected="true" enabled="false" />
+				<s:CheckBox id="checkBoxTestGroupScenario" label="Scenario" change="checkBoxTestGroup_changeHandler(event)"
+							selected="{model.systemSettings.groupBy == 2 || model.systemSettings.groupBy == 4}"/>
+				<s:CheckBox id="checkBoxTestGroupParameters" label="Parameters" change="checkBoxTestGroup_changeHandler(event)"
+							selected="{model.systemSettings.groupBy == 3 || model.systemSettings.groupBy == 4}"/>
+				<s:Spacer x="268" y="15" width="43" height="22"/>
+				<tools:ExecutionReportTools id="tools" height="40%"
+											change="executionReportToolsChanged(event)"/>
+				<s:Button id="buttonRefresh" x="468" y="221" buttonMode="true" click="refreshButtonClicked(event)"
+						  mouseChildren="false"
+						  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"
+						  toolTip="Refresh" useHandCursor="true"/>
+			</s:HGroup>
+		</s:HGroup>
+		<s:HGroup id="grids" width="100%" height="85%" paddingTop="10" verticalAlign="bottom">
+			<grids:TestsGroupReportGrid name="testsGroupGrid" id="testsGroupGrid" dataProvider="{testGroupGridModel.gridData.items}" doubleClick="testsGroupGrid_doubleClickHandler(event)"/>
+			<!--<grids:TestsReportGrid id="testsGrid" dataProvider="{testGridModel.gridData.items}" />-->
+		</s:HGroup>
+		<common:Navigation	 paddingBottom="8" width="100%" paddingTop="8" verticalAlign="middle" horizontalAlign="center"
+							 id="navigation" navModel="{testGroupGridModel.navigation}"/>
+	</s:VGroup>
+</s:BorderContainer>

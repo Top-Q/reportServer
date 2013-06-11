@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" verticalAlign="middle">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<mx:columns>
+		<mx:DataGridColumn headerText="Name" dataField="name"/>
+			
+		<mx:DataGridColumn headerText="Version/Build" dataField="version"/>
+		<mx:DataGridColumn headerText="Total" dataField="total"/>
+		<mx:DataGridColumn headerText="Pass" dataField="pass"/>
+		<mx:DataGridColumn headerText="Fail" dataField="fail"/>
+		<mx:DataGridColumn headerText="Warning" dataField="warning"/>
+		<mx:DataGridColumn headerText="Detailed Report" dataField="report" headerWordWrap="true">
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox horizontalAlign="center" verticalAlign="middle" width="100%">
+					<mx:LinkButton label="Link" click="linkbutton1_clickHandler(event)" rollOverColor="#2E44C7" textRollOverColor="#ffffff">
+						<fx:Script>
+							<![CDATA[
+								import mx.controls.Alert;
+								protected function linkbutton1_clickHandler(event:MouseEvent):void
+								{
+									Alert.show("Link to Report is not implemented yet");
+									//navigateToURL(new URLRequest(data.fullReport), 'quote');
+								}
+							]]>
+						</fx:Script>
+					</mx:LinkButton>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+		</mx:DataGridColumn>
+	</mx:columns>
+</mx:DataGrid>

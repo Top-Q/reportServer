@@ -1,0 +1,288 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:reports="il.co.topq.systems.report.views.components.reports.*"
+				   xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*"
+				   xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+				   width="100%" height="100%" creationComplete="customReport_creationComplete(event)" xmlns:common="il.co.topq.systems.report.views.components.reports.common.*">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.general.RefreshCustomReportGridEvent;
+			[Event(name="testCustomReportGridDoubleClickEvent", type="il.co.topq.systems.report.events.testCustomReport.TestCustomReportGridDoubleClickEvent")]
+			[Event(name="scenarioCustomReportGridDoubleClickEvent", type="il.co.topq.systems.report.events.scenarioCustomReport.ScenarioCustomReportGridDoubleClickEvent")]
+		
+			import il.co.topq.systems.report.events.scenarioCustomReport.ScenarioCustomReportGridDoubleClickEvent;
+			import il.co.topq.systems.report.events.testCustomReport.TestCustomReportGridDoubleClickEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.CustomReportVO;
+			import il.co.topq.systems.report.models.valueobjects.ScenarioCustomReportVO;
+			import il.co.topq.systems.report.views.components.reports.viewModel.ScenarioCustomReportViewModel;
+			import il.co.topq.systems.report.views.components.reports.viewModel.TestCustomReportViewModel;
+			import il.co.topq.systems.report.views.components.reports.wizards.CustomReportWizard;
+			import il.co.topq.systems.report.views.skin.RefreshButtonSkin;
+			
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			private var type:String = "Test"; //default value;
+			
+			private var _testCustomReportVM:TestCustomReportViewModel;
+			private var _scenarioCustomReportVM:ScenarioCustomReportViewModel;
+			
+			protected function customReport_creationComplete(event:FlexEvent):void
+			{
+				customReportTools.addEventListener(IndexChangeEvent.CHANGE,customReportToolsChangeHandler);
+				resetCustomReportGroup();
+				_testCustomReportVM = new TestCustomReportViewModel();
+				_testCustomReportVM.addEventListener(TestCustomReportGridDoubleClickEvent.TEST_CUSTOM_REPORT_GRID_DOUBLE_CLICK_EVENT,testCustomReportGridDoubleClickHandler);
+				customReportGroup.addElement(_testCustomReportVM);
+			}
+			
+			/**
+			 * This method will reset the testCustomReportVM component.
+			 * It will create a new instance and will register as a listner to all the event that should be listned to.
+			 */ 
+			private function resetTestCustomReportVM():void {
+				_testCustomReportVM = new TestCustomReportViewModel();
+				_testCustomReportVM.addEventListener(TestCustomReportGridDoubleClickEvent.TEST_CUSTOM_REPORT_GRID_DOUBLE_CLICK_EVENT,testCustomReportGridDoubleClickHandler);
+			}
+			
+			/**
+			 * This method will reset the scenarioCustomReport component.
+			 * It will create a new instance and will register as a listner to all the event that should be listned to.
+			 */ 
+			private function resetScenarioCustomReportVM():void {
+				_scenarioCustomReportVM = new ScenarioCustomReportViewModel();
+				_scenarioCustomReportVM.addEventListener(ScenarioCustomReportGridDoubleClickEvent.SCENARIO_CUSTOM_REPORT_GRID_DOUBLE_CLICK_EVENT,scenarioCustomReportGridDoubleClickHandler);
+			}
+			
+			/**
+			 * This method will reset the custom report group container.<br>
+			 * it will remove all the elements from the group.
+			 */ 
+			private function resetCustomReportGroup():void {
+				customReportGroup.removeAllElements();
+			}
+			
+			/**
+			 * This method will be called upon the creation of a new custom report.
+			 */ 
+			protected function newCustomReportCreatedEventHandler(event:RefreshCustomReportGridEvent):void
+			{
+				if (event.customReportType == "test"){
+					resetCustomReportGroup();
+					resetTestCustomReportVM();
+					type = "Test";
+					customReportGroup.addElement(_testCustomReportVM);
+				}else if (event.customReportType == "scenario"){
+					resetCustomReportGroup();
+					resetScenarioCustomReportVM();
+					type = "Execution"
+					customReportGroup.addElement(_scenarioCustomReportVM);
+				}
+			}
+			
+			protected function customReportToolsChangeHandler(event:IndexChangeEvent):void
+			{
+				var data:String = (event.currentTarget as CustomReportTools).selectedItem as String;
+				
+				if(data == "New Custom Report"){
+					//init values due to object binding.
+					var model:ReportModelLocator = ReportModelLocator.getInstance();
+					model.customReportVO = new CustomReportVO();
+					model.customReport = new XML();
+					
+					var customReportWizard:CustomReportWizard = new CustomReportWizard();
+					customReportWizard.addEventListener(RefreshCustomReportGridEvent.REFRESH_CUSTOM_REPORT_GRID_EVENT, newCustomReportCreatedEventHandler);
+					PopUpManager.addPopUp(customReportWizard,UIComponent(this.parentApplication),true);					
+					PopUpManager.centerPopUp(customReportWizard);
+				}else if (data == "Test Custom Report"){
+					type = "Test";
+					resetCustomReportGroup();
+					customReportGroup.addElement(_testCustomReportVM);
+				}else if (data == "Execution Custom Report"){
+					type = "Execution";
+					if (_scenarioCustomReportVM ==  null){
+						_scenarioCustomReportVM = new ScenarioCustomReportViewModel();
+						_scenarioCustomReportVM.addEventListener(ScenarioCustomReportGridDoubleClickEvent.SCENARIO_CUSTOM_REPORT_GRID_DOUBLE_CLICK_EVENT,scenarioCustomReportGridDoubleClickHandler);
+					}
+					resetCustomReportGroup();
+					customReportGroup.addElement(_scenarioCustomReportVM);
+				}
+				customReportTools.selectedItem="Tools"										
+			}
+			
+			/**
+			 * This method will be called upon a double click in the Execution custom report grid.<br>
+			 * It will result the generation of the custom report clicked on.<br>
+			 */ 
+			protected function scenarioCustomReportGridDoubleClickHandler(event:ScenarioCustomReportGridDoubleClickEvent):void
+			{
+				dispatchEvent(new ScenarioCustomReportGridDoubleClickEvent(event.scenarioCustomReportVO));
+			}
+			
+			/**
+			 * This method will be called upon a double click in the test custom report grid.<br>
+			 * It will result the generation of the custom report clicked on.<br>
+			 */ 
+			protected function testCustomReportGridDoubleClickHandler(event:TestCustomReportGridDoubleClickEvent):void
+			{
+				dispatchEvent(new TestCustomReportGridDoubleClickEvent(event.testCustomReportVO));
+			}
+			
+			
+			/**
+			 * This method will be called upon a click on the refresh button<br>
+			 * It will send a get results with the most recent configurations.<br>
+			 */ 
+			protected function buttonRefresh_clickHandler(event:MouseEvent):void
+			{
+				if (type == "Test"){
+					_testCustomReportVM.getResults();
+				}else if (type == "Execution") {
+					_scenarioCustomReportVM.getResults();
+				}
+			}
+			
+//			private function getResults():void
+//			{
+//				if (type == "Test"){
+//					
+//					new GetTestCustomReportSizeEvent(testGridModel).dispatch();
+////					new GetTestCustomReportByChunkEvent(filter).dispatch();				
+//				}
+//				else if (type == "Execution"){
+//					
+//					new GetScenarioCustomReportSizeEvent(filter).dispatch();
+//					new GetScenarioCustomReportByChunkEvent(filter).dispatch();				
+//				}
+//			}
+//			
+//			protected function initFilter():void{
+//				filter = new Filter();
+//				filter.chunk = new Chunk(model.gridNumberOfRows * model.navigation.index,model.gridNumberOfRows);
+//				filter.timeRange = new TimeRange();
+//				filter.timeRange.lowBoundDate = lowBoundDate;
+//				filter.timeRange.upBoundDate = upBoundDate;
+//			}
+//			
+//			
+//			public function sendChuckRequest():void{
+//				
+//				filter.chunk = new Chunk(model.gridNumberOfRows * model.navigation.index,model.gridNumberOfRows);
+//				filter.timeRange = new TimeRange();
+//				filter.timeRange.lowBoundDate = lowBoundDate;
+//				filter.timeRange.upBoundDate = upBoundDate;
+//				send();
+//			}
+//			private static function send():void{
+//				
+//				if (type == "Test"){
+//					new GetTestCustomReportSizeEvent(filter).dispatch();
+//					new GetTestCustomReportByChunkEvent(filter).dispatch();				
+//				}
+//				else if (type == "Execution"){
+//					new GetScenarioCustomReportSizeEvent(filter).dispatch();
+//					new GetScenarioCustomReportByChunkEvent(filter).dispatch();				
+//				}
+//			}
+//			public static function refresh():void{
+//				
+//				
+//				ReportModelLocator.getInstance().navigation.index = 0;//on refresh start index = 0;
+//				
+//				if (filter == null){
+//					filter = new Filter();
+//				}
+//				
+//				filter.chunk = new Chunk(0,ReportModelLocator.gridNumberOfRowsStatic);
+//				filter.timeRange = new TimeRange();
+//				filter.timeRange.lowBoundDate = NaN;
+//				filter.timeRange.upBoundDate = NaN;
+//				
+//				send();				
+//			}
+//			public static function refreshOnDelete(index:Number):void{
+//				filter.chunk = new Chunk(ReportModelLocator.gridNumberOfRowsStatic * index,ReportModelLocator.gridNumberOfRowsStatic);
+//				filter.timeRange = new TimeRange();
+//				filter.timeRange.lowBoundDate = lowBoundDate;
+//				filter.timeRange.upBoundDate = upBoundDate;
+//				
+//				send();	
+//			}
+//			
+//			protected function getSizeOfTestCustomReport(filter:Filter):void{
+//				new GetTestCustomReportSizeEvent(filter).dispatch();
+//			}
+//			
+//			protected function handleNextClicked():void{
+//				
+//				if (model.navigation.index < model.numberOfPages){
+//					model.navigation.index++;
+//					sendChuckRequest();
+//				}
+//			}
+//			protected function handlePreviousClicked():void{
+//				if (model.navigation.index > 0){
+//					model.navigation.index--;
+//					sendChuckRequest();
+//				}
+//			}
+//			
+//			protected function customReportGrid_doubleClickHandler(event:MouseEvent):void
+//			{
+//				var customReportGrid:CustomReportGrid = (event.currentTarget) as CustomReportGrid;
+//				
+//				if (type == "Test") {
+//					new GetTestCustomReportPropertiesValuesEvent(customReportGrid.selectedItem.@id).dispatch();
+//				}
+//				else {
+//					new GetScenarioCustomReportPropertiesValuesEvent(customReportGrid.selectedItem.@id).dispatch();
+//				}					
+//			}
+//			
+//			/**
+//			 * This method will add event listners to the Navigation component.
+//			 * Will listen on next | previous clicks.
+//			 **/
+//			private function addNavigationListners():void {
+//				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+//				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+//				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+//				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+//			}
+
+			
+		]]>		
+		
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup id="customReportParentGroup" width="100%" height="100%">
+		<s:HGroup width="100%" height="10%" horizontalAlign="center" paddingLeft="20"
+				  paddingRight="20" verticalAlign="middle">
+			<s:HGroup width="50%" height="100%" horizontalAlign="left" paddingRight="10"
+					  verticalAlign="middle">
+				<s:Label fontSize="16" fontWeight="bold" text="{type} Custom Report"/>
+			</s:HGroup>
+			<s:HGroup width="50%" height="100%" horizontalAlign="right" paddingRight="10"
+					  verticalAlign="middle">
+				
+				<tools:CustomReportTools id="customReportTools" height="40%"/>
+				<s:Button id="buttonRefresh" x="468" y="221" buttonMode="true" click="buttonRefresh_clickHandler(event)" mouseChildren="false"
+						  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"
+						  toolTip="Refresh" useHandCursor="true"/>
+			</s:HGroup>
+		</s:HGroup>
+		<s:VGroup id="customReportGroup" width="100%" height="100%" paddingTop="10"/>
+		
+	</s:VGroup>
+	
+</s:BorderContainer>

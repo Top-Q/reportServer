@@ -1,0 +1,404 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	© 2011 Top-Q Intellectual Property. All rights reserved.
+	Authors: Tomer Gafner & Eran Golan
+
+	This is a componenet that holds all the summary of the report server.
+
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:charts="com.connectedpixel.charts.*"
+		 xmlns:chartsScroll="il.co.topq.systems.report.chartsScroll.*"
+		 width="100%" height="100%" contentBackgroundColor="#FFFFFF"
+		 creationComplete="loadConfigurations()" fontFamily="Calibri" fontSize="16" show="refresh()">
+	<fx:Script>
+		
+		[Embed(source='/assets/fonts/SaccoVanzetti.ttf', 
+            fontName='SaccoVanzetti', 
+            mimeType='application/x-font',
+            embedAsCFF='false')] 
+		private var font2:Class;
+	</fx:Script>    
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.chartsScroll.ChartScroller;
+			import il.co.topq.systems.report.events.GetSummaryPageEvent;
+			import il.co.topq.systems.report.events.config.GetUIConfigurationsEvent;
+			import il.co.topq.systems.report.events.config.SetUIConfigurationsEvent;
+			import il.co.topq.systems.report.events.scenario.GetScenarioPropertiesValuesEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.ScenarioGridModel;
+			import il.co.topq.systems.report.models.valueobjects.ScenarioProperty;
+			import il.co.topq.systems.report.models.valueobjects.uiConfigurations.UIConfiguration;
+			import il.co.topq.systems.report.views.components.reports.wizards.PropertiesWizard;
+			import il.co.topq.systems.report.views.components.reports.wizards.StatisticsPropertiesWizard;
+			
+			import mx.charts.chartClasses.IAxis;
+			import mx.collections.ArrayCollection;
+			import mx.collections.ArrayList;
+			import mx.controls.ComboBox;
+			import mx.events.ListEvent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.as3commons.collections.Set;
+			import org.as3commons.collections.framework.IIterator;
+			
+			private var statisticsPropertiesWizard:StatisticsPropertiesWizard;
+			private var comboBoxPropertyValueArr:Array;
+			private var numOfProperties:int;
+			
+			[Bindable]
+			public var scenarioGridModel:ScenarioGridModel = ReportModelLocator.getScenarioGridModel();
+			
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			[Bindable]
+			private var properties:XML;
+			
+			private var ANY_VALUE_INDEX:Number = 0;
+			
+			public function set scenarioPropertyValues(propertyValues:XML):void{
+				this.properties = propertyValues;
+			}
+			
+			public static function refresh():void{
+				new GetSummaryPageEvent().dispatch()				
+			}
+			public function systemSettingCallbackResult(data:ResultEvent):void {
+				ReportModelLocator.getInstance().uiConfigurations = new UIConfiguration(new XML(data.message.body));
+				var properties:String = ReportModelLocator.getInstance().uiConfigurations.summaryProperties.toString();
+				new GetScenarioPropertiesValuesEvent(properties,this).dispatch();
+				model.applicationState.currentState = "Reports";
+			}
+			public function settingsCallbackFault(info:Object): void
+			{
+				;//failed to load ui configuration.
+			}
+			public function loadConfigurations():void {
+			
+				new GetUIConfigurationsEvent(systemSettingCallbackResult,settingsCallbackFault).dispatch();
+				
+//				var properties:String = ReportModelLocator.getInstance().uiConfigurations.summaryProperties.toString();
+//				new GetScenarioPropertiesValuesEvent(properties,this).dispatch();
+			}
+			
+			private function getHGroup():HGroup{
+				var hgroup:HGroup = new HGroup();
+				hgroup.percentWidth = 100;
+				hgroup.height=30;
+				hgroup.paddingLeft=25;
+				hgroup.paddingTop=5;
+				hgroup.paddingBottom=5;
+				hgroup.verticalAlign="middle";
+				return hgroup;
+			}
+			
+			public function setStatisticsProperties():void
+			{
+				//Removing all element from the statistics properties
+				propertiesContainer.removeAllElements();
+				scenarioGridModel.scenarioQuery.scenarioProperties = new ArrayCollection();
+				
+				comboBoxPropertyValueArr = new Array();	
+				
+				var xmlList:XMLList = this.properties.propertyValuesWrappers as XMLList;			
+				
+				numOfProperties = xmlList.length();
+				for (var i:int=0; i<numOfProperties; i++){
+					
+					var hgroup:HGroup = getHGroup();
+				
+					var label:mx.controls.Label = new mx.controls.Label();		
+					label.percentWidth = 40;
+					label.text = xmlList.propertyKey[i].toString();
+					
+					var comboBox:ComboBox = new ComboBox();
+					comboBox.setStyle("chromeColor","#FFFFFF");
+					comboBox.width = 150;
+					comboBox.name=label.text;
+					scenarioGridModel.scenarioQuery.scenarioProperties.addItem(new ScenarioProperty(xmlList.propertyKey[i].toString(),""));
+					comboBox.editable = false;
+					comboBoxPropertyValueArr.push(comboBox);					
+					
+					var xmllist2:XMLList = (xmlList[i].propertyKeyValueList as XMLList);
+					
+					var arr:ArrayList = new ArrayList();
+					arr.addItem("All");
+					for (var j:int=0; j<xmllist2.length(); j++){
+						arr.addItem(xmllist2[j].toString());
+					}
+
+					comboBox.dataProvider = arr;
+					comboBox.itemRenderer = new ClassFactory (mx.controls.Label);
+//					comboBox.toolTip = comboBox.selectedItem.toString();
+					comboBox.addEventListener("change",comboBoxChanged);
+					hgroup.addElement(label);
+					hgroup.addElement(comboBox);
+					
+					propertiesContainer.addElement(hgroup);
+				}
+				propertiesTitle.visible = true;
+			}
+
+			protected function addStatisticsProperties_click(event:MouseEvent):void
+			{
+				statisticsPropertiesWizard = new StatisticsPropertiesWizard();
+				statisticsPropertiesWizard.finishButton.addEventListener(MouseEvent.CLICK,statisticsPropertiesWizardFinishClicked);
+				PopUpManager.addPopUp(statisticsPropertiesWizard,this,false);
+				PopUpManager.centerPopUp(statisticsPropertiesWizard);
+			}
+			
+			private function statisticsPropertiesWizardFinishClicked(event:MouseEvent):void{		
+				
+				var properties:String = "";
+				var target:ArrayCollection = statisticsPropertiesWizard.target;
+				PopUpManager.removePopUp(statisticsPropertiesWizard);
+				for (var i:int = 0; i<target.length; i++){
+					properties += target[i] + "," ;
+				}
+				ReportModelLocator.getInstance().uiConfigurations.summaryProperties.properties = target;
+				new SetUIConfigurationsEvent().dispatch();
+				new GetScenarioPropertiesValuesEvent(properties,this).dispatch();
+			}
+			
+			public function comboBoxChanged(event:ListEvent):void{
+				
+				scenarioGridModel.scenarioQuery.scenarioProperties = new ArrayCollection();			
+				for (var i:int=0; i<comboBoxPropertyValueArr.length; i++){
+					var c:ComboBox = comboBoxPropertyValueArr[i] as ComboBox;
+					if (c.selectedIndex != ANY_VALUE_INDEX){
+						scenarioGridModel.scenarioQuery.scenarioProperties.addItem(new ScenarioProperty(c.name as String,c.selectedItem as String));
+					}else{
+						scenarioGridModel.scenarioQuery.scenarioProperties.addItem(new ScenarioProperty(c.name as String,""));
+					}
+				}
+				resetGraphs();
+				new GetSummaryPageEvent(scenarioGridModel.scenarioQuery.toXML()).dispatch();
+			}
+		
+			public function categoryLabelFunction(labelValue:Object, previousValue:Object, axis:IAxis):String
+			{
+					if (model.summaryDataVO.executionStatistics != null){
+					var index:int = int(labelValue);
+					
+					if (index >= 0 && index < model.summaryDataVO.executionStatistics.length){
+						return model.summaryDataVO.executionStatistics[index].ExecutionType;
+					}
+					return ""; 
+				}
+				return "";
+				
+			}
+			private function resetGraphs():void {
+				model.summaryDataVO.executionStatistics.removeAll();
+				vAxisExecutionStatistics.minimum = NaN;
+				vAxisExecutionStatistics.maximum = 50;
+				executionTypeAxis.minimum = NaN;
+				executionTypeAxis.maximum = 3;
+				testsTimeRangeVAxis.minimum = NaN;
+				testsTimeRangeVAxis.maximum = 20; 
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+
+		<chartsScroll:ChartScroller id="testsMonthLineChartScroller" chart="{testsMonthLineChart}"
+									horizontalScrollEnabled="true" horizontalZoomEnabled="false"
+									verticalScrollEnabled="true" verticalZoomEnabled="false"/>
+		<chartsScroll:ChartScroller id="executionScroller" chart="{executionStatistics}"
+									horizontalScrollEnabled="true" horizontalZoomEnabled="false"
+									verticalScrollEnabled="true" verticalZoomEnabled="false"/>
+
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup width="100%" height="100%" paddingBottom="10" paddingLeft="10" paddingRight="10"
+			  paddingTop="10">
+		
+		<!-- *************************************************** Top summary *************************************************** -->
+		
+		<s:HGroup id="propertiesHgroup" width="100%" height="40%" verticalAlign="bottom">
+			<s:Panel width="100%" height="100%" chromeColor="#3F68A1" color="#FFFFFF" title="Status">
+				<s:HGroup width="100%" height="100%" color="#3F68A1" fontWeight="bold">	
+					<s:VGroup width="230" height="100%">
+						<s:VGroup width="100%" height="100%" gap="15" paddingLeft="30"
+								  paddingTop="15">
+							<s:Label text="Total number of executions: "/>	
+							<s:Label text="Total number of tests:"/>
+							<s:Label id="addStatistics" buttonMode="true"
+									 click="addStatisticsProperties_click(event)"
+									 mouseChildren="false" text="Add Statistics Properties"
+									 textDecoration="underline" useHandCursor="true"/>
+						</s:VGroup>
+					</s:VGroup>
+					<s:VGroup width="313" height="100%" gap="15" paddingLeft="30" paddingTop="15">
+						<s:Label text="{model.summaryDataVO.totalScenarios}"/>	
+						<s:Label text="{model.summaryDataVO.totalTests}"/>
+					</s:VGroup>
+					<s:Spacer width="100%" height="100%"/>
+					<s:VGroup width="100%" height="100%">
+						<s:HGroup id="propertiesTitle" visible="false" width="100%" height="30"
+								  paddingBottom="5" paddingLeft="25" paddingTop="10"
+								  verticalAlign="middle">
+							<s:Label width="40%" text="Property Key"/>
+							<s:Label width="50%" text="Property Value"/>
+						</s:HGroup>
+						<s:Scroller width="100%" height="80%" chromeColor="#FFFFFF"
+									focusEnabled="false" hasFocusableChildren="true">
+							<s:VGroup id="propertiesContainer" width="100%" height="100%">
+							</s:VGroup>
+						</s:Scroller>
+					</s:VGroup>
+				</s:HGroup>
+			</s:Panel>
+		</s:HGroup>
+		
+		
+		<!-- *************************************************** Graphs *************************************************** -->
+		<s:HGroup width="100%" height="60%" verticalAlign="bottom">
+			
+			<mx:Panel width="33.3%" height="100%" chromeColor="#3F68A1" color="#FFFFFF"
+					  title="Test Statistics">
+				<mx:PieChart id="testsResultsPieChart" width="100%" height="90%"
+							 chromeColor="#041122" color="#3F68A1"
+							 dataProvider="{model.summaryDataVO.testResults}" showDataTips="true">
+					<mx:series>
+						<mx:PieSeries field="Amount" labelPosition="callout" nameField="Status">
+							<mx:fills>
+								<mx:SolidColor alpha="1.0" color="#DB0E0E"/>								
+								<mx:SolidColor alpha="1.0" color="#1B95D9"/>
+								<mx:SolidColor alpha="1.0" color="#EDEB49"/>
+							</mx:fills>
+						</mx:PieSeries>
+					</mx:series>
+				</mx:PieChart>
+				<mx:Legend width="100%" height="10%" color="#3F68A1"
+						   dataProvider="{testsResultsPieChart}"/>
+			</mx:Panel>
+
+			<mx:Panel width="33.3%" height="100%" chromeColor="#3F68A1" color="#FFFFFF"
+					  horizontalScrollPolicy="auto" title="Executions">
+				<mx:ColumnChart id="executionStatistics" width="100%" height="90%" color="#3F68A1"
+								dataProvider="{model.summaryDataVO.executionStatistics}"
+								showDataTips="true" type="stacked">					
+					<mx:series>
+						<mx:ColumnSeries color="#DB0E0E" displayName="Fail"
+										 horizontalAxis="{executionTypeAxis}" yField="Fail">
+							<mx:fill>
+								<mx:SolidColor>
+									<mx:color>0xDB0E0E</mx:color>
+								</mx:SolidColor>
+							</mx:fill>
+						</mx:ColumnSeries>
+						<mx:ColumnSeries color="#EDEB49" displayName="Warning"
+										 horizontalAxis="{executionTypeAxis}" yField="Warning">
+							<mx:fill>
+								<mx:SolidColor>
+									<mx:color>0xEDEB49</mx:color>
+								</mx:SolidColor>
+							</mx:fill>
+						</mx:ColumnSeries>
+						<mx:ColumnSeries color="#1B95D9" displayName="Pass"
+										 horizontalAxis="{executionTypeAxis}" yField="Pass">
+							<mx:fill>
+								<mx:SolidColor>
+									<mx:color>0x1B95D9</mx:color>
+								</mx:SolidColor>
+							</mx:fill>
+						</mx:ColumnSeries>
+					</mx:series>
+					<mx:verticalAxis>
+						<mx:LinearAxis id="vAxisExecutionStatistics" maximum="50"/>
+					</mx:verticalAxis>
+					<mx:horizontalAxis>
+						<mx:LinearAxis id="executionTypeAxis" interval="1"
+									   labelFunction="categoryLabelFunction" maximum="3"/>
+					</mx:horizontalAxis>
+									
+									
+					<mx:horizontalAxisRenderers>
+						<mx:AxisRenderer axis="{executionTypeAxis}" placement="bottom"/>
+					</mx:horizontalAxisRenderers>
+				</mx:ColumnChart>
+				<s:HGroup id="executionConfButtons" width="100%" height="10%" horizontalCenter="0"
+						  verticalCenter="0">
+					<mx:Legend height="10%" color="#3F68A1" dataProvider="{executionStatistics}"/>
+					<s:Spacer width="100%" height="100%"/>
+					<s:HGroup width="100%" height="100%" horizontalAlign="right" paddingRight="10">
+						<s:CheckBox width="14" height="100%" label="CheckBox"
+									change="{executionScroller.verticalZoomEnabled = event.target.selected}"
+									chromeColor="#CFCFCF"
+									selected="{executionScroller.verticalZoomEnabled}"
+									toolTip="vertical zoom enabled"/>
+						<s:CheckBox width="14" height="100%" label="CheckBox"
+									change="{executionScroller.horizontalZoomEnabled = event.target.selected}"
+									chromeColor="#CFCFCF"
+									selected="{executionScroller.horizontalZoomEnabled}"
+									toolTip="horizontal zoom enabled"/>
+					</s:HGroup>
+				</s:HGroup>
+				
+			</mx:Panel>
+			
+			<mx:Panel width="33.3%" height="100%" chromeColor="#3F68A1" color="#FFFFFF"
+					  title="Test Status / Time Range">
+				
+				<mx:LineChart id="testsMonthLineChart" width="100%" height="90%" color="#3F68A1"
+							  dataProvider="{model.summaryDataVO.scenarioStatisticsByTimeRange}"
+							  gutterLeft="40" gutterRight="10" showDataTips="true">
+					<mx:horizontalAxis>
+						<mx:DateTimeAxis id="monthAxis" dataUnits="weeks"/>
+					</mx:horizontalAxis>
+					<mx:verticalAxis>
+						<mx:LinearAxis id="testsTimeRangeVAxis" maximum="20"/>
+					</mx:verticalAxis>
+					<mx:series>
+						<mx:LineSeries displayName="Fail" horizontalAxis="{monthAxis}"
+									   xField="CreateDate" yField="Fail">
+							<mx:lineStroke>
+								<s:SolidColorStroke alpha=".6" color="0xDB0E0E" weight="6"/>
+							</mx:lineStroke>
+						</mx:LineSeries>
+						<mx:LineSeries displayName="Warning" horizontalAxis="{monthAxis}"
+									   xField="CreateDate" yField="Warning">
+							<mx:lineStroke>
+								<s:SolidColorStroke alpha=".6" color="0xEDEB49" weight="6"/>
+							</mx:lineStroke>
+						</mx:LineSeries>
+						<mx:LineSeries displayName="Pass" horizontalAxis="{monthAxis}"
+									   xField="CreateDate" yField="Pass">
+							<mx:lineStroke>
+								<s:SolidColorStroke alpha=".6" color="0x1B95D9" weight="6"/>
+							</mx:lineStroke>
+						</mx:LineSeries>
+					</mx:series>
+					<mx:horizontalAxisRenderers>
+						<mx:AxisRenderer axis="{monthAxis}" placement="bottom"/>
+					</mx:horizontalAxisRenderers>
+				</mx:LineChart>
+				<s:HGroup id="testTimeRangeConfButtons" width="100%" height="10%"
+						  horizontalCenter="0" verticalCenter="0">
+					<mx:Legend height="10%" color="#3F68A1" dataProvider="{testsMonthLineChart}"/>
+					<s:Spacer width="100%" height="100%"/>
+					<s:HGroup width="100%" height="100%" horizontalAlign="right" paddingRight="10">
+						<s:CheckBox width="14" height="100%" label="CheckBox"
+									change="{testsMonthLineChartScroller.verticalZoomEnabled = event.target.selected}"
+									chromeColor="#CFCFCF"
+									selected="{testsMonthLineChartScroller.verticalZoomEnabled}"
+									toolTip="vertical zoom enabled"/>
+						<s:CheckBox width="14" height="100%" label="CheckBox"
+									change="{testsMonthLineChartScroller.horizontalZoomEnabled = event.target.selected}"
+									chromeColor="#CFCFCF"
+									selected="{testsMonthLineChartScroller.horizontalZoomEnabled}"
+									toolTip="horizontal zoom enabled"/>
+					</s:HGroup>
+				</s:HGroup>
+			</mx:Panel>
+			
+		</s:HGroup>
+	</s:VGroup>
+</s:Group>

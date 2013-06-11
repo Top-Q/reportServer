@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:components="il.co.topq.systems.report.views.components.*"
+			   width="408" height="298" chromeColor="#D4E4FB" color="#000000"
+			   contentBackgroundColor="#FFFFFF" close="aboutCloseHandler(event)"
+			   creationComplete="evaluation_creationCompleteHandler(event)"
+			   title="Top-Q Report System">
+	<fx:Script>
+		<![CDATA[
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			protected function evaluation_creationCompleteHandler(event:FlexEvent):void
+			{
+				anim.play();
+			}
+			
+			protected function aboutCloseHandler(event:CloseEvent):void
+			{
+				PopUpManager.removePopUp(this);					
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		
+		<s:Animate id="anim" targets="{[this]}" duration="1000">
+			<s:SimpleMotionPath property="alpha" valueFrom="0.0" valueTo="1.0" />
+			<s:SimpleMotionPath property="horizontalCenter" valueFrom="-100" valueTo="0" />
+			<s:SimpleMotionPath property="rotationY" valueFrom="-45" valueTo="0" />
+			<s:SimpleMotionPath property="scaleX" valueFrom="1.5" valueTo="1" />
+			<s:SimpleMotionPath property="scaleY" valueFrom="1.5" valueTo="1" />
+		</s:Animate>
+	</fx:Declarations>
+	<s:Image x="0" y="0" width="176" height="159" source="assets/images/logo.jpg"/>
+	<s:TextArea x="37" y="167" width="328" height="53" borderVisible="false" color="#000000" editable="false"
+				fontSize="18" text="Top-Q Report System&#xd;Version: 1.22"
+				verticalAlign="middle"/>
+	<components:Footer x="0" y="249" width="100%" verticalAlign="top"/>
+</s:TitleWindow>

@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark"
+		  xmlns:mx="library://ns.adobe.com/flex/mx">
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.models.valueobjects.NavigationVO;
+			
+			[Bindable]
+			[Inspectable(category="General",attribute="navModel")]
+			public var navModel:NavigationVO; //will be used a the data provider for this component.
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+		<mx:LinkButton id="LinkButtonPreviousIcon" width="38" enabled="{navModel.isPrevEnable}"
+					   icon="@Embed(source='/assets/images/previous.png')" toolTip="Previous"/>
+		<mx:LinkButton id="LinkButtonNextIcon" width="38" enabled="{navModel.isNextEnable}"
+					   icon="@Embed(source='/assets/images/next.png')" toolTip="Next"/>
+		
+</s:HGroup>

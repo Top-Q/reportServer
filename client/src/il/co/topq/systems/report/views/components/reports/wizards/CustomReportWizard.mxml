@@ -1,0 +1,441 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="716" height="386" chromeColor="#F2F5FA" 
+			   color="#000000" cornerRadius="20" 
+			   currentState="generalInfo" fontSize="14" title="New Report Wizard"
+			   creationComplete="creationCompleteHandler(event)" close="cancel_clickHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			[Event(name="refreshCustomReportGridEvent", type="il.co.topq.systems.report.events.general.RefreshCustomReportGridEvent")]
+			
+			import il.co.topq.systems.report.events.general.RefreshCustomReportGridEvent;
+			import il.co.topq.systems.report.events.scenario.GetScenarioPropertiesKeysEvent;
+			import il.co.topq.systems.report.events.scenarioCustomReport.CreateScenarioCustomReportEvent;
+			import il.co.topq.systems.report.events.test.GetTestPropertiesKeysEvent;
+			import il.co.topq.systems.report.events.testCustomReport.CreateTestCustomReportEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.events.DragEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.DragManager;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.ResultEvent;
+			
+			import org.as3commons.collections.Set;
+			
+			
+			protected var properties:ArrayCollection;
+			[Bindable]
+			protected var available:ArrayCollection;
+			[Bindable]
+			protected var target:ArrayCollection;			
+
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			[Bindable]
+			public var reportNameStr:String ="";
+			
+			[Bindable]
+			public var inEditMode:Boolean = false;
+
+			protected function cancel_clickHandler(event:Event):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+
+			protected function addNewReport():void{	
+				
+				if (model.customReportVO.propertiesSet.size == 0){
+					Alert.show("Custom Report must contain at least one property", "unable to create custom report");
+				}else
+				{				
+					if (model.customReportVO.type == "Test"){				
+						model.currentCustomReportType="Test";
+						new CreateTestCustomReportEvent(createTestCustomReportResult, createTestCustomReportFault).dispatch();
+					}else{
+						model.currentCustomReportType="Execution";
+						new CreateScenarioCustomReportEvent(createScenarioCustomReportResult,createScenarioCustomReportFault).dispatch();
+					}						
+				}
+				PopUpManager.removePopUp(this);
+			}	
+			
+			protected function createScenarioCustomReportResult(data:ResultEvent): void
+			{
+				//dispatch an update Scenario custom report chunk event.
+				dispatchEvent(new RefreshCustomReportGridEvent("scenario"));
+			}
+			
+			protected function createScenarioCustomReportFault(info:Object): void
+			{
+				Alert.show("Create Test Custom Report Failed");
+			}
+			
+			protected function createTestCustomReportResult(data:ResultEvent): void
+			{
+				//dispatch an update test custom report chunk event.
+				dispatchEvent(new RefreshCustomReportGridEvent("test"));
+			}
+			
+			protected function createTestCustomReportFault(info:Object): void
+			{
+				Alert.show("Create Test Custom Report Failed");
+			}
+			
+			private function retrieveCustomReportPropertiesIntoTargetProp():void
+			{
+				//sets the properties from DB to Avlbl prop grid;
+				if (model.customReport.type == "Test"){
+					new GetTestPropertiesKeysEvent(getPropertiesKeysCallbackResult,getPropertiesCallbackFault).dispatch();	
+				}else{
+					new GetScenarioPropertiesKeysEvent(getPropertiesKeysCallbackResult,getPropertiesCallbackFault).dispatch();	
+				}
+			}
+			
+			private function nextState(event:Event):void{
+				if(currentState == "generalInfo"){
+					if (!(reportName.text.length >= 3)){
+						Alert.show("Report name must contain at least 3 characters","Invalid reportName");
+					}
+					else{
+						model.customReportVO.name = this.reportName.text;
+						model.customReportVO.description = this.TextAreaReportDescription.text;
+						if (inEditMode){
+							next.label = "Finish";
+							currentState = "standard";
+							retrieveCustomReportPropertiesIntoTargetProp();
+						}
+						else{
+							currentState = "type";
+						}
+					}
+				}
+				else if (currentState == "type"){
+					
+					var legal:Boolean = true;
+					if (this.ComboBoxTypeSelection.selectedIndex == 0)	{
+						model.customReportVO.type = "Test";
+						new GetTestPropertiesKeysEvent(getPropertiesKeysCallbackResult,getPropertiesCallbackFault).dispatch();	
+					}else if (this.ComboBoxTypeSelection.selectedIndex == 1){
+						model.customReportVO.type = "Execution";
+						new GetScenarioPropertiesKeysEvent(getPropertiesKeysCallbackResult,getPropertiesCallbackFault).dispatch();		
+					}else{
+						Alert.show("Please select a type of custom report", "Invalid type selection");
+						legal = false;
+					}
+					if (legal){
+						next.label = "Finish";
+						currentState = "standard";
+					}
+					
+				}
+				else if (currentState == "standard"){
+					setTargetIntoCustomReportVO();
+					addNewReport();
+				}
+			}
+			
+			//This function will change once this class is refactored.
+			private function setTargetIntoCustomReportVO():void {
+				model.customReportVO.propertiesSet = new Set();
+				for (var i:int = 0; i< target.length; i++){
+					model.customReportVO.propertiesSet.add(target[i]);	
+				}
+			}
+			
+			private function initTargetProp():void{
+				var data:ArrayCollection = ArrayCollection(this.targetProp.dataProvider);
+				if (data != null){
+					for(var i:uint = 0; i < data.length; i++) {
+						data.removeItemAt(i);
+					}
+				}	
+			}
+			private function backState(event:Event):void{				
+				if (currentState == "type"){					
+					currentState = "generalInfo";
+				}
+				else if (currentState == "standard"){
+					next.label = "Next";
+					initTargetProp();	
+					if (inEditMode){
+						currentState = "generalInfo";
+					}else{
+						currentState = "type";					
+					}
+				}
+			}
+		
+
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				if (!inEditMode){
+					model.customReport = new XML();
+				}
+				model.customReportVO.propertiesSet = new Set();
+			}
+			
+			// Variable to store original border color.
+			private var tempBorderColor:uint;
+			
+			// Flag to indicate that tempBorderColor has been set.
+			private var borderColorSet:Boolean = false;
+			
+			private function dragOverHandler(event:DragEvent):void {					
+					
+				validateTargetPropAccordingToSize();
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+				// Explpicitly handle the dragOver event.            
+				event.preventDefault();
+				
+				// Since you are explicitly handling the dragOver event,
+				// call showDropFeedback(event) to have the drop target
+				// display the drop indicator.
+				// The drop indicator is removed
+				// automatically for the list controls by the built-in 
+				// event handler for the dragDrop event.
+				event.currentTarget.showDropFeedback(event);
+				
+				if (event.dragSource.hasFormat("items"))
+				{
+					// Set the border to green to indicate that 
+					// this is a drop target.
+					// Since the dragOver event is dispatched continuosly 
+					// as you move over the drop target, only set it once.
+					if (borderColorSet == false) {                 
+						tempBorderColor = 
+							event.currentTarget.getStyle('borderColor');
+						borderColorSet = true;
+					}
+					
+					// Set the drag-feedback indicator based on the 
+					// type of drag-and-drop operation.
+					event.currentTarget.setStyle('borderColor', 'green');
+					DragManager.showFeedback(DragManager.MOVE);
+					return;
+					
+				}
+				// Drag not allowed.
+				DragManager.showFeedback(DragManager.NONE);  
+			}
+			
+			private function dragOverAvlPropHandler(event:DragEvent):void {					
+				
+				//validateTargetPropAccordingToSize();
+				this.availableProp.dropEnabled=true;
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+				// Explpicitly handle the dragOver event.            
+				event.preventDefault();
+				
+				// Since you are explicitly handling the dragOver event,
+				// call showDropFeedback(event) to have the drop target
+				// display the drop indicator.
+				// The drop indicator is removed
+				// automatically for the list controls by the built-in 
+				// event handler for the dragDrop event.
+				event.currentTarget.showDropFeedback(event);
+				
+				if (event.dragSource.hasFormat("items"))
+				{
+					// Set the border to green to indicate that 
+					// this is a drop target.
+					// Since the dragOver event is dispatched continuosly 
+					// as you move over the drop target, only set it once.
+					if (borderColorSet == false) {                 
+						tempBorderColor = 
+							event.currentTarget.getStyle('borderColor');
+						borderColorSet = true;
+					}
+					event.currentTarget.setStyle('borderColor', 'green');
+					DragManager.showFeedback(DragManager.MOVE);
+				}
+				
+				// Drag not allowed.
+				DragManager.showFeedback(DragManager.NONE);  
+			}
+			
+			private function dragDropHandler(event:DragEvent):void {	
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+					for (var i:Number = 0; i < dragObj.length; i++) {	
+						properties.addItem(dragObj[i]);
+						model.customReportVO.propertiesSet.add(dragObj[i]);
+					}
+					dragExitHandler(event);
+			}    
+			
+			private function validateTargetPropAccordingToSize():void{
+				this.targetProp.dropEnabled = true;
+			}
+			
+			public function dragOut(event:DragEvent):void{
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+				for (var i:Number = 0; i < dragObj.length; i++) {				
+					model.customReportVO.propertiesSet.remove(properties.getItemAt(properties.getItemIndex(dragObj[i])));
+				}
+				dragExitHandler(event);			
+			}
+			
+			// Restore the border color.
+			private function dragExitHandler(event:DragEvent):void {				
+				event.currentTarget.setStyle('borderColor', tempBorderColor);
+				borderColorSet = true;				
+			}	
+			
+			private function dragBack(event:DragEvent):void{
+				DragManager.showFeedback(DragManager.MOVE);
+				validateTargetPropAccordingToSize();
+				return;
+			}
+			
+			private function dragDrop(event:DragEvent):void
+			{				
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+				for (var i:Number = 0; i < dragObj.length; i++) {		
+					properties.addItem(dragObj[i]);
+					model.customReportVO.propertiesSet.add(dragObj[i]);
+				}
+				dragExitHandler(event);
+			}
+
+			private function getPropertiesCallbackFault():void
+			{
+				Alert.show("GetScenarioPropertiesKeysCommand is not working properly");
+			}
+			
+			/**
+			 * This method will get the properties from server and will put them into properties Set.
+			 */ 
+			protected function getPropertiesKeysCallbackResult(data:ResultEvent): void
+			{			
+				properties = new ArrayCollection();
+				target = new ArrayCollection();
+				available = new ArrayCollection();
+				setPropertiesFromXML(new XML(data.message.body));
+			}
+			
+			/**
+			 * This method will retrieve the properties keys from xml and will put them into propertiesSet;
+			 * @parameters: XML - properties keys xml.
+			 */ 
+			private function setPropertiesFromXML(propertiesKeysXML:XML): void {
+				
+				var xmllist:XMLList = (propertiesKeysXML.property) ;
+				if (xmllist!=null){
+					for (var i:int=0; i<xmllist.length(); i++){
+						available.addItem(new String(xmllist[i].propertyKey)); 
+					}
+				}		
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:states>
+		<s:State name="type"/>
+		<s:State name="generalInfo"/>
+		<s:State name="standard"/>
+		
+	</s:states>
+	
+	<s:VGroup includeIn="standard" width="100%" height="100%" horizontalAlign="center"
+			  paddingTop="20" verticalAlign="middle">
+		<s:VGroup width="100%" height="100%">
+			<s:VGroup width="100%" height="74" paddingLeft="30" verticalAlign="middle">
+				<s:TextArea y="7" width="645" height="66" borderVisible="false"
+							text="Drag and drop the properties you would like to use in the custom report"/>
+			</s:VGroup>
+			<s:HGroup width="715" height="154" paddingLeft="30" paddingRight="30"
+					  verticalAlign="middle">
+				
+				<s:VGroup includeIn="standard" width="327.5" height="131">
+					<mx:DataGrid id="availableProp" width="247" height="131" 
+								 allowMultipleSelection="true"
+								 dataProvider="{available}"
+								 dragDrop="dragDropHandler(event);" dragEnabled="true"
+								 dragExit="dragExitHandler(event);" dragMoveEnabled="true"
+								 dragOver="dragOverHandler(event);" dropEnabled="true" rowCount="4">
+								 <!--dragOver="dragBack(event);" dropEnabled="true" rowCount="4">-->
+								 
+						<mx:columns>
+							<mx:DataGridColumn id="availablePropCol" dataField="propertyKey" dataTipField="text" showDataTips="true" itemRenderer="mx.controls.Label"
+											   draggable="true" headerText="Available Properties"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</s:VGroup>
+				<s:VGroup width="322.5" height="131" horizontalAlign="right">
+					<mx:DataGrid id="targetProp" width="247" height="131"
+								 allowMultipleSelection="true" 
+								 dataProvider="{target}"
+								 dragDrop="dragDropHandler(event);"
+								 dragEnabled="true" dragExit="dragExitHandler(event);"
+								 dragMoveEnabled="true" dragOver="dragOverHandler(event);"
+								 dropEnabled="true" rowCount="4">
+						<mx:columns>
+							<mx:DataGridColumn id="targetPropCol" dataField="propertyKey" dataTipField="text" showDataTips="true" itemRenderer="mx.controls.Label"
+											   headerText="Target Properties"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</s:VGroup>
+			</s:HGroup>
+		</s:VGroup>
+	</s:VGroup>
+	
+	<s:VGroup includeIn="type" width="100%" height="100%" horizontalAlign="center" paddingTop="20"
+			  verticalAlign="middle">
+		<s:VGroup width="100%" height="100%">
+			<s:VGroup width="100%" height="74" paddingLeft="30" verticalAlign="middle">
+				<s:Label paddingRight="25"
+						 text="Choose report main component. The main component will"/>
+				<s:Label paddingRight="25" text="be used as the first column in the report."/>
+			</s:VGroup>
+			<s:HGroup width="100%" height="30%" paddingLeft="30" verticalAlign="middle">
+				<s:Label paddingRight="30" text="Report for:"/>
+				<s:ComboBox id="ComboBoxTypeSelection">	
+					<s:ArrayList>
+						<fx:String>Tests</fx:String>
+						<fx:String>Execution</fx:String>
+					</s:ArrayList>
+				</s:ComboBox>
+			</s:HGroup>
+		</s:VGroup>
+	</s:VGroup>
+	<s:VGroup includeIn="generalInfo" width="100%" height="100%" horizontalAlign="center"
+			  paddingTop="20" verticalAlign="middle">
+		<s:VGroup width="100%" height="100%">
+			<s:HGroup width="100%" height="32" paddingLeft="30" verticalAlign="middle">
+				<s:Label text="Enter general report information"/>
+			</s:HGroup>
+			<s:HGroup width="100%" height="74" paddingLeft="30" verticalAlign="middle">
+				<s:Label paddingRight="25" text="Report Name:"/>
+				<s:TextInput id="reportName" width="302" 
+							 text="{model.customReport.name}"/>
+			</s:HGroup>
+			<s:HGroup width="100%" height="30%" paddingLeft="30" verticalAlign="middle">
+				<s:Label text="ReportDescription:"/>
+				<s:TextArea id="TextAreaReportDescription" width="398" height="102"
+							chromeColor="#EFF4FF"
+							text="{model.customReport.description}"/>
+			</s:HGroup>
+			
+		</s:VGroup>
+	</s:VGroup>
+	<s:controlBarContent>
+		<s:HGroup width="100%" height="100%" horizontalAlign="right">
+			<s:Button id="back" excludeFrom="generalInfo" label="Back" chromeColor="#011E4E"
+					  click="backState(event)" color="#FFFFFF"/>
+			<s:Button id="next" label="Next" chromeColor="#011E4E" click="nextState(event)"
+					  color="#FFFFFF" enabled="{(reportName.text.length &gt;= 0)}"/>
+			<s:Button label="Cancel" chromeColor="#011E4E" click="cancel_clickHandler(event)"
+					  color="#FFFFFF"/>
+		</s:HGroup>
+		
+		
+	</s:controlBarContent>
+</s:TitleWindow>

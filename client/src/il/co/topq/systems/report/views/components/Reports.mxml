@@ -1,0 +1,103 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	© 2011 Top-Q Intellectual Property. All rights reserved.
+	Authors: Tomer Gafner & Eran Golan
+
+	Description: This is a component that holds all different states in order to navigate betweeen the 
+				 different reports
+-->
+
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+         xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:reports="il.co.topq.systems.report.views.components.reports.*"
+		 width="100%" height="100%"
+         currentState="{model.applicationState.reportsState}" creationComplete="reportsCreationComplete(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.commands.states.ChangeReportsStateCommand;
+			import il.co.topq.systems.report.events.general.ScenarioDetailsGetScenarioTestsEvent;
+			import il.co.topq.systems.report.events.scenario.GetScenarioTestsEvent;
+			import il.co.topq.systems.report.events.scenario.GetScenarioTestsSizeEvent;
+			import il.co.topq.systems.report.events.states.ChangeReportsStateEvent;
+			import il.co.topq.systems.report.models.valueobjects.Scenario;
+			import il.co.topq.systems.report.views.MainApp;
+			
+			import mx.controls.Alert;
+			[Event(name="updateEvent", type="il.co.topq.systems.report.events.general.UpdateEvent")]
+			[Event(name="scenarioDetailsGetScenarioTestsEvent", type="il.co.topq.systems.report.events.general.ScenarioDetailsGetScenarioTestsEvent")]
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			/**
+			 * Once an event of show scenario Tests is cought:<br>
+			 * an event of change state is dispatch.<br>
+			 * uppon completion of change state event will change the grid in test report.<br>
+			 * the change state result callback do not have the scenario member and this is why it is here.<br>
+			 * an assignment will be given uppon show scenario tests event is cought.<br>
+			 */ 
+			private var scenario:Scenario;
+			
+			protected function reportsCreationComplete(event:FlexEvent):void
+			{
+				this.addEventListener(UpdateEvent.UPDATE_EVENT,updateHandler);
+				this.addEventListener(ScenarioDetailsGetScenarioTestsEvent.SCENARIO_DETAILS_GET_SCENARIO_TESTS_EVENT,getScenarioTestsEventHandler);
+			}
+			
+			/**
+			 * This method will be called upon an update event bubbled up from the application.
+			 */ 
+			protected function updateHandler(event:Event):void {
+				if (executionReport != null){
+					executionReport.getResults();
+				}
+				if (testReport != null){
+					if (testReport.testReport != null){
+						testReport.testReport.getTestsResults();
+//						testReport.testReport.getResults();
+					}
+				}
+			}
+			
+			/**
+			 * This method will result the change of grids in tests report component.
+			 */
+			protected function getScenarioTestsEventHandler(event:ScenarioDetailsGetScenarioTestsEvent):void
+			{
+				this.scenario = event.scenario;
+				new ChangeReportsStateEvent("Tests").dispatch();
+				testReport.addEventListener(FlexEvent.CREATION_COMPLETE,showScenarioTests);//will work when component was not created yet.
+				testReport.showScenarioTests(scenario);//if component created the function listening on creation complete will not be called and need to explicitly run this line.
+				MainApp.changeReportButtonBarSelectedItem("Tests");
+			}
+			
+			protected function showScenarioTests(event:FlexEvent):void
+			{
+				testReport.showScenarioTests(scenario);
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:states>
+		<s:State name="Execution" />
+		<s:State name="Runtime"/>
+		<s:State name="Tests"/>
+		<s:State name="Custom"/>
+	</s:states>
+	
+	<reports:ExecutionReport id="executionReport" includeIn="Execution"/>
+	<reports:RuntimeReport includeIn="Runtime"/>
+	<reports:TestsReport id="testReport" includeIn="Tests"/>
+	<reports:CustomReports id="customReport" includeIn="Custom"/>
+	
+</s:Group>

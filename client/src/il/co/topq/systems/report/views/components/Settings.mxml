@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+© 2011 Top-Q Intellectual Property. All rights reserved.
+Authors: Tomer Gafner & Eran Golan
+
+Description: This is a component that holds all different states in order to navigate betweeen the 
+			 different settings
+
+-->
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 xmlns:settings="il.co.topq.systems.report.views.components.settings.*"
+		 width="100%" height="100%" currentState="{model.applicationState.settingsState}"
+		 fontFamily="Calibri" fontSize="16">
+	<!--contentBackgroundColor.Preferences="#FFFFFF"-->
+	
+	<fx:Script>
+	
+		<![CDATA[
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+		]]>
+		
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:states>
+		<s:State name="SystemConfiguration"/>
+		<s:State name="About"/>
+		<s:State name="Preferences"/>
+		<s:State name="Users"/>
+	</s:states>
+	
+	<settings:SystemConfig includeIn="SystemConfiguration"/>
+	<!--<settings:Preferences includeIn="Preferences"/>-->
+	<settings:Users includeIn="Users"/>
+	<settings:About includeIn="About"/>
+	
+</s:Group>

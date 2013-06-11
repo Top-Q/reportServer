@@ -1,0 +1,172 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009"
+             xmlns:s="library://ns.adobe.com/flex/spark"
+             xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" verticalAlign="middle"
+             doubleClickEnabled="true" >
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.general.RefreshCustomReportGridEvent;
+			import il.co.topq.systems.report.events.scenario.DeleteOrphanPropertiesEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.CustomReport;
+			import il.co.topq.systems.report.models.valueobjects.uiConfigurations.GridUIConfiguration;
+			
+			import mx.controls.Alert;
+			import mx.formatters.DateFormatter;
+			import mx.rpc.events.ResultEvent;
+	
+	        public function formatDate(item:Object, column:DataGridColumn):String {
+	            var date:Date = DateFormatter.parseDateString(item.dateOfCreation);
+	            return dateFormatter.format(date) + " ";
+	        }
+	
+			private function formatDateOfCreation(customReport:CustomReport, column:DataGridColumn):String{
+				return formatDateScenarioDetail(customReport);
+			}
+				
+			private function formatDateScenarioDetail(customReport:CustomReport):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY at HH:NN:SS";  
+				var d:Date = new Date(new Number(customReport.dateOfCreation));   
+				return df.format(d);
+			}
+				
+			/**
+			 * Users are currently not supported.<br>
+			 * Will return const Admin user.
+			 */ 
+			private function getUser(customReport:Object, column:DataGridColumn):String{
+				return "Admin";
+			}
+			
+			/**
+			 * This method will be called upon completion of the deletion of a test Custom Report.<br>
+			 * It will result:<br>
+			 * 1. Deletion of orphan properties if exist in DB due to the deletion of the custom report.<br>
+			 * 2. Refresh of the test custom report page.
+			 */ 
+			public function deleteTestCustomReportResult(event:ResultEvent):void {
+				new DeleteOrphanPropertiesEvent().dispatch();
+				dispatchEvent(new RefreshCustomReportGridEvent("test",true));
+			}
+			
+			/**
+			 * This method will be called upon failure of the deletion of a test custom report;
+			 */ 
+			public function deleteTestCustomReportFault(event:Object):void {
+				Alert.show("Delete Test Custom Report Failed");
+			}
+			
+			/**
+			 * This method will be called upon completion of the deletion of a scenario Custom Report.<br>
+			 * It will result:<br>
+			 * 1. Deletion of orphan properties if exist in DB due to the deletion of the custom report.<br>
+			 * 2. Refresh of the scenario custom report page.
+			 */ 
+			public function deleteScenarioCustomReportResult(event:ResultEvent):void {
+				new DeleteOrphanPropertiesEvent().dispatch();
+				dispatchEvent(new RefreshCustomReportGridEvent("execution",true));
+			}
+			
+			/**
+			 * This method will be called upon failure of the deletion of a scenario custom report;
+			 */ 
+			public function deleteScenarioCustomReportFault(event:Object):void {
+				Alert.show("Delete Scenario Custom Report Failed");
+			}
+			
+        ]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" 	
+						  formatString="DD/MM/YY"/>
+		<fx:XML id="customMock" source="/assets/mock/custom.xml" />
+	</fx:Declarations>
+	<mx:columns>
+		<mx:DataGridColumn itemRenderer="mx.controls.Label" headerText="Report Name" textAlign="left" dataField="name" headerWordWrap="true">
+			<mx:headerRenderer>
+				<fx:Component>				   			
+					<mx:Label textAlign="center"/>
+				</fx:Component>
+			</mx:headerRenderer>
+		</mx:DataGridColumn>	
+		<mx:DataGridColumn headerText="Date Of Creation" textAlign="center" dataField="dateOfCreation" labelFunction="formatDateOfCreation" headerWordWrap="true" />
+		<mx:DataGridColumn headerText="User" textAlign="center" labelFunction="getUser" headerWordWrap="true" />					
+		<mx:DataGridColumn  headerText="Operation" textAlign="center" dataField="edit" headerWordWrap="true">
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox horizontalAlign="center" verticalAlign="middle" width="100%">
+						<fx:Script>
+							<![CDATA[
+                            import il.co.topq.systems.report.events.scenarioCustomReport.GetScenarioCustomReportByIDEvent;
+                            import il.co.topq.systems.report.events.testCustomReport.GetTestCustomReportByIDEvent;
+                            import il.co.topq.systems.report.views.components.reports.wizards.CustomReportWizard;
+                            
+                            import mx.controls.Alert;
+                            import mx.core.UIComponent;
+                            import mx.managers.PopUpManager;
+
+                            private function editButtonEditHandler(event:MouseEvent):void {
+								
+								Alert.show("This feature is not implemented for the current Version", "Edit Custom Report");
+								
+//                                var customReportWizard:CustomReportWizard = new CustomReportWizard();
+//                                customReportWizard.inEditMode = true;
+//                                if (data.type == "Test") {
+//                                    new GetTestCustomReportByIDEvent(data.@id).dispatch();
+//                                    PopUpManager.addPopUp(customReportWizard, UIComponent(this.parentApplication), true);
+//                                    PopUpManager.centerPopUp(customReportWizard);
+//                                } else if (data.type == "Scenario") {
+//                                    new GetScenarioCustomReportByIDEvent(data.@id).dispatch();
+//                                    PopUpManager.addPopUp(customReportWizard, UIComponent(this.parentApplication), true);
+//                                    PopUpManager.centerPopUp(customReportWizard);
+//                                }
+                            }
+                            ]]>
+						</fx:Script>
+						<mx:LinkButton label="Edit" click="editButtonEditHandler(event)"  
+									   rollOverColor="#2E44C7" textRollOverColor="#ffffff"/>
+						<s:Label text="|"/>
+						<mx:LinkButton label="Delete" click="handleClick()"  rollOverColor="#2E44C7" textRollOverColor="#ffffff"/>
+							<fx:Script><![CDATA[
+								import il.co.topq.systems.report.events.config.SetUIConfigurationsEvent;
+								import il.co.topq.systems.report.models.valueobjects.uiConfigurations.GridUIConfiguration;
+								import il.co.topq.systems.report.models.ReportModelLocator;
+								import il.co.topq.systems.report.models.valueobjects.ScenarioCustomReportVO;
+								import il.co.topq.systems.report.models.valueobjects.TestCustomReportVO;
+                                import il.co.topq.systems.report.events.general.DeleteScenarioCustomReportEvent;
+                                import il.co.topq.systems.report.events.general.DeleteTestCustomReportEvent;
+
+                                import mx.events.CloseEvent;
+
+                                public function handleClick():void {
+
+                                    Alert.show("Are you sure you want to delete the Custom Report " + data.name + "?", "Delete Custom Report",
+										Alert.OK | Alert.CANCEL, null, alertListener, null, Alert.OK);
+                                }
+
+                                private function alertListener(eventObj:CloseEvent):void {
+									var gridUIConfiguration:GridUIConfiguration;
+                                    // Check to see if the OK button was pressed.
+                                    if (eventObj.detail == Alert.OK) {
+                                        if (data is TestCustomReportVO) {
+                                            new DeleteTestCustomReportEvent(data.id, outerDocument.deleteTestCustomReportResult, outerDocument.deleteTestCustomReportFault).dispatch();
+											gridUIConfiguration= ReportModelLocator.getInstance().uiConfigurations.testCustomReportConfiguration.customReportConfigurationMap.itemFor(data.id);
+											ReportModelLocator.getInstance().uiConfigurations.testCustomReportConfiguration.customReportConfigurationMap.remove(gridUIConfiguration);
+                                        } else if (data is ScenarioCustomReportVO) {
+                                            new DeleteScenarioCustomReportEvent(data.id, outerDocument.deleteScenarioCustomReportResult, outerDocument.deleteScenarioCustomReportFault).dispatch();
+											gridUIConfiguration= ReportModelLocator.getInstance().uiConfigurations.scenarioCustomReportConfiguration.customReportConfigurationMap.itemFor(data.id);
+											ReportModelLocator.getInstance().uiConfigurations.scenarioCustomReportConfiguration.customReportConfigurationMap.remove(gridUIConfiguration);
+                                        }
+										new SetUIConfigurationsEvent().dispatch();
+                                    }
+
+                                }
+                                ]]></fx:Script>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+			</mx:DataGridColumn>
+	</mx:columns>
+</mx:DataGrid>

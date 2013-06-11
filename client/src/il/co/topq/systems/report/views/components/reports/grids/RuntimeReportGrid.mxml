@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" verticalAlign="middle" dataProvider="{runtimeMock.runtime}" >
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.model.ModelLocator;
+			
+			import il.co.topq.systems.report.events.legacy.LegacyGetScenarioEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.Chunk;
+			import il.co.topq.systems.report.models.valueobjects.Filter;
+			import il.co.topq.systems.report.models.valueobjects.TimeRange;
+			
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.events.FlexEvent;
+			
+	
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+
+
+			
+			
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<fx:XML id="runtimeMock" source="/assets/mock/runtime.xml" />
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	
+
+	
+	<mx:columns>
+		<mx:DataGridColumn headerText="Status" dataField="status" headerWordWrap="true" />
+		<mx:DataGridColumn headerText="Test Case" dataField="testcase" headerWordWrap="true" />
+		<mx:DataGridColumn headerText="Station" dataField="station" headerWordWrap="true" />
+		<mx:DataGridColumn headerText="Pass" dataField="pass" headerWordWrap="true"  />
+		<mx:DataGridColumn headerText="Fail" dataField="fail" headerWordWrap="true" />
+		<mx:DataGridColumn headerText="Warning" dataField="warning" headerWordWrap="true" />
+		<mx:DataGridColumn  headerText="Runtime Report" dataField="report" headerWordWrap="true">
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox horizontalAlign="center" verticalAlign="middle" width="100%">
+						
+						<fx:Script>
+							<![CDATA[
+								import mx.controls.Alert;
+								import mx.core.FlexGlobals;
+								
+								private function openOldReport(event:MouseEvent):void{
+									Alert.show("This feature is not implemented for Beta Version","Beta Version");	
+								}
+							]]>
+						</fx:Script>
+						<mx:LinkButton label="Link" click="openOldReport(event)"  rollOverColor="#2E44C7" textRollOverColor="#ffffff"/>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+			</mx:DataGridColumn>
+	</mx:columns>
+</mx:DataGrid>

@@ -1,0 +1,30 @@
+<runtimes>
+	<runtime>
+		<status>Running</status>
+		<testcase>Login</testcase>
+		<station>192.168.1.1</station>
+		<pass>10</pass>
+		<fail>5</fail>
+		<warning>7</warning>
+		<report></report>
+	</runtime>
+	<runtime>
+		<status>Running</status>
+		<testcase>Add User</testcase>
+		<station>192.168.1.2</station>
+		<pass>12</pass>
+		<fail>20</fail>
+		<warning>3</warning>
+		<report></report>
+	</runtime>
+	<runtime>
+		<status>Completed</status>
+		<testcase>Add User</testcase>
+		<station>192.168.1.3</station>
+		<pass>17</pass>
+		<fail>2</fail>
+		<warning>17</warning>
+		<report></report>
+	</runtime>
+</runtimes>
+		

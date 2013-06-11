@@ -1,0 +1,42 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated May 2, 2011 10:49:15 AM by Hibernate Tools 3.2.1.GA -->
+<hibernate-mapping>
+	<class name="il.co.topq.systems.report.common.model.TestProperty"
+		table="test_properties">
+		<id name="index1" type="java.lang.Integer">
+			<column name="index1" />
+			<generator class="identity" />
+		</id>
+		<property name="propertyKey" type="string">
+			<column name="propertyKey" />
+		</property>
+		<property name="propertyValue" type="string">
+			<column name="propertyValue" />
+		</property>
+		<set name="publishedTest01s" inverse="false"
+			table="test_properties_has_published_test_01" lazy="true" cascade="delete-orphan">
+			<key>
+				<column name="test_properties_index1" not-null="true" />
+			</key>
+			<many-to-many entity-name="il.co.topq.systems.report.common.model.Test" >
+				<column name="published_test_01_testIndex" not-null="true"  />
+			</many-to-many> 
+		</set>
+
+		<!-- ADDED ADDED -->
+		<set name="testCustomReports" inverse="false"
+			table="test_custom_report_has_scenario_properties">
+			<key>
+				<column name="test_properties_index1" not-null="true" />
+			</key>
+			<many-to-many
+				entity-name="il.co.topq.systems.report.common.model.TestCustomReport">
+				<column name="test_custom_report_id" not-null="true" />
+			</many-to-many>
+		</set>
+		<!-- ADDED ADDED -->
+
+	</class>
+</hibernate-mapping>

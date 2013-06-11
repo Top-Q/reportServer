@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			 xmlns:s="library://ns.adobe.com/flex/spark" 
+			 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" verticalAlign="middle">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<mx:columns>
+		<mx:DataGridColumn headerText="Action" dataField="action" >
+			<mx:itemRenderer >
+				<fx:Component>
+					<mx:HBox horizontalAlign="center" verticalAlign="middle" width="100%">
+						<mx:LinkButton click="handleEdit()" label="Edit"  rollOverColor="#2E44C7" textRollOverColor="#ffffff">
+							<fx:Script><![CDATA[
+								import mx.controls.Alert;
+								public function handleEdit():void{
+									Alert.show("Edit Not Implemented Yet");
+								}
+							]]></fx:Script>
+						</mx:LinkButton>
+						<s:Label text="|"/>
+						<mx:LinkButton click="handleDelete()" label="Delete"  rollOverColor="#2E44C7" textRollOverColor="#ffffff">
+							<fx:Script><![CDATA[
+								import mx.controls.Alert;
+								public function handleDelete():void{
+									Alert.show("Delete Not Implemented Yet");
+								}
+							]]></fx:Script>
+						</mx:LinkButton>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+		</mx:DataGridColumn>
+		<mx:DataGridColumn headerText="Username" dataField="username"/>
+		<mx:DataGridColumn headerText="Password" dataField="password"/>
+		<mx:DataGridColumn headerText="User Type" dataField="usertype"/>
+	</mx:columns>
+</mx:DataGrid>

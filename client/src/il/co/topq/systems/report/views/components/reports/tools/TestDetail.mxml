@@ -1,0 +1,343 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:common="il.co.topq.systems.report.views.components.reports.common.*"
+			   width="614" height="626" chromeColor="#D4E4FB" close="cancel_clickHandler(event)"
+			   color="#000000" contentBackgroundColor="#FFFFFF" title="Test Details">
+
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.scenario.DeleteOrphanPropertiesEvent;
+			[Event(name="saveTestPropertyEvent", type="il.co.topq.systems.report.events.local.SaveTestPropertyEvent")]
+			
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.events.local.SaveTestPropertyEvent;
+			import il.co.topq.systems.report.events.test.GetTestScenarioEvent;
+			import il.co.topq.systems.report.events.test.UpdateTestEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.Scenario;
+			import il.co.topq.systems.report.models.valueobjects.ScenarioProperty;
+			import il.co.topq.systems.report.models.valueobjects.Test;
+			import il.co.topq.systems.report.models.valueobjects.TestProperty;
+			import il.co.topq.systems.report.views.components.reports.common.PropertyEditor;
+			import il.co.topq.systems.report.views.components.reports.common.TestPropertyEditor;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+	
+			
+			protected var _test:Test; //the original test object.
+			
+			[Bindable]
+			protected var _testClone:Test; //a clone object if updated will send to update, otherwise the original data remains untouch.  
+			
+			[Bindable]
+			public var testScenario:Scenario;
+			
+			[Bindable]
+			protected var setup:String;
+			
+			protected var isEdit:Boolean = false; //will indicate if edit property or new property 
+			
+			[Bindable]
+			private var isTestDetailsChanged:Boolean = false;//will inidicate if a change made to data.
+			
+			[Embed(source="/assets/images/add.png")]
+			[Bindable]
+			protected var add:Class;
+			
+			[Embed(source="/assets/images/delete.png")]
+			[Bindable]
+			protected var remove:Class;
+			
+			[Embed(source="/assets/images/edit.png")]
+			[Bindable]
+			protected var edit:Class;
+			
+			[Bindable]
+			protected var testTime:String;//format: start - end
+			
+			protected function init():void {
+				Alert.show("Need to inherit and override this method");
+				formatTestTimes();
+				getTestScenario();
+			}
+			
+			public function setSetup(setup:String):void{
+				this.setup = setup;
+			}
+			
+			protected function getTestScenario():void
+			{	
+				new GetTestScenarioEvent(_testClone.id, scenarioCallbackResult, scenarioCallbackFault).dispatch();
+			}
+			
+			public function scenarioCallbackResult(event:ResultEvent): void
+			{
+				var scenario : XML = new XML(event.message.body);
+				testScenario = new Scenario(scenario);
+				setup = getScenarioSetup(testScenario);
+			}
+			
+			private function getScenarioSetup(scenario:Scenario):String {
+				var scenarioSetup:String = "";
+				if (scenario != null){
+					for (var i:int =0; i<scenario.scenarioProperties.length; i++){
+						var scenarioProperty:ScenarioProperty = scenario.scenarioProperties[i] as ScenarioProperty;
+						if (scenarioProperty.propertyKey == "setupName"){
+							scenarioSetup = (scenarioProperty.propertyValue) as String;
+						}
+					}
+				}
+				return scenarioSetup;
+			}
+			
+			public function scenarioCallbackFault(info:Object): void
+			{
+				Alert.show("Failed to retrieve test's scenario");
+//				var event:FaultEvent = FaultEvent(info);
+//				var model:ReportModelLocator = ReportModelLocator.getInstance();
+//				model.error.setMessage(event,"Could not get retrieve test scenario");
+//				model.applicationState.currentState = "ErrorPage";	
+			}
+			
+			protected function formatTestTimes():void{
+				testTime = formatDateTestDetail(_testClone.startTime) + " - " + formatDateTestDetail(_testClone.endTime);
+			}
+			
+			public function formatDateTestDetail(date:String):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY at HH:NN:SS";  
+				var d:Date = new Date(new Number(date));   
+				return df.format(d);
+			}
+			
+			protected function cancel_clickHandler(event:Event):void
+			{
+				if (isTestDetailsChanged){
+					Alert.show("Changes that were made will not be saved", "Test Details",
+						Alert.OK | Alert.CANCEL, null,alertListener, null, Alert.OK);
+				}else {
+					PopUpManager.removePopUp(this);
+				}
+			}
+			
+			private function alertListener(eventObj:CloseEvent):void {
+				if (eventObj.detail==Alert.OK) {
+					PopUpManager.removePopUp(this);
+				}
+			}
+			
+			protected function saveClickHandler(event:MouseEvent):void
+			{
+				var testXML:XML = _testClone.toXML();
+				if (isTestDetailsChanged){
+					isTestDetailsChanged = false;
+					new UpdateTestEvent(testXML,updateTestResult,updateTestFault).dispatch();
+				}
+			}
+			
+			protected function testStatusChanged(event:Event):void
+			{
+				isTestDetailsChanged = true;
+				_testClone.status = ((event.target as RadioButton).value) as Number ;
+			}
+			
+			protected function testFailCauseChanged(event:Event):void {
+				isTestDetailsChanged = true;
+			}
+			
+			protected function addNewProperty(event:MouseEvent):void
+			{
+				isTestDetailsChanged = true;
+				var propertyEditor:PropertyEditor = new TestPropertyEditor();
+				propertyEditor.addEventListener("saveTestPropertyEvent",savePropertyHandler);
+				PopUpManager.addPopUp(propertyEditor,this,true);
+				PopUpManager.centerPopUp(propertyEditor);
+			}
+			
+			protected function removeProperty(event:MouseEvent):void
+			{
+				isTestDetailsChanged = true;
+				var testProperty:TestProperty = testPropertyList.selectedItem as TestProperty;
+				var testPropertyIndex:int = _testClone.testProperties.getItemIndex(testProperty);
+				_testClone.testProperties.removeItemAt(testPropertyIndex);
+			}
+			
+			protected function editProperty(event:Event):void
+			{	
+				isEdit = true;
+				isTestDetailsChanged = true;
+				var propertyEditor:PropertyEditor = new TestPropertyEditor(( testPropertyList.selectedItem) as TestProperty);
+				propertyEditor.addEventListener("saveTestPropertyEvent",savePropertyHandler);
+				PopUpManager.addPopUp(propertyEditor,this,true);
+				PopUpManager.centerPopUp(propertyEditor);
+			}
+			
+			private function updateProperty (event:SaveTestPropertyEvent):void {
+				var testProperty:TestProperty = testPropertyList.selectedItem as TestProperty;
+				var testPropertyIndex:int = _testClone.testProperties.getItemIndex(testProperty);
+				var tp:TestProperty = (_testClone.testProperties.removeItemAt(testPropertyIndex)) as TestProperty;
+				tp = event.testProperty ;
+				_testClone.testProperties.addItemAt(tp,testPropertyIndex);
+				
+			}
+			
+			protected function savePropertyHandler(event:SaveTestPropertyEvent):void
+			{
+				if (isEdit){
+					updateProperty(event);
+					isEdit = false;
+				}else {
+					addTestProperty(event.testProperty);
+				}
+			}
+			
+			private function addTestProperty(testProperty:TestProperty):void
+			{
+				_testClone.testProperties.addItem(testProperty);
+			}
+			
+			/**
+			 * This method will be called upon updateTest event success.<br>
+			 * It will show an alert of the success of the operation to the user,
+			 * and will bubble the event to parent listner container for grid refresh for etc..;
+			 */ 
+			public function updateTestResult(event:ResultEvent):void
+			{
+				Alert.show("Test updated successfully", "Test Update",Alert.OK,null,updateTestAlerListner,null,Alert.OK);
+				dispatchEvent(new UpdateEvent(true));
+				new DeleteOrphanPropertiesEvent().dispatch();//in case a scenario property was deleted a delete orphan call should be made
+			}
+			
+			/**
+			 * This method will be called upon the confirmation of the test updated alert.<br>
+			 * It will result the removal of the testDetails popup from screen.
+			 */ 
+			private function updateTestAlerListner(eventObj:CloseEvent):void {
+				if (eventObj.detail==Alert.OK) {
+					PopUpManager.removePopUp(this);
+				}
+			}
+			
+			/**
+			 * This method will be called uppon updateTest event failure.
+			 */ 
+			public function updateTestFault(info:Object):void
+			{
+				var model:ReportModelLocator = ReportModelLocator.getInstance();
+				var event:FaultEvent = FaultEvent(info);			
+				model.error.setMessage(event,"Could not update test");
+				model.applicationState.currentState = "ErrorPage";	
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY at HH:NN:SS"/>
+	</fx:Declarations>
+	
+	<s:HGroup x="29" y="10" width="560" height="573" verticalAlign="middle">
+		<s:VGroup y="1" width="560" height="572">
+			<mx:Form width="560" color="#000000" textAlign="left">
+				<mx:FormItem label="Test Name:" fontWeight="bold">
+					<s:TextInput width="399" editable="false" fontWeight="normal"
+								 text="@{_testClone.testDescription.testName}" textAlign="left"
+								 toolTip="{_testClone.testDescription.testName}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Package Name:" fontWeight="bold">
+					<s:TextInput width="399" editable="false" fontWeight="normal"
+								 text="{_testClone.packageDescription.packageName}" textAlign="left"
+								 toolTip="{_testClone.packageDescription.packageName}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Test Time:" fontWeight="bold">
+					<s:TextInput id="textInputStartTime" width="399" editable="false"
+								 fontWeight="normal" text="{testTime}" textAlign="left"/>
+				</mx:FormItem>
+				<mx:FormItem label="Scenario" fontWeight="bold">
+					<s:TextInput width="399" editable="false" fontWeight="normal"
+								 text="{testScenario.scenarioName}" textAlign="left"
+								 toolTip="{testScenario.scenarioName}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Setup:" fontWeight="bold">
+					<s:TextInput width="399" editable="false" fontWeight="normal" text="{setup}"
+								 textAlign="left" toolTip="{setup}"/>
+				</mx:FormItem>
+				<mx:FormItem label="Status:" fontWeight="bold">
+					<mx:HBox fontWeight="normal">
+						<s:RadioButtonGroup id="testStatus"/>
+						<s:RadioButton id="rbt_passedStatus" height="21" label="Passed"
+									   change="testStatusChanged(event)" groupName="TestStatus"
+									   selected="{_testClone.status == 0}" value="0"/>
+						<s:RadioButton id="rbt_failedStatus" height="21" label="Failed"
+									   change="testStatusChanged(event)" groupName="TestStatus"
+									   selected="{_testClone.status == 1}" value="1"/>
+						<s:RadioButton id="rbt_warnedStatus" width="97" height="21" label="Warned"
+									   change="testStatusChanged(event)" groupName="TestStatus"
+									   selected="{_testClone.status == 2}" value="2"/>
+					</mx:HBox>
+				</mx:FormItem>
+			</mx:Form>
+			<s:HGroup x="7" width="545" height="200">
+				<s:HGroup width="540" height="200">
+					<s:VGroup width="273" height="197">
+						<s:Label width="266" height="21" paddingBottom="4" paddingLeft="2"
+								 paddingTop="4" text="Test Description:"/>
+						<s:TextArea width="265" height="161" borderAlpha="0.5" editable="false"
+									text="{_testClone.testDescription.testDescription}"/>
+					</s:VGroup>
+					<s:VGroup width="259" height="197">
+						<s:HGroup width="100%" height="21">
+							<s:Label width="100%" height="21" paddingBottom="4" paddingLeft="2"
+									 paddingTop="4" text="Properties:"/>
+							<s:HGroup height="100%">
+								<s:Image id="addImg" buttonMode="true" click="addNewProperty(event)"
+										 fillMode="scale" mouseChildren="false" scaleMode="stretch"
+										 source="{add}" toolTip="Add" useHandCursor="true"/>
+								<s:Image id="removeImg" buttonMode="true"
+										 click="removeProperty(event)"
+										 enabled="{testPropertyList.selectedIndex != -1}"
+										 fillMode="scale" mouseChildren="false" scaleMode="stretch"
+										 source="{remove}" toolTip="Remove" useHandCursor="true"/>
+								<s:Image id="editImg" buttonMode="true" click="editProperty(event)"
+										 enabled="{testPropertyList.selectedIndex != -1}"
+										 fillMode="scale" mouseChildren="false" scaleMode="stretch"
+										 source="{edit}" toolTip="Edit" useHandCursor="true"/>
+							</s:HGroup>
+						</s:HGroup>
+						<s:List id="testPropertyList" width="100%" height="161" borderAlpha="0.5"
+								contentBackgroundAlpha="0.5"
+								dataProvider="{_testClone.testProperties}">
+							
+						</s:List>
+					</s:VGroup>
+				</s:HGroup>
+			</s:HGroup>
+			<s:VGroup width="540" height="95">
+				
+				<s:VGroup width="540" height="93">
+					<s:Label width="143" height="18" paddingBottom="4" paddingLeft="2" paddingTop="4"
+							 text="Fail Cause:"/>
+					<s:TextArea width="540" height="65" change="testFailCauseChanged(event)"
+								editable="true" text="@{_testClone.failCause}"/>
+				</s:VGroup>
+				
+			</s:VGroup>
+			<s:HGroup width="540" height="23" horizontalAlign="right" verticalAlign="bottom">
+				<s:Button id="buttonSave" label="Save" chromeColor="#0A1E39"
+						  click="saveClickHandler(event)" color="#FFFFFF" focusColor="#85AED4"
+						  fontWeight="bold"/>
+				<s:Button id="buttonCancel" label="Cancel" chromeColor="#0A1E39"
+						  click="cancel_clickHandler(event)" color="#FFFFFF" focusColor="#85AED4"
+						  fontWeight="bold"/>
+			</s:HGroup>
+
+		</s:VGroup>
+		</s:HGroup>
+</s:TitleWindow>

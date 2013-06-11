@@ -1,0 +1,85 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:security="http://www.springframework.org/schema/security"
+	xsi:schemaLocation="
+		http://www.springframework.org/schema/beans	http://www.springframework.org/schema/beans/spring-beans-3.0.xsd
+		http://www.springframework.org/schema/context http://www.springframework.org/schema/context/spring-context-3.0.xsd">
+
+	<bean id="propertyConfigurer"
+		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
+		<property name="locations">
+			<list>
+				<value>classpath:configuration.properties</value>
+				<!-- <value>file:#{systemEnvironment['REPORT_SERVER_CONFIG']}/configuration.properties 
+					</value> -->
+			</list>
+		</property>
+	</bean>
+
+	<bean id="userDao" class="il.co.topq.systems.report.dao.impl.UserDaoImpl" />
+	<bean id="userService" class="il.co.topq.systems.report.service.impl.UserServiceImpl"
+		autowire="byType">
+		<property name="userDao" ref="userDao" />
+	</bean>
+
+	<bean id="scenarioPropertyDao"
+		class="il.co.topq.systems.report.dao.impl.ScenarioPropertyDaoImpl" />
+	<bean id="testPropertyDao" class="il.co.topq.systems.report.dao.impl.TestPropertyDaoImpl" />
+	<bean id="testCustomReportDao"
+		class="il.co.topq.systems.report.dao.impl.TestCustomReportDaoImpl" />
+	<bean id="scenarioCustomReportDao"
+		class="il.co.topq.systems.report.dao.impl.ScenarioCustomReportDaoImpl" />
+
+	<bean id="testPropertyService"
+		class="il.co.topq.systems.report.service.impl.PropertyServiceImpl"
+		autowire="byType">
+		<property name="propertyDao" ref="testPropertyDao">
+		</property>
+	</bean>
+
+	<bean id="scenarioPropertyService"
+		class="il.co.topq.systems.report.service.impl.PropertyServiceImpl"
+		autowire="byType">
+		<property name="propertyDao" ref="scenarioPropertyDao" />
+	</bean>
+
+	<bean id="scenarioCustomReportService"
+		class="il.co.topq.systems.report.service.impl.ScenarioCustomReportServiceImpl"
+		autowire="byType">
+		<property name="propertyDao" ref="scenarioPropertyDao" />
+		<property name="customReportDao" ref="scenarioCustomReportDao" />
+	</bean>
+
+	<bean id="testCustomReportService"
+		class="il.co.topq.systems.report.service.impl.TestCustomReportServiceImpl"
+		autowire="byType">
+		<property name="propertyDao" ref="testPropertyDao" />
+		<property name="customReportDao" ref="testCustomReportDao" />
+	</bean>
+
+	<bean id="scenarioService"
+		class="il.co.topq.systems.report.service.impl.ScenarioServiceImpl"
+		autowire="byType">
+		<property name="scenarioPropertyDao" ref="scenarioPropertyDao" />
+		<property name="testPropertyDao" ref="testPropertyDao" />
+	</bean>
+
+	<bean id="testService" class="il.co.topq.systems.report.service.impl.TestServiceImpl"
+		autowire="byType">
+		<property name="propertyDao" ref="testPropertyDao" />
+	</bean>
+
+	<bean id="dbMigrationService"
+		class="il.co.topq.systems.report.service.impl.migration.DBMigrationServiceImpl"
+		autowire="byType" depends-on="scenarioService,testService">
+		<property name="scenarioService" ref="scenarioService" />
+		<property name="testService" ref="testService" />
+	</bean>
+
+
+
+	<context:component-scan base-package="il.co.topq" />
+	<import resource="db-config.xml" />
+	<import resource="security.xml" />
+</beans>

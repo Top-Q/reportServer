@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<fxpProperties abbreviated="false" authoringTool="Flex Builder" compiles="true" parentProject="d7264148-f634-4a9e-875e-7588635dcff7" projectUUID="d7264148-f634-4a9e-875e-7588635dcff7" sdkVersion="4.1.0" uuid="24722321-20b7-4547-a954-0ddbda7aa3ef" version="4">
+  <projects/>
+  <src/>
+  <swc>
+    <linked location="sdkPlaceHolder" path="sdkPlaceHolder" position="0" uuid="24722321-20b7-4547-a954-0ddbda7aa3ef"/>
+    <linked location="C:/Users/Tomer/Adobe Flash Builder 4/ReportSystem/libs/Cairngorm.swc" path="/libs/Cairngorm.swc" position="1" uuid="24722321-20b7-4547-a954-0ddbda7aa3ef"/>
+    <linked location="C:/Users/eran_g/Adobe Flash Builder 4.5/ReportSystem/libs/as3commons-collections-1.3.1.swc" path="/libs/as3commons-collections-1.3.1.swc" position="2" uuid="c4314b4f-90ee-4d9c-a89f-e0403bccbd3b"/>
+  </swc>
+  <misc/>
+  <theme/>
+</fxpProperties>

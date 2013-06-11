@@ -1,0 +1,244 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer
+	xmlns:common="il.co.topq.systems.report.views.components.reports.common.*"
+	xmlns:fx="http://ns.adobe.com/mxml/2009"
+	xmlns:s="library://ns.adobe.com/flex/spark"
+	xmlns:mx="library://ns.adobe.com/flex/mx"
+	xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+	xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*" 
+	height="100%" width="100%" borderVisible="false" chromeColor="#D4E4FB" color="#000000"
+	creationComplete="onCreationComplete(event)"  >
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.general.ShowCustomReportsEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.*;
+			import il.co.topq.systems.report.views.components.reports.tools.TimeRangeChooser;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ComboBox;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.HGroup;
+			import spark.components.Label;
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			public var testCustomReportGridModel:TestCustomReportGridModel = ReportModelLocator.getTestCustomReportGridModel();
+			
+			[Bindable]
+			private var reportTitle:String = "Test Custom Report";
+			
+			protected var comboBoxPropertyValueArr:Array; //propertyComboBox's
+			
+			protected var  ANY_VALUE_INDEX:Number = 0;			
+			protected var timeRangeChooser:TimeRangeChooser;
+			
+			protected function cancel_clickHandler(event:Event):void
+			{
+				PopUpManager.removePopUp(this);
+			}	
+			
+			/**
+			 * This method will set the custom report title according to the 
+			 * last filtered timeRange values.
+			 * in case no filter was made the defult will be preseted. 
+			 **/
+			protected function setCustomReportTitle():void{
+				
+				var title:String = "Test Custom Report";
+				
+				if (timeRangeChooser != null){
+					testCustomReportGridModel.testQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+					
+					if ((timeRangeChooser.lowerDate.selectedDate != null) && (timeRangeChooser.upperDate.selectedDate != null)){
+						var from:String = formatDate(timeRangeChooser.lowerDate.selectedDate.getTime());
+						var to:String = formatDate(timeRangeChooser.upperDate.selectedDate.getTime());
+						title += " between " + from + " and " + to ;
+					}
+				}
+				reportTitle = title;
+			}
+			
+			protected function formatDate(date:Number):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY";  
+				var d:Date = new Date(date);   
+				return df.format(d);
+			}
+			
+			protected function handleNextClicked(event:MouseEvent):void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function handlePreviousClicked(event:MouseEvent):void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function setPropertiesInTestQuery():void{
+				
+				testCustomReportGridModel.testQuery.testProperties = new ArrayCollection();//will reset test query properties.
+				
+				for (var i:int=0; i<comboBoxPropertyValueArr.length; i++){
+					var c:ComboBox = comboBoxPropertyValueArr[i] as ComboBox;
+					
+					if (c.selectedIndex != ANY_VALUE_INDEX){
+						testCustomReportGridModel.testQuery.testProperties.addItem(new TestProperty(c.name,c.selectedItem as String));					
+					}else{
+						testCustomReportGridModel.testQuery.testProperties.addItem(new TestProperty(c.name,""));						
+					}
+				}
+			}
+			
+			/**
+			 * This method will add event listners to the Navigation component.
+			 * Will listen on next | previous clicks.
+			 **/
+			protected function addNavigationListners():void {
+				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+			}
+			
+			protected function onCreationComplete(event:FlexEvent):void
+			{		
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			private function getHGroup():HGroup{
+				var hgroup:HGroup = new HGroup();
+				hgroup.percentWidth = 100;
+				hgroup.height=30;
+				hgroup.paddingLeft=25;
+				hgroup.paddingTop=5;
+				hgroup.paddingBottom=5;
+				hgroup.verticalAlign="middle";
+				return hgroup;
+			}
+			
+			protected function populatePropertValuesComboBox():void {
+				comboBoxPropertyValueArr = new Array();				
+				var numOfProperties:Number = testCustomReportGridModel.testCustomReportPropertiesValues.length;
+				for (var i:int=0; i<numOfProperties; i++){
+					var propertyValuesWrapper:PropertyValuesWrapper = (testCustomReportGridModel.testCustomReportPropertiesValues[i]) as PropertyValuesWrapper;
+					propertyValuesWrapper.propertyValues.addItemAt("All",0);
+					
+					var hgroup:HGroup = getHGroup();
+					hgroup.width = propertiesContainer.width;
+					var label:mx.controls.Label = new mx.controls.Label();		
+					label.width = propertyKeyLabel.width;
+					label.text = propertyValuesWrapper.propertyKey;
+					label.truncateToFit = true;
+					
+					var comboBox:ComboBox = new ComboBox();
+					comboBox.setStyle("chromeColor","#ffffff");
+					comboBox.width = 200;
+					comboBox.name=label.text;
+					comboBox.editable = false;
+					comboBoxPropertyValueArr.push(comboBox);					
+					comboBox.itemRenderer = new ClassFactory (mx.controls.Label);
+					comboBox.dataProvider = propertyValuesWrapper.propertyValues;
+					comboBox.addEventListener("change",combobox_changeHandler);
+					hgroup.addElement(label);
+					hgroup.addElement(comboBox);
+					propertiesContainer.addElement(hgroup);
+				}
+				propertiesTitle.visible = true;
+			}
+			
+			protected function onGetResultsClick(event:MouseEvent):void
+			{			
+				getResults();
+			}
+			
+			/**
+			 * This method will be called once save is clicked in the select Time range pop up.
+			 **/
+			public function saveTimeRangeClicked(event:MouseEvent):void{			
+				getTimeRangeData();
+				PopUpManager.removePopUp(timeRangeChooser);
+				getResults();
+			}
+			
+			private function getTimeRangeData():void{
+				testCustomReportGridModel.testQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+			}
+			
+			public function cleanTimeRangeClicked(event:MouseEvent):void{			
+				getTimeRangeData();
+				PopUpManager.removePopUp(timeRangeChooser);
+				getResults();
+			}
+			
+			protected function tools_changeHandler(event:IndexChangeEvent):void
+			{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function combobox_changeHandler(event:ListEvent):void
+			{
+				getResults();
+			}
+			
+			protected function getResults():void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function customReportsLinkButton_clickHandler(event:MouseEvent):void
+			{
+				dispatchEvent(new ShowCustomReportsEvent());				
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:VGroup width="100%"  height="100%">
+		<s:HGroup width="100%" height="35%" horizontalAlign="center" paddingLeft="20"
+				  paddingRight="20" verticalAlign="middle">
+			<s:HGroup width="50%" height="100%" horizontalAlign="left"
+					  paddingRight="10" verticalAlign="top" paddingTop="10">
+				<s:VGroup  width="100%" height="100%">
+					<s:HGroup id="propertiesTitle" color="#3f68a1" fontWeight="bold" visible="false" width="100%" 
+							  height="30" paddingLeft="25" paddingBottom="5" verticalAlign="middle">
+						<s:Label id="propertyKeyLabel" width="300" text="Property Key"/>
+						<s:Label   text="Property Value"/>
+					</s:HGroup>
+					<s:HGroup id="propertiesVGroup" width="550" height="100%">
+						<s:Scroller width="100%" height="90%" horizontalScrollPolicy="off">
+							<s:VGroup id="propertiesContainer" clipAndEnableScrolling="true"/>
+						</s:Scroller>
+					</s:HGroup>
+				</s:VGroup>
+			</s:HGroup>
+			<s:HGroup width="100%" height="100%" horizontalAlign="right" paddingBottom="10"
+					  paddingRight="10" verticalAlign="bottom">
+				<s:VGroup y="24" width="100%" height="100%">
+					<s:HGroup width="100%" height="100%" paddingTop="10" verticalAlign="top">
+						<s:Spacer width="100%" height="100%"/>
+						<mx:LinkButton id="testCustomReportsLinkButton" label="Custom Reports" enabled="true"  icon="@Embed(source='/assets/images/showAll.png')" click="customReportsLinkButton_clickHandler(event)"/>
+					</s:HGroup>
+					<s:HGroup width="100%" height="50%" horizontalAlign="right" paddingBottom="10"
+							  verticalAlign="bottom">
+						<tools:FilterdCustomReportTools id="tools" height="30"
+														change="tools_changeHandler(event)"
+														selectedItem="Tools"/>
+							<s:Button buttonMode="true" click="onGetResultsClick(event)" mouseChildren="false"
+									  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"
+									  toolTip="Get Results" useHandCursor="true"/>
+					</s:HGroup>
+				</s:VGroup>
+			</s:HGroup>
+		</s:HGroup>
+		<s:VGroup width="100%" height="100%">
+			<grids:TestsReportGrid id="testReportGrid" height="100%" dataProvider="{testCustomReportGridModel.gridData.items}"/>
+		</s:VGroup>
+		<common:Navigation paddingBottom="8" width="100%" paddingTop="8" verticalAlign="middle" horizontalAlign="center"
+						   id="navigation" navModel="{testCustomReportGridModel.navigation}"/>
+	</s:VGroup>
+</s:BorderContainer>

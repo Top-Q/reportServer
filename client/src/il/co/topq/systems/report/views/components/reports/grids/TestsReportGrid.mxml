@@ -1,0 +1,634 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009"
+			 xmlns:s="library://ns.adobe.com/flex/spark"
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+			 width="100%" height="100%" rowCount="18" verticalAlign="middle"
+			 horizontalScrollPolicy="auto" verticalScrollPolicy="auto"
+			 doubleClick="testReportGrid_doubleClickHandler(event)" doubleClickEnabled="true" 
+			 creationComplete="testReportGrid_creationCompleteHandler(event)" >
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.business.config.GridColumnRemover;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.uiConfigurations.GridUIConfiguration;
+			import il.co.topq.systems.report.renderers.TestPropertyLinkItemRenderer;
+			[Event(name="removeColumnImgClick", type="mx.events.MoveEvent")]
+			[Event(name="saveTestPropertyEvent", type="il.co.topq.systems.report.events.local.SaveTestPropertyEvent")]
+			[Event(name="updateEvent", type="il.co.topq.systems.report.events.general.UpdateEvent")]
+			[Event(name="selectAllCheckBoxClickedEvent", type="il.co.topq.systems.report.events.general.SelectAllCheckBoxClickedEvent")]
+			[Event(name="scenarioDetailsGetScenarioTestsEvent", type="il.co.topq.systems.report.events.general.ScenarioDetailsGetScenarioTestsEvent")]			
+			import il.co.topq.systems.report.events.general.SelectAllCheckBoxClickedEvent;
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.models.valueobjects.Test;
+			import il.co.topq.systems.report.models.valueobjects.TestGridModel;
+			import il.co.topq.systems.report.models.valueobjects.TestProperty;
+			import il.co.topq.systems.report.renderers.RemovableDataGridHeaderRenderer;
+			import il.co.topq.systems.report.views.components.reports.common.TestDetailsViewModel;
+			import il.co.topq.systems.report.views.components.reports.tools.TestDetail;
+			import il.co.topq.systems.report.views.components.reports.wizards.TestAddColumnsWizard;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.dataGridClasses.DataGridItemRenderer;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			
+			import org.as3commons.collections.Map;
+			
+			private var gridBaseColumns:Array;
+			private var testAddColumnsWizard:TestAddColumnsWizard;
+			
+			[Bindable]
+			public var selectedTests:Map = new Map();
+			
+			[Bindable]
+			public var areAllTestsSelected:Boolean = false; /// are all tests from DB selected.
+			
+			[Bindable]
+			public var headerCheckBoxSelected:Boolean = false; // is all chunk selected
+			
+			[Inspectable]
+			public var testGridModel:TestGridModel;
+			
+			public var gridUIConfiguration:GridUIConfiguration;
+			
+			protected function testReportGrid_creationCompleteHandler(event:FlexEvent):void
+			{
+				saveGridBaseColumns();
+//				rebuildGrid(getGridDefaultColumns());
+//				rebuildGridUsingUIConfiguration(ReportModelLocator.getInstance().uiConfigurations.testGridConfigurations);
+			}
+			
+			/**
+			 * This method will return the grid's default columns which are not part of the base columns and are not property columns.
+			 */ 
+			private function getGridDefaultColumns():ArrayCollection {
+				var defaultColumns:ArrayCollection = new ArrayCollection();
+				defaultColumns.addItem("StartTime");
+				defaultColumns.addItem("Duration");
+				return defaultColumns;
+			}
+			
+			public function rebuildGridUsingUIConfiguration(gridUIConfiguration:GridUIConfiguration):void {
+				if ((gridUIConfiguration == null)|| (gridUIConfiguration.fieldColumns.length == 0 && gridUIConfiguration.propertiesColumns.length == 0)){
+					addColumnsToGrid(getGridDefaultColumns());
+				}else{
+					addColumnsToGrid(gridUIConfiguration.fieldColumns);
+					addColumnsToGrid(gridUIConfiguration.propertiesColumns);
+				}
+				this.gridUIConfiguration = gridUIConfiguration;
+			}
+			
+			private function addColumnsToGrid(columns:ArrayCollection):void{
+				var setDefaultItemRenderer:Boolean = true;
+				var cols:Array = new Array(); //will be used as the new grid columns array.
+				
+				//set the grid base columns to the new columns array.
+				for (var i:int = 0; i < this.columns.length; i++){
+					cols.push(this.columns[i]);
+				}
+				
+				for (var j:int = 0; j < columns.length; j++){
+					
+					var dgc:DataGridColumn = new DataGridColumn();
+					var columnHeader:String = columns[j];
+					dgc.headerText = columnHeader;
+					dgc.setStyle("textAlign","center");
+					
+					if (columnHeader == "StartTime"){
+						dgc.dataField = "startTime";
+						dgc.width = 180;
+						dgc.labelFunction = formatDate;
+					}else if (columnHeader == "Duration"){
+						dgc.dataField = "duration";
+						dgc.width = 140;
+						dgc.labelFunction = formatDuration;
+					}else if (columnHeader == "TestLink"){
+						var testPropertyLinkItemRenderer:TestPropertyLinkItemRenderer = new TestPropertyLinkItemRenderer();
+						dgc.itemRenderer = testPropertyLinkItemRenderer;
+						setDefaultItemRenderer = false;
+					}else {
+						dgc.labelFunction = formatPropertyColumn;
+					}
+					
+					dgc.showDataTips = true;
+					if (setDefaultItemRenderer){
+						dgc.itemRenderer = new ClassFactory (mx.controls.Label);
+					}
+					this.addEventListener("removeColumnImgClick",removeColumnHandler);
+					dgc.headerRenderer = new ClassFactory (RemovableDataGridHeaderRenderer);
+					
+					cols.push(dgc);		
+					setDefaultItemRenderer = true;
+				}
+				
+				this.columns = cols;
+			}
+			
+			/**
+			 * This method will be called on creation complete.<Br>
+			 * It will save the base columns of the grid.<br>
+			 * Base columns: the columns which are not configurable.
+			 */ 
+			private function saveGridBaseColumns():void {
+				gridBaseColumns = this.columns;
+			}
+			
+			/**
+			 * This method will rebuild the component (DataGrid).<br>
+			 * It will get an arrayCollection of columns (string: columnHeader),
+			 * And it will use the grid's base columns which are not configurable.
+			 */ 
+			private function rebuildGrid(gridColumns:ArrayCollection):void {
+				var cols:Array = new Array(); //will be used as the new grid columns array.
+				var setDefaultItemRenderer:Boolean = true;
+				
+				//set the grid base columns to the new columns array.
+				for (var i:int = 0; i < gridBaseColumns.length; i++){
+					cols.push(gridBaseColumns[i]);
+				}
+				
+				for (var j:int = 0; j < gridColumns.length; j++){
+					
+					var dgc:DataGridColumn = new DataGridColumn();
+					var columnHeader:String = gridColumns[j];
+					dgc.headerText = columnHeader;
+					dgc.setStyle("textAlign","center");
+					
+					if (columnHeader == "StartTime"){
+						dgc.dataField = "startTime";
+						dgc.width = 180;
+						dgc.labelFunction = formatDate;
+					}else if (columnHeader == "Duration"){
+						dgc.dataField = "duration";
+						dgc.width = 140;
+						dgc.labelFunction = formatDuration;
+					}else if (columnHeader == "TestLink"){
+						var testPropertyLinkItemRenderer:TestPropertyLinkItemRenderer = new TestPropertyLinkItemRenderer();
+						dgc.itemRenderer = testPropertyLinkItemRenderer;
+						setDefaultItemRenderer = false;
+					}else {
+						dgc.labelFunction = formatPropertyColumn;
+					}
+					
+					dgc.showDataTips = true;
+					if (setDefaultItemRenderer){
+						dgc.itemRenderer = new ClassFactory (mx.controls.Label);
+					}
+					this.addEventListener("removeColumnImgClick",removeColumnHandler);
+					dgc.headerRenderer = new ClassFactory (RemovableDataGridHeaderRenderer);
+					
+					cols.push(dgc);		
+					setDefaultItemRenderer = true;
+				}
+				
+				this.columns = cols;
+			}
+			
+			protected function testReportGrid_doubleClickHandler(event:MouseEvent):void
+			{
+				var testDetail:TestDetail = new TestDetailsViewModel(selectedItem as Test);//when changing to componenet with c'tor consider putting the update callback function in c'tor. 
+				testDetail.addEventListener(UpdateEvent.UPDATE_EVENT,updateHandler);
+				PopUpManager.addPopUp(testDetail,UIComponent(this.parentApplication),false);
+				PopUpManager.centerPopUp(testDetail);
+			}
+			
+			/**
+			 * This method will format the duration of the test.
+			 */ 
+			private function formatDuration(test:Test, column:DataGridColumn):String{
+				
+				var duration:Number = new Number(test.duration);
+				duration *= 1000;
+				
+				if (duration > 0){
+					
+					var result: String= new String();
+					var dayValue:int = 24 * 60 * 60 * 1000;
+					var hrValue:int = 60 * 60 * 1000;
+					var minValue:int = 60 * 1000;
+					var secValue:int = 1000;
+					
+					
+					var hrLeft:int = duration % dayValue;
+					dayValue = (duration - hrLeft)/dayValue;
+					var minLeft:int = hrLeft % hrValue;
+					hrValue = (hrLeft - minLeft)/hrValue;
+					var secLeft:int = minLeft % minValue;
+					minValue = (minLeft - secLeft)/minValue;
+					var milliSecLeft:int = secLeft % secValue;
+					secValue = (secLeft - milliSecLeft)/secValue;
+					
+					if (dayValue != 0){
+						result += dayValue.toFixed(0) + "d:" + hrValue + "h:" + minValue + "m:" + secValue + "s:" + milliSecLeft.toFixed(0) +"ms";
+					}else if (hrValue != 0){
+						result += hrValue + "h:" + minValue + "m:" + secValue + "s:"+ milliSecLeft.toFixed(0) +"ms";
+					}else if (minValue != 0){
+						result += minValue + "m:" + secValue + "s:"+ milliSecLeft.toFixed(0) +"ms";
+					}else if (secValue != 0){
+						result += secValue + "s:"+ milliSecLeft.toFixed(0) +"ms";
+					}else if (milliSecLeft != 0){
+						result += milliSecLeft.toFixed(0) + "ms";
+					}
+					return result;
+				}else {
+					return "0";
+				}
+			}
+			
+			public function formatDate(test:Test, column:DataGridColumn):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY at HH:NN:SS";  
+				var d:Date = new Date(new Number(test.startTime));   
+				return df.format(d);
+			}
+			
+			public function addToSelectedItems(id:String):void{
+				selectedTests.add(id,true);
+			}
+			
+			public function removeFromSelectedItem(id:String):void{
+				selectedTests.removeKey(id);
+			}
+			
+			public function setSelectedItem(id:String):Boolean{
+				if (selectedTests.hasKey(id)){
+					return true;
+				}else{
+					return false;
+				}
+			}
+			
+			/**
+			 * This method will be called upon the click on the add Columns from the testReport tools.<br>
+			 * It will open the TestAddColumns wizard and will allow the selection of the different columns to grid.<br>
+			 * The user will be able to add or remove columns to the grid.
+			 */ 
+			public function addGridColumns():void
+			{
+				testAddColumnsWizard = new TestAddColumnsWizard(getGridDefaultColumns());
+				testAddColumnsWizard.finishButton.addEventListener(MouseEvent.CLICK,testAddColumnsWizardFinishClicked);
+				PopUpManager.addPopUp(testAddColumnsWizard,this,true);
+				PopUpManager.centerPopUp(testAddColumnsWizard);	
+			}
+			
+			/**
+			 * This method will be called upon completion of the addTestColumnsWizard.<br>
+			 * It will rebuild the grid: base columns + target List data from the wizard.<br>
+			 * It will save the grid's new configuration to server.
+			 */ 
+			private function testAddColumnsWizardFinishClicked(event:MouseEvent):void{		
+				PopUpManager.removePopUp(testAddColumnsWizard);
+				//set the grid columns to be the base+target columns
+				rebuildGrid(testAddColumnsWizard.target);
+				this.gridUIConfiguration.update(getUnremovableColumns(),getGridDefaultColumns(),this.columns);
+				//save configuration to server.
+			}
+
+			/**
+			 * This method will be called upon the grid getching data to put into a columns which represents a test property.<br>
+			 * It will search the test properties for the matching property, if exist will return its value, else return Undefined synbol.
+			 */ 
+			private function formatPropertyColumn(test:Test, column:DataGridColumn):String{
+				
+				for (var i:int = 0; i < test.testProperties.length; i++) {
+					if (column.headerText.toLowerCase() == ((test.testProperties[i])as TestProperty).propertyKey.toLowerCase()){
+						return ((test.testProperties[i])as TestProperty).propertyValue;
+					}
+				}
+				return "/";
+			}
+			
+			protected function removeColumnHandler(event:MouseEvent):void
+			{
+				this.columns = GridColumnRemover.removeColumn(this.columns, getUnremovableColumns(),
+					(event.target as RemovableDataGridHeaderRenderer).headerText,getGridDefaultColumns(),this.gridUIConfiguration);
+			}
+			
+			protected function updateHandler(event:UpdateEvent):void
+			{
+				dispatchEvent(new UpdateEvent(true));				
+			}
+			
+			public function selectAllCheckBox():void {
+				headerCheckBoxSelected = true;
+				var tests:ArrayCollection = (this.dataProvider) as ArrayCollection;
+				for each (var test:Test in tests) 
+				{
+					test.isSelected = true;
+					addToSelectedItems(test.id);
+				}
+			}
+			
+			public function deselectAllCheckBox():void {
+				areAllTestsSelected = false;
+				headerCheckBoxSelected = false;
+				var tests:ArrayCollection = (this.dataProvider) as ArrayCollection;
+				for each (var test:Test in tests) 
+				{
+					test.isSelected = false;
+				}
+				selectedTests.clear();
+			}
+			
+			public function selectAllCheckBoxClicked(select:Boolean):void{
+				if (select){
+					selectAllCheckBox();
+				}
+				else{
+					deselectAllCheckBox();	
+				}
+				dispatchEvent(new SelectAllCheckBoxClickedEvent(select,true));
+			}
+			
+			
+//			private function lfRowNum(oItem:Object,iCol:int):String
+//			{
+//				var iIndex:int = (this.dataProvider as ArrayCollection).getItemIndex(oItem) + 1 + testGridModel.testQuery.chunk.startIndex;
+////				getRowNumberWidth();
+//				return String(iIndex);
+//			}
+//			
+//			
+//			private function getRowNumberWidth():Number {
+//				renderer.text = (testGridModel.testQuery.chunk.startIndex + testGridModel.testQuery.chunk.length).toString(); 
+//				rowCol.width = renderer.measuredWidth + 10;
+//				return renderer.measuredWidth + 10;
+//			}
+			public function getUnremovableColumns():ArrayCollection {
+				var columns:ArrayCollection = new ArrayCollection();
+				columns.addItem("");//check box columns;
+				columns.addItem("Test Case");
+				columns.addItem("Status");
+				columns.addItem("Log");
+				columns.addItem("Scenario");
+				return columns;
+			}			
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<mx:DateFormatter id="dateFormatter" formatString="DD/MM/YY"/>
+		<mx:DataGridItemRenderer id="renderer" />
+	</fx:Declarations>
+	<mx:columns>
+<!--		<mx:DataGridColumn width="20" headerText="" textAlign="center" sortable="false">
+			<mx:headerRenderer>
+				<fx:Component>				   			
+						<mx:CheckBox click="" mouseEnabled="false" textAlign="center"/>
+				</fx:Component>
+			</mx:headerRenderer>
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:CheckBox click="checkbox1_clickHandler(event,selected)"
+								 selected="{outerDocument.setSelectedItem(data.@id)}"
+								 textAlign="center">
+						
+						<fx:Script>
+							<![CDATA[
+								import mx.controls.Alert;
+								protected function checkbox1_clickHandler(event:MouseEvent,selected:Boolean):void
+								{
+									var selected:Boolean = (event.currentTarget as CheckBox).selected as Boolean;
+									Alert.show(data.duration + " " + selected);
+									if (selected){
+										outerDocument.addToSelectedItems(data.@id);
+									}else{
+										outerDocument.removeFromSelectedItem(data.@id);
+									}
+								}
+							]]>
+						</fx:Script>
+						
+					</mx:CheckBox>					
+				</fx:Component>								
+			</mx:itemRenderer>
+		</mx:DataGridColumn>-->
+	<!--<mx:DataGridColumn id="rowCol" headerText="#" labelFunction="lfRowNum" textAlign="center" width="{getRowNumberWidth()}"/>-->
+		
+		
+		
+	<mx:DataGridColumn width="30" headerText="" textAlign="center" sortable="false" resizable="false" >
+		<mx:headerRenderer>
+			<fx:Component>				   			
+				<mx:CheckBox textAlign="center" click="{outerDocument.selectAllCheckBoxClicked(selected)}" selected="{outerDocument.headerCheckBoxSelected}"/>
+			</fx:Component>
+		</mx:headerRenderer>
+		<mx:itemRenderer>
+			<fx:Component>
+				<mx:HBox horizontalAlign="center" >
+					<mx:CheckBox id="columnCheckbox" click="checkbox1_clickHandler(event,columnCheckbox.selected)"
+								 selected="{outerDocument.selectedTests.hasKey((data as Test).id) || outerDocument.areAllTestsSelected || outerDocument.headerCheckBoxSelected}"
+								 textAlign="center" width="30">
+						
+						<fx:Script>
+							<![CDATA[
+								import il.co.topq.systems.report.events.general.SelectAllCheckBoxClickedEvent;
+								import il.co.topq.systems.report.models.valueobjects.Test;
+								
+								import mx.controls.Alert;
+								/**
+								 * This method will be called upon a click on a specific row checkBox<br>
+								 * It will differ between 2 situations:<br>
+								 * 1. Header check box is selected:<br>
+								 * It will deselect the header, change the state back to normal in test report and remove the selected item id from selected ids.<br>
+								 * 2. Header check box is not selected:<br>
+								 * If selected = true --> add the selected row to selected items.<br>
+								 * else --> remove the selected row from selected items.<br>
+								 * "finally" will deselect all tests and header checkbox to false.
+								 */ 
+								protected function checkbox1_clickHandler(event:MouseEvent,selected:Boolean):void
+								{
+									if (outerDocument.headerCheckBoxSelected){
+										outerDocument.removeFromSelectedItem(this.data.id);
+										outerDocument.dispatchEvent(new SelectAllCheckBoxClickedEvent(false,true));
+									}else{
+										var selected:Boolean = (event.currentTarget as CheckBox).selected as Boolean;
+										if (selected){
+											outerDocument.addToSelectedItems(this.data.id);
+										}else{
+											outerDocument.removeFromSelectedItem(this.data.id);
+										}
+									}
+									outerDocument.areAllTestsSelected = false;
+									outerDocument.headerCheckBoxSelected = false;
+								}
+							]]>
+						</fx:Script>
+					</mx:CheckBox>		
+				</mx:HBox>
+			</fx:Component>								
+		</mx:itemRenderer>
+	</mx:DataGridColumn>
+	<mx:DataGridColumn width="500" itemRenderer="mx.controls.Label" dataField="testDescription.testName" headerText="Test Case" textAlign="left">
+			<mx:headerRenderer>
+				<fx:Component>				   			
+					<mx:Label textAlign="center"/>
+				</fx:Component>
+			</mx:headerRenderer>
+		</mx:DataGridColumn>
+		<mx:DataGridColumn width="70" dataField="status" headerText="Status" textAlign="center">
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox horizontalAlign="center" verticalAlign="middle">
+						<fx:Script>
+							<![CDATA[
+								
+								[Embed(source="/assets/images/pass.png")]
+								[Bindable]
+								public var pass:Class;
+								
+								[Embed(source="/assets/images/fail.gif")]
+								[Bindable]
+								public var fail:Class;
+								
+								[Embed(source="/assets/images/warning.png")]
+								[Bindable]
+								public var warning:Class;
+								
+								private function getImage(status:Number):Class {
+									if (status == 0) {
+										return pass;
+									}else if (status == 1){ 
+										return fail;
+									}else if (status == 2){
+										return warning;
+									}
+									return null;
+								}
+								
+								private function getToolTip(status:Number):String{
+									if (status == 0) {
+										return "Passed";
+									}else if (status == 1){ 
+										return "Failed";
+									}else if (status == 2){
+										return "Warned";
+									}
+									return null;
+								}
+							]]>
+						</fx:Script>
+						<mx:Image height="20" autoLoad="true" maintainAspectRatio="true"
+								  scaleContent="true" source="{getImage(data.status)}"
+								  toolTip="{getToolTip(data.status)}"/>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+		</mx:DataGridColumn>
+		<mx:DataGridColumn dataField="report" headerText="Log" headerWordWrap="true"
+						   textAlign="center">
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox width="100%" horizontalAlign="center" verticalAlign="middle">
+						
+						<fx:Script>
+							<![CDATA[
+								import il.co.topq.systems.report.events.test.GetTestLogFolderEvent;
+								import il.co.topq.systems.report.models.ReportModelLocator;
+								import il.co.topq.systems.report.models.valueobjects.ReportServerService;
+								import il.co.topq.systems.report.services.ReportServiceLocator;
+								
+								import mx.controls.Alert;
+								import mx.rpc.events.ResultEvent;
+								
+								[Bindable]
+								public var model:ReportModelLocator = ReportModelLocator.getInstance(); 
+								
+								private function openTestLog(event:MouseEvent):void{
+									new GetTestLogFolderEvent(data.id, getTestGroupCallbackResult, callbackFault).dispatch();
+								}	
+								
+								public function getTestGroupCallbackResult(result:ResultEvent): void
+								{
+									var urlRequest:URLRequest = new URLRequest(result.message.body as String);
+									navigateToURL(urlRequest);	
+								}
+								
+								public function callbackFault(info:Object): void
+								{
+									Alert.show("Server Error: Operation Failed");
+								}
+								
+							]]>
+						</fx:Script>
+						<mx:LinkButton label="Link" click="openTestLog(event)"
+									   rollOverColor="#2E44C7" textRollOverColor="#ffffff"/>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+		</mx:DataGridColumn>
+		<mx:DataGridColumn width="200" headerText="Scenario" headerWordWrap="true"
+						   textAlign="center">
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox width="100%" horizontalAlign="center" verticalAlign="middle">
+						
+						<fx:Script>
+							<![CDATA[
+								import il.co.topq.systems.report.events.general.ScenarioDetailsGetScenarioTestsEvent;
+								import il.co.topq.systems.report.events.general.UpdateEvent;
+								import il.co.topq.systems.report.events.test.GetScenarioByTestIdEvent;
+								import il.co.topq.systems.report.events.test.GetTestLogFolderEvent;
+								import il.co.topq.systems.report.models.ReportModelLocator;
+								import il.co.topq.systems.report.models.valueobjects.ReportServerService;
+								import il.co.topq.systems.report.models.valueobjects.Scenario;
+								import il.co.topq.systems.report.services.ReportServiceLocator;
+								import il.co.topq.systems.report.views.components.reports.scenario.ScenarioDetailsViewModel;
+								
+								import mx.controls.Alert;
+								import mx.core.UIComponent;
+								import mx.managers.PopUpManager;
+								import mx.rpc.events.ResultEvent;
+								
+								[Bindable]
+								public var model:ReportModelLocator = ReportModelLocator.getInstance(); 
+								
+								private function openScenarioDetails(event:MouseEvent):void{
+									new GetScenarioByTestIdEvent(data.id, getScenarioByTestIdCallbackResult, callbackFault).dispatch();
+								}	
+								
+								public function getScenarioByTestIdCallbackResult(result:ResultEvent): void
+								{
+									var scenario:Scenario = new Scenario(new XML(result.message.body));
+									var scenarioDetail:ScenarioDetailsViewModel = new ScenarioDetailsViewModel(scenario);
+									scenarioDetail.addEventListener(UpdateEvent.UPDATE_EVENT,updateHandler);
+									scenarioDetail.addEventListener(ScenarioDetailsGetScenarioTestsEvent.SCENARIO_DETAILS_GET_SCENARIO_TESTS_EVENT,getScenarioTestsHandler);
+									PopUpManager.addPopUp(scenarioDetail,UIComponent(this.parentApplication),false);
+									PopUpManager.centerPopUp(scenarioDetail);
+								}
+								
+								/**
+								 * This method will be called when Tests button in scenario details popup window is clicked.<br>
+								 * Scenario's Tests will be shown in tests grid and an event to upper layer must be dispatched.
+								 * 
+								 */ 
+								protected function getScenarioTestsHandler(event:ScenarioDetailsGetScenarioTestsEvent):void
+								{
+									dispatchEvent(new ScenarioDetailsGetScenarioTestsEvent(event.scenario));
+								}
+								
+								protected function updateHandler(event:UpdateEvent):void
+								{
+									dispatchEvent(new UpdateEvent(true));				
+								}
+								
+								public function callbackFault(info:Object): void
+								{
+									Alert.show("Server Error: Operation Failed");
+								}
+								private function getScenarioName():String{
+									return this.data.scenarioName;
+								}
+								
+							]]>
+						</fx:Script>
+						<s:Label text="{data.scenarioName}" click="openScenarioDetails(event)" useHandCursor="true" buttonMode="true" textAlign="center"/>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+		</mx:DataGridColumn>
+	</mx:columns>
+</mx:DataGrid>

@@ -1,0 +1,26 @@
+<reports>
+	<report>
+		<name>User Report</name>
+		<description></description>
+		<type>tests</type>
+		<standard>Version,Build,Station,User</standard>
+		<dateOfCreation>2009-12-10T05:25:32+02:00</dateOfCreation>
+		<custom>OS,Jitter,Platform</custom>
+	</report>
+	<report>
+		<name>Sanity Report</name>
+		<description></description>
+		<type>tests</type>
+		<standard>Station,User</standard>
+		<dateOfCreation>2008-06-15T20:33:48+03:00</dateOfCreation>
+		<custom>OS,Jitter</custom>
+	</report>
+	<report>
+		<name>Basic Report</name>
+		<description></description>
+		<type>executions</type>
+		<standard>Version,Build</standard>
+		<dateOfCreation>2009-08-23T15:58:45+03:00</dateOfCreation>
+		<custom>OS</custom>
+	</report>
+</reports>

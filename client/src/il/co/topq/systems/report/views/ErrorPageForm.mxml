@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+© 2011 Top-Q Intellectual Property. All rights reserved.
+Authors: Tomer Gafner & Eran Golan
+
+Description:
+	This is a page that will show up each time there is an error in the server.
+	The description of the error will appear in the text area.
+
+-->
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   x="430" y="251" width="450" height="366" 
+				   cornerRadius="50" backgroundColor="#4F81BD">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:TextArea  id="errorMessage"
+				 x="53" y="83" text="Connection with Server Failed or an error has occured in the server: {model.error.message}"
+				 color="#0066CC"  fontFamily="Calibri" fontSize="18" borderVisible="false" />
+	
+	<s:Label x="51" y="46" text="Server Error" fontSize="28" fontFamily="Calibri" color="#FFFFFF" width="245"/>
+	
+</s:BorderContainer>

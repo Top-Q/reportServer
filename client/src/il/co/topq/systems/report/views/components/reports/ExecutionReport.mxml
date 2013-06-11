@@ -1,0 +1,447 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:reports="il.co.topq.systems.report.views.components.reports.*"
+				   xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*"
+				   xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+				   width="100%" height="100%" currentState="Normal"
+				   xmlns:common="il.co.topq.systems.report.views.components.reports.common.*"
+				   creationComplete="creationCompleteHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.config.CreateGridConfigurationEvent;
+			import il.co.topq.systems.report.events.config.GetGridConfigurationEvent;
+			import il.co.topq.systems.report.events.config.UpdateGridConfigurationEvent;
+			import il.co.topq.systems.report.events.scenario.DeleteOrphanPropertiesEvent;
+			import il.co.topq.systems.report.events.scenario.DeleteScenarioByScenarioQueryEvent;
+			import il.co.topq.systems.report.models.valueobjects.GridConfiguration;
+			import il.co.topq.systems.report.models.valueobjects.TypeEnum;
+			import il.co.topq.systems.report.util.Util;
+			import il.co.topq.systems.report.views.components.reports.grids.ExecutionReportGrid;
+			
+			import mx.collections.ArrayCollection;
+			import mx.skins.spark.DefaultButtonSkin;
+			[Event(name="updateEvent", type="il.co.topq.systems.report.events.general.UpdateEvent")]
+			import il.co.topq.systems.report.events.general.ScenarioDetailsGetScenarioTestsEvent;
+			import il.co.topq.systems.report.events.general.SelectAllCheckBoxClickedEvent;
+			import il.co.topq.systems.report.views.components.reports.viewModel.ComparedScenariosViewModel;
+			import il.co.topq.systems.report.xml_utils.ScenarioXMLConverter;
+			import il.co.topq.systems.report.events.general.DeleteScenarioEvent;
+			import il.co.topq.systems.report.events.scenario.DeleteScenarioButtonClickEvent;
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.events.scenario.CompareScenarioEvent;
+			import il.co.topq.systems.report.events.scenario.ExportScenarioReportEvent;
+			import il.co.topq.systems.report.events.scenario.GetScenarioEvent;
+			import il.co.topq.systems.report.events.scenario.GetScenarioSizeEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.grid.ExecutionReportModel;
+			import il.co.topq.systems.report.models.valueobjects.Chunk;
+			import il.co.topq.systems.report.models.valueobjects.Filter;
+			import il.co.topq.systems.report.models.valueobjects.ScenarioGridModel;
+			import il.co.topq.systems.report.models.valueobjects.ScenarioQuery;
+			import il.co.topq.systems.report.models.valueobjects.TimeRange;
+			import il.co.topq.systems.report.views.components.reports.tools.CustomReportTimeRangeChooser;
+			import il.co.topq.systems.report.views.skin.RefreshButtonSkin;
+			
+			import mx.collections.ArrayList;
+			import mx.events.CloseEvent;
+			
+			import mx.controls.Alert;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			
+			import org.as3commons.collections.framework.IIterator;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Embed(source="/assets/images/recycle.png")]
+			[Bindable]
+			protected var deleteImgSource:Class;
+			
+			[Bindable]
+			private var reportTitle:String = "Execution Report";
+			
+			[Bindable]
+			public var scenarioGridModel:ScenarioGridModel = ReportModelLocator.getScenarioGridModel();
+			
+			private var timeRangeChooser:CustomReportTimeRangeChooser;
+			
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				addNavigationListners();
+				executionGrid.addEventListener(UpdateEvent.UPDATE_EVENT,updateHandler);
+				executionGrid.addEventListener(UpdateGridConfigurationEvent.UPDATE_GRID_CONFIGURATION_EVENT,updateGridConfigurationEventHandler);
+				executionGrid.addEventListener(DeleteScenarioButtonClickEvent.DELETE_SCENARIO_BUTTON_CLICK_EVENT,deleteScenarioButtonClickHandler);
+				executionGrid.addEventListener(ScenarioDetailsGetScenarioTestsEvent.SCENARIO_DETAILS_GET_SCENARIO_TESTS_EVENT,getScenarioTestsHandler);
+				this.addEventListener(SelectAllCheckBoxClickedEvent.SELECT_ALL_CHECK_BOX_CLICKED_EVENT,selectAllCheckBoxClicked);
+				getGridColumns();
+			}
+			
+			protected function updateGridConfigurationEventHandler(event:Event):void
+			{
+				//call save grid configuration with the update gridConfiguration (columns + chunkSize);
+				var gridConfiguration : GridConfiguration = new GridConfiguration();
+				gridConfiguration.type = TypeEnum.SCENARIO_REPORT;
+				gridConfiguration.id = GridConfiguration.NO_ID;
+				gridConfiguration.numberOfRows = scenarioGridModel.gridConfiguration.numberOfRows;
+				gridConfiguration.gridColumns = Util.arrayToArrayCollection(executionGrid.columns);
+				new CreateGridConfigurationEvent(gridConfiguration).dispatch();
+			}
+			
+			
+			/**
+			 * This method will get the exeuction report grid's columns from DB. 
+			 * if not exist will return the default columns for this specific grid.
+			 **/
+			private function getGridColumns():void
+			{
+				executionGrid.rebuildGridUsingUIConfiguration(ReportModelLocator.getInstance().uiConfigurations.scenarioGridConfigurations);
+				getResults();
+			}
+			
+			
+			/**
+			 * This method will check if grid already exist in fixed columns
+			 */ 
+			private function isDefaultColumn(column:String):Boolean{
+				var executionGridUnremovableColumns:ArrayCollection = executionGrid.getUnremovableColumns();
+				if (executionGridUnremovableColumns.contains(column)){
+					return true;
+				}		
+				return false;
+			}
+			
+			
+			protected function getScenarioTestsHandler(event:ScenarioDetailsGetScenarioTestsEvent):void
+			{
+				dispatchEvent(new ScenarioDetailsGetScenarioTestsEvent(event.scenario,true));
+			}
+			
+			/**
+			 * This method will handle the updateEvent.
+			 */ 
+			protected function updateHandler(event:Event):void
+			{
+				dispatchEvent(event);
+			}
+			
+			protected function handleNextClicked(event:MouseEvent):void{
+				if (scenarioGridModel.navigation.index < scenarioGridModel.gridData.numberOfPages){
+					if (!executionGrid.areAllScenariosSelected){//next chunk will not be selected in case not all scenarios from db are selected.
+						executionGrid.headerCheckBoxSelected = false;
+						currentState = "Normal";
+					}
+					scenarioGridModel.navigation.index++;
+					scenarioGridModel.scenarioQuery.chunk.length = scenarioGridModel.gridConfiguration.numberOfRows;
+					scenarioGridModel.scenarioQuery.chunk.startIndex = scenarioGridModel.navigation.index * scenarioGridModel.gridConfiguration.numberOfRows;
+					getResults();
+				}
+			}
+			
+			protected function handlePreviousClicked(event:MouseEvent):void{
+				if (scenarioGridModel.navigation.index > 0){
+					if (!executionGrid.areAllScenariosSelected){//next chunk will not be selected in case not all scenarios from db are selected.
+						executionGrid.headerCheckBoxSelected = false;
+						currentState = "Normal";
+					}
+					scenarioGridModel.navigation.index--;
+					scenarioGridModel.scenarioQuery.chunk.length = scenarioGridModel.gridConfiguration.numberOfRows;
+					scenarioGridModel.scenarioQuery.chunk.startIndex = scenarioGridModel.navigation.index * scenarioGridModel.gridConfiguration.numberOfRows;
+					getResults();
+				}
+			}
+			
+			/**
+			 * This method will add event listners to the Navigation component.
+			 * Will listen on next | previous clicks.
+			 **/
+			private function addNavigationListners():void {
+				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+			}
+	
+			protected function executionReportToolsChanged(event:IndexChangeEvent):void
+			{
+				var data:String = (event.currentTarget as ExecutionReportTools).selectedItem as String;
+				
+				if(data == "Export to Excel"){					
+					new ExportScenarioReportEvent("jsystem_scenario_report.xls","xls",scenarioGridModel.scenarioQuery).dispatch();
+				}else if (data == "Export to PDF"){
+					new ExportScenarioReportEvent("jsystem_scenario_report.pdf","pdf",scenarioGridModel.scenarioQuery).dispatch();
+				}else if(data == "Time Range"){
+					if (timeRangeChooser == null){
+						timeRangeChooser= new CustomReportTimeRangeChooser();	
+					}					
+					PopUpManager.addPopUp(timeRangeChooser,this.parent);
+					PopUpManager.centerPopUp(timeRangeChooser);
+					timeRangeChooser.saveButton.addEventListener(MouseEvent.CLICK,saveTimeRangeClicked);
+					timeRangeChooser.cleanButton.addEventListener(MouseEvent.CLICK,cleanTimeRangeClicked);
+				}else if (data == "Compare"){
+					compareClickHandler();
+				}else if (data =="Add Columns"){
+					executionGrid.addGridColumns();
+				}
+				tools.selectedItem="Tools";
+				
+			}
+			
+			private function compareClickHandler():void {
+				var keyIterator:IIterator = executionGrid.selectedScenarios.keyIterator();
+				var comparedScenarios:String = "";
+				var scenariosCounter:Number = 0;
+				while(keyIterator.hasNext()){
+					var key:String = keyIterator.next() as String;
+					comparedScenarios += key + ",";
+					scenariosCounter ++;
+				}		
+				if (scenariosCounter > 1){ //if not empty --> will dispatch a compare scenarios event.
+					new ComparedScenariosViewModel(comparedScenarios);
+//					new CompareScenarioEvent(comparedScenarios).dispatch();
+				}else {
+					Alert.show("Compare requires at least 2 scenarios");
+				}
+			}
+			
+			public function cleanTimeRangeClicked(event:MouseEvent):void{		
+				getTimeRangeData();
+				PopUpManager.removePopUp(timeRangeChooser);
+				getResults();
+			}
+			
+			private function getTimeRangeData():void{
+				scenarioGridModel.scenarioQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+			}
+			/**
+			 * This method will be called once save is clicked in the select Time range pop up.
+			 **/
+			public function saveTimeRangeClicked(event:MouseEvent):void{			
+				getTimeRangeData();
+				PopUpManager.removePopUp(timeRangeChooser);
+				getResults();
+			}
+			
+			protected function refreshButtonClicked(event:MouseEvent):void
+			{
+				getResults();
+			}
+			
+			public function getResults():void{
+				new GetScenarioSizeEvent(scenarioGridModel).dispatch();
+				new GetScenarioEvent(scenarioGridModel.scenarioQuery,getScenarioCallbackResult,getScenarioCallbackFault).dispatch();	
+				setReportTitle();
+			}
+			
+			protected function getScenarioCallbackResult(data:ResultEvent): void
+			{
+				var evt:ResultEvent = data as ResultEvent;
+				var xmlList:XMLList = (new XML(evt.message.body)).scenarios;
+				scenarioGridModel.gridData.items = ScenarioXMLConverter.fromXMLList(xmlList); 
+//				executionGrid.rebuildGrid(executionGrid.gridColumns);
+			}
+			
+			protected function getScenarioCallbackFault(info:Object): void
+			{
+				var model:ReportModelLocator = ReportModelLocator.getInstance();
+				var event:FaultEvent = FaultEvent(info);
+				model.error.setMessage(event);
+				model.applicationState.currentState = "ErrorPage";
+			}
+
+			/**
+			 * This method will set the custom report title according to the 
+			 * last filtered timeRange values.
+			 * in case no filter was made the defult will be preseted. 
+			 **/
+			protected function setReportTitle():void{
+				
+				var title:String = "Execution Report";
+				if (timeRangeChooser != null){
+					var filter:Filter = timeRangeChooser.getFilter();
+					if ((timeRangeChooser.lowerDate.selectedDate != null) && (timeRangeChooser.upperDate.selectedDate != null)){
+						var from:String = formatDate(timeRangeChooser.lowerDate.selectedDate.getTime());
+						var to:String = formatDate(timeRangeChooser.upperDate.selectedDate.getTime());
+						title += " between " + from + " and " + to ;
+					}
+				}
+				reportTitle = title;
+			}
+			
+			private function formatDate(date:Number):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY";  
+				var d:Date = new Date(date);   
+				return df.format(d);
+			}
+			
+			protected function deleteScenarioButtonClickHandler(event:DeleteScenarioButtonClickEvent):void
+			{
+				new DeleteScenarioEvent(event.scenarioID,deleteScenarioCallbackResult,callbackFault).dispatch(); 
+			}
+			
+			protected function deleteScenarioCallbackResult(data:ResultEvent): void
+			{
+				//Call delete orphan scenario properties -> async, busy = false;
+				new DeleteOrphanPropertiesEvent().dispatch();
+				currentState = "Normal";//back to normal state.
+				executionGrid.headerCheckBoxSelected = false;//after deletion completed header checkbox should not be selected.
+				executionGrid.areAllScenariosSelected = false;
+				executionGrid.selectedScenarios.clear();
+				Alert.show('Delete operation completed successfully', '', mx.controls.Alert.OK);
+				var updateEvent:UpdateEvent = new UpdateEvent(true);
+				dispatchEvent(updateEvent);
+			}
+			
+			protected function callbackFault(info:Object): void
+			{
+				Alert.show("Operation Failed");
+			}
+			
+			/**
+			 * This method will be called upon the selection of all scenario from grid and the request for delete.<br>
+			 * This is needed in order to prevent from the user to erase all executions in DB in case he did not mean to.
+			 */ 
+			private function deleteAllHandler():void {
+				Alert.show("All Executions will be deleted from DB.\Do you wish to proceed?","Delete All Executions from DB", Alert.OK | Alert.CANCEL, null, deleteAllAlertListner, null, Alert.OK);
+			}
+			
+			/**
+			 * This method will be called in case user CONFIRMS the deletion of all scenario from DB.<br>
+			 * It will dispatch a delete all scenarios event<br>
+			 */ 
+			private function deleteAllAlertListner(eventObj:CloseEvent):void {
+				if (eventObj.detail==Alert.OK) {
+					new DeleteScenarioByScenarioQueryEvent(scenarioGridModel.scenarioQuery,deleteScenarioCallbackResult,callbackFault).dispatch();
+				}
+			}
+			
+			/**
+			 * This method will get all the selected scenario from the grid and will return them as array collection
+			 */ 
+			private function getAllSelectedScenarios():ArrayList{
+				var scenarioArr:ArrayList = new ArrayList();
+				var keyIterator:IIterator = executionGrid.selectedScenarios.keyIterator();
+				while(keyIterator.hasNext()){
+					scenarioArr.addItem(keyIterator.next() as String);
+				}		
+				return scenarioArr;
+			}
+			
+			/**
+			 * This method will get an arrayList of objects which has toString implementation and a delimiter.<br>
+			 * It will create a string which concat each object in list and delimiter.<br>
+			 */ 
+			private function concatListToString(objectList:ArrayList,delimiter:String):String{
+				var result:String ="";
+				for(var i:int=0; i<objectList.length; i++){
+					result += objectList.getItemAt(i) + delimiter;
+				}
+				return result;
+			}
+			
+			protected function deleteImg_clickHandler(event:MouseEvent):void
+			{
+				if (executionGrid.areAllScenariosSelected){
+					deleteAllHandler();
+				}else {
+					
+					var selectedScenarios:ArrayList = getAllSelectedScenarios();
+					var selectedScenariosString:String = concatListToString(selectedScenarios,",");
+					if (selectedScenarios.length > 0){
+						new DeleteScenarioEvent(selectedScenariosString,deleteScenarioCallbackResult,callbackFault).dispatch(); 
+					}else {
+						Alert.show("Select at least one execution to delete");
+					}
+				}
+			}
+			
+			protected function LinkButtonSelectAllExecutionsFromDB_clickHandler(event:MouseEvent):void
+			{
+				executionGrid.areAllScenariosSelected = true;
+				executionGrid.headerCheckBoxSelected = true;
+				currentState = 	"AllExecutionsSelected";				
+			}
+			
+			protected function LinkButtonDeselectAllExecutionsFromDB_clickHandler(event:MouseEvent):void
+			{
+				executionGrid.areAllScenariosSelected = false;
+				executionGrid.deselectAllCheckBox();
+				currentState = 	"Normal";
+			}
+			
+			protected function selectAllCheckBoxClicked(event:SelectAllCheckBoxClickedEvent):void
+			{
+				if (event.select){
+					this.currentState = "SelectAllCheckBoxSelected"; //show the select all from db option.
+				}else{
+					this.currentState = "Normal";//back to normal.
+				}
+			}
+			
+			
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup width="100%" height="100%">
+		<s:HGroup width="100%" height="10%" horizontalAlign="center" paddingLeft="20"
+				  paddingRight="20" verticalAlign="middle">
+			<s:VGroup width="50%" height="100%">
+
+				<s:VGroup  width="100%" height="50%" horizontalAlign="left">
+					<s:HGroup	 width="100%" height="100%" horizontalAlign="left"  verticalAlign="middle">
+						<s:Label id="title" fontSize="16" fontWeight="bold" text="{reportTitle}"/>
+					</s:HGroup>
+				</s:VGroup>
+			</s:VGroup>
+			<s:VGroup  width="50%" height="100%" paddingTop="5">
+				<s:HGroup width="100%" height="100%" horizontalAlign="right" paddingRight="10" verticalAlign="middle">
+					<s:HGroup width="200" height="40%" horizontalAlign="right">
+						<s:Image id="deleteImg" height="100%" buttonMode="true"
+								 click="deleteImg_clickHandler(event)" fillMode="scale"
+								 mouseChildren="false" scaleMode="stretch" source="{deleteImgSource}"
+								 toolTip="Delete Execution" useHandCursor="true"/>
+						<s:Button buttonMode="true" click="refreshButtonClicked(event)" mouseChildren="false"
+								  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"
+								  toolTip="Refresh" useHandCursor="true"/>
+					</s:HGroup>
+					<tools:ExecutionReportTools id="tools" height="40%"
+												change="executionReportToolsChanged(event)"/>
+				</s:HGroup>
+				<s:VGroup width="100%" height="50%" horizontalAlign="left" verticalAlign="bottom" >
+					<s:HGroup id="selectAllExecutionsGroup" width="100%" height="100%" horizontalAlign="right"  verticalAlign="bottom" includeIn="SelectAllCheckBoxSelected">
+						<mx:LinkButton id="LinkButtonSelectAllExecutionsFromDB" click="LinkButtonSelectAllExecutionsFromDB_clickHandler(event)"
+									   label="Select all executions that match this search"
+									   enabled="true" textDecoration="underline"/>
+					</s:HGroup>
+					<s:HGroup id="deselectAllExecutionsGroup" width="100%" height="100%" horizontalAlign="right"  verticalAlign="bottom" includeIn="AllExecutionsSelected">
+						<mx:LinkButton id="LinkButtonDeselectAllExecutionsFromDB" click="LinkButtonDeselectAllExecutionsFromDB_clickHandler(event)" 
+									   label="All Executions that match this search are selected. Clear selection"
+									   enabled="true" textDecoration="underline"/>
+					</s:HGroup>
+				</s:VGroup>
+			</s:VGroup>
+		</s:HGroup>
+		<s:HGroup id="grid" width="100%" height="85%" paddingTop="10" verticalAlign="bottom">
+			<grids:ExecutionReportGrid id="executionGrid" dataProvider="{scenarioGridModel.gridData.items}" scenarioGridModel="{scenarioGridModel}"/>
+		</s:HGroup>
+		<common:Navigation	 paddingBottom="8" width="100%" paddingTop="8" verticalAlign="middle" horizontalAlign="center"
+						   id="navigation" navModel="{scenarioGridModel.navigation}"/>
+	</s:VGroup>
+	
+	
+	<s:states>
+		<s:State name="Normal"/>
+		<s:State name="AllExecutionsSelected" />
+		<s:State name="SelectAllCheckBoxSelected"/>
+	</s:states>
+	
+</s:BorderContainer>

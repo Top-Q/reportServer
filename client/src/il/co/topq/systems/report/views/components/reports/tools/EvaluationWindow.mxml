@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:components="il.co.topq.systems.report.views.components.*"
+			   width="546" height="406" chromeColor="#D4E4FB" color="#000000"
+			   contentBackgroundColor="#FFFFFF"
+			   creationComplete="evaluation_creationCompleteHandler(event)"
+			   remove="evaluationWindowRemove(event)"
+			   title="Top-Q Report System Trial version">
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.collections.ArrayList;
+			import mx.controls.Alert;
+			import mx.controls.DateField;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			
+			[Embed(source="/assets/images/valid.png")]
+			[Bindable]
+			public var valid:Class;				
+			
+			[Embed(source="/assets/images/invalid.png")]
+			[Bindable]
+			public var invalid:Class;
+	
+			private var deployedDate:Date = new Date(2012,9,31);//the date of deployment
+			private var evaluationDays:Number = 31;
+			public const MS_IN_DAYS:Number = 1000 * 60 * 60 * 24 ; 
+			
+			protected function evaluation_creationCompleteHandler(event:FlexEvent):void
+			{
+				anim.play();
+				this.moveArea.visible=false;
+				this.closeButton.visible = false;
+			}
+			
+			
+			protected function validateEvaluation():Boolean{
+				
+				if (!(getHowManyDayLeftToEvaluation() > 0)){
+					return false;
+				}
+				
+				return true;
+			}
+			
+			protected function getHowManyDayLeftToEvaluation():int{
+				var expire:Date = new Date();
+				expire.setTime(deployedDate.getTime() + (evaluationDays*MS_IN_DAYS));
+				
+				var currentTime:Number = new Date().time;
+				var diffInMS:Number = expire.time - currentTime;
+				var days:int = (diffInMS / MS_IN_DAYS);
+				if (days < 0){
+					return 0;
+				}
+				return days;
+			}
+		
+			
+			protected function evaluationStatus():Class{
+				
+				if (validateEvaluation()){
+					return valid;
+				}else{
+					return invalid;
+				}
+			}
+			
+			protected function getPeriodStatus():String{
+				if (validateEvaluation()){
+					return "started";
+				}else{
+					return "ended";
+				}
+			}
+			
+			protected function Continue_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);				
+			}
+			
+			protected function evaluationWindowRemove(event:FlexEvent):void
+			{
+				anim.play(null, true);				
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		
+		<s:Animate id="anim" targets="{[this]}" duration="1000">
+			<s:SimpleMotionPath property="alpha" valueFrom="0.0" valueTo="1.0" />
+			<s:SimpleMotionPath property="horizontalCenter" valueFrom="-100" valueTo="0" />
+			<s:SimpleMotionPath property="rotationY" valueFrom="-45" valueTo="0" />
+			<s:SimpleMotionPath property="scaleX" valueFrom="1.5" valueTo="1" />
+			<s:SimpleMotionPath property="scaleY" valueFrom="1.5" valueTo="1" />
+		</s:Animate>
+	</fx:Declarations>
+	<s:Image x="10" y="204" width="176" height="159" source="assets/images/logo.jpg"/>
+	<s:Image id="evaluationStatusImg" source="{evaluationStatus()}" x="98" y="32" width="70" height="78"/>
+	<s:Button id="Continue" click="Continue_clickHandler(event)" visible="{validateEvaluation()}" x="177" y="164" width="138" height="31" label="Continue Trial"
+			  chromeColor="#254061" color="#FFFFFF"
+			  fontFamily="Calibri" fontSize="18"/>
+	<s:TextArea x="177" y="32" width="320" height="78" borderVisible="false" color="#D2D2D2" editable="false"
+				fontSize="30" text="{getHowManyDayLeftToEvaluation()} days remaining"
+				verticalAlign="middle"/>
+	<s:TextArea x="177" y="117" width="320" height="39" borderVisible="false" color="#000000" editable="false"
+				fontSize="18" text="your trial period has {getPeriodStatus()}"
+				verticalAlign="middle"/>
+	<components:Footer x="2" y="357"/>
+</s:TitleWindow>

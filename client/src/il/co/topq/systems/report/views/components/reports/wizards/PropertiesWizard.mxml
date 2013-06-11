@@ -1,0 +1,236 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="716" height="386" chromeColor="#F2F5FA"
+			   color="#000000" cornerRadius="20" 
+			   currentState="standard" fontSize="14" 
+			   close="cancel_clickHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			
+			import mx.collections.ArrayCollection;
+			import mx.events.DragEvent;
+			import mx.managers.DragManager;
+			import mx.managers.PopUpManager;
+			
+			import org.as3commons.collections.Set;
+			
+			protected var properties:ArrayCollection; // not sure if this should be bindable.
+			
+			[Bindable]
+			protected var description:String;
+			
+			[Bindable]
+			protected var _target:ArrayCollection; 
+			
+			[Bindable]
+			protected var available:ArrayCollection; 
+			
+			protected function cancel_clickHandler(event:Event):void {
+				PopUpManager.removePopUp(this);
+			}
+			
+			// Variable to store original border color.
+			private var tempBorderColor:uint;
+			
+			// Flag to indicate that tempBorderColor has been set.
+			private var borderColorSet:Boolean = false;
+			
+			private function dragOverHandler(event:DragEvent):void {					
+				
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+				// Explpicitly handle the dragOver event.            
+				event.preventDefault();
+				
+				// Since you are explicitly handling the dragOver event,
+				// call showDropFeedback(event) to have the drop target
+				// display the drop indicator.
+				// The drop indicator is removed
+				// automatically for the list controls by the built-in 
+				// event handler for the dragDrop event.
+				event.currentTarget.showDropFeedback(event);
+				
+				if (event.dragSource.hasFormat("items"))
+				{
+					// Set the border to green to indicate that 
+					// this is a drop target.
+					// Since the dragOver event is dispatched continuosly 
+					// as you move over the drop target, only set it once.
+					if (borderColorSet == false) {                 
+						tempBorderColor = 
+							event.currentTarget.getStyle('borderColor');
+						borderColorSet = true;
+					}
+					
+					// Set the drag-feedback indicator based on the 
+					// type of drag-and-drop operation.
+					event.currentTarget.setStyle('borderColor', 'green');
+					//					if (event.ctrlKey) {                    
+					//						DragManager.showFeedback(DragManager.COPY);
+					//						return;
+					//					}
+					//					else if (event.shiftKey) {
+					//						DragManager.showFeedback(DragManager.LINK);
+					//						return;
+					//					}
+					//					else {
+					//						DragManager.showFeedback(DragManager.MOVE);
+					//						return;
+					//					}
+					DragManager.showFeedback(DragManager.MOVE);
+					
+				}
+				// Drag not allowed.
+//				DragManager.showFeedback(DragManager.NONE);  
+			}
+			
+			private function dragOverAvlPropHandler(event:DragEvent):void {					
+				
+				//validateTargetPropAccordingToSize();
+				this.availableProp.dropEnabled=true;
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+				// Explpicitly handle the dragOver event.            
+				event.preventDefault();
+				
+				// Since you are explicitly handling the dragOver event,
+				// call showDropFeedback(event) to have the drop target
+				// display the drop indicator.
+				// The drop indicator is removed
+				// automatically for the list controls by the built-in 
+				// event handler for the dragDrop event.
+				event.currentTarget.showDropFeedback(event);
+				
+				if (event.dragSource.hasFormat("items"))
+				{
+					// Set the border to green to indicate that 
+					// this is a drop target.
+					// Since the dragOver event is dispatched continuosly 
+					// as you move over the drop target, only set it once.
+					if (borderColorSet == false) {                 
+						tempBorderColor = 
+							event.currentTarget.getStyle('borderColor');
+						borderColorSet = true;
+					}
+					
+					// Set the drag-feedback indicator based on the 
+					// type of drag-and-drop operation.
+					event.currentTarget.setStyle('borderColor', 'green');
+					//					if (event.ctrlKey) {                    
+					//						DragManager.showFeedback(DragManager.COPY);
+					//						return;
+					//					}
+					//					else if (event.shiftKey) {
+					//						DragManager.showFeedback(DragManager.LINK);
+					//						return;
+					//					}
+					//					else {
+					//						DragManager.showFeedback(DragManager.MOVE);
+					//						return;
+					//					}
+					DragManager.showFeedback(DragManager.MOVE);
+				}
+				// Drag not allowed.
+				DragManager.showFeedback(DragManager.NONE);  
+			}
+			
+			private function dragDropHandler(event:DragEvent):void {	
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+				for (var i:Number = 0; i < dragObj.length; i++) {				
+					properties.addItem(dragObj[i]);
+				}
+				dragExitHandler(event);
+			}    
+			
+			public function dragOut(event:DragEvent):void{
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+				for (var i:Number = 0; i < dragObj.length; i++) {				
+					properties.removeItemAt(properties.getItemIndex(dragObj[i]));
+				}
+				dragExitHandler(event);			
+			}
+			// Restore the border color.
+			private function dragExitHandler(event:DragEvent):void {				
+				event.currentTarget.setStyle('borderColor', tempBorderColor);
+				borderColorSet = true;				
+			}	
+			
+			private function dragBack(event:DragEvent):void{
+				DragManager.showFeedback(DragManager.MOVE);
+			}
+			
+			private function dragDrop(event:DragEvent):void
+			{				
+				var dragObj:Array= event.dragSource.dataForFormat("items") as Array;
+			
+				for (var i:Number = 0; i < dragObj.length; i++) {				
+					properties.addItem(dragObj[i]);
+				}
+				dragExitHandler(event);
+			}
+			
+			/**
+			 * This method will return the target list.
+			 */ 
+			public function get target():ArrayCollection{
+				return _target;
+			}
+			
+		]]>
+	</fx:Script>
+	<s:states>
+		<s:State name="standard"/>
+	</s:states>
+	
+	<s:VGroup includeIn="standard" width="100%" height="100%" horizontalAlign="center"
+			  paddingTop="20" verticalAlign="middle">
+		<s:VGroup width="100%" height="100%">
+			<s:VGroup width="100%" height="74" paddingLeft="30" verticalAlign="middle">
+				<s:TextArea id="wizardTitle" text="{description}" y="7" width="645" height="66" borderVisible="false" editable="false"/>
+			</s:VGroup>
+			<s:HGroup width="715" height="154" paddingLeft="30" paddingRight="30"
+					  verticalAlign="middle">
+				<!--dataProvider="{model.scenarioProperties.property}"-->
+				<s:VGroup includeIn="standard" width="327.5" height="131">
+					<mx:DataGrid id="availableProp" width="247" height="131"
+								 allowMultipleSelection="true"
+								 dataProvider="{available}"
+								 dragDrop="dragDropHandler(event);" dragEnabled="true"
+								 dragExit="dragExitHandler(event);" dragMoveEnabled="true"
+								 dragOver="dragOverHandler(event);" dropEnabled="true" rowCount="4">
+						<mx:columns>
+							<mx:DataGridColumn id="availablePropCol" dataField="propertyKey"
+											   draggable="true" headerText="Available Properties"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</s:VGroup>
+				<s:VGroup width="322.5" height="131" horizontalAlign="right">
+					<mx:DataGrid id="targetProp" width="247" height="131"
+								 allowMultipleSelection="true" 
+								 dataProvider="{_target}"								 
+								 dragDrop="dragDropHandler(event);"
+								 dragEnabled="true" dragExit="dragExitHandler(event);"
+								 dragMoveEnabled="true" dragOver="dragOverHandler(event);"
+								 dropEnabled="true" rowCount="4">
+						<mx:columns>
+							<mx:DataGridColumn id="targetPropCol" dataField="propertyKey"
+											   headerText="Target Properties"/>
+						</mx:columns>
+					</mx:DataGrid>
+				</s:VGroup>
+			</s:HGroup>
+		</s:VGroup>
+	</s:VGroup>
+	
+
+	<s:controlBarContent>
+		<s:HGroup width="100%" height="100%" horizontalAlign="right">
+			<s:Button id="finishButton" label="Finish" chromeColor="#011E4E" color="#FFFFFF" />
+			<s:Button label="Cancel" chromeColor="#011E4E" click="cancel_clickHandler(event)"
+					  color="#FFFFFF"/>
+		</s:HGroup>
+		
+		
+	</s:controlBarContent>
+</s:TitleWindow>

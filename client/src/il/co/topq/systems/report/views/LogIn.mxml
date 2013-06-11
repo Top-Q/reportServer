@@ -1,0 +1,138 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	© 2011 Top-Q Intellectual Property. All rights reserved.
+	Authors: Tomer Gafner & Eran Golan
+
+	Description:
+	This class held the componenet that deals with user authentication and authorization
+	
+-->
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+				   x="430" y="251" width="450" height="336" backgroundColor="#4F81BD"
+				   cornerRadius="50" creationComplete="init()" defaultButton="{username}">
+
+	<fx:Script>
+		
+		<![CDATA[
+			import il.co.topq.systems.report.events.LoginEvent;
+			import il.co.topq.systems.report.events.config.GetUIConfigurationsEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.TestGroupingPolicy;
+			import il.co.topq.systems.report.models.valueobjects.User;
+			import il.co.topq.systems.report.models.valueobjects.uiConfigurations.UIConfiguration;
+			import il.co.topq.systems.report.views.components.reports.tools.EvaluationWindow;
+			import il.co.topq.systems.report.views.components.settings.Disclaimer;
+			
+			import mx.containers.TitleWindow;
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
+			import mx.managers.PopUpManager;
+			import mx.rpc.AsyncResponder;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+
+			
+			public var evaluation:EvaluationWindow;
+			
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			
+			/**
+			 * Set the default focus in the application on the username input text.
+			 */
+			private function init():void{
+//				initEvaluationWindow();
+				
+				navigateToURL(new URLRequest("javascript: document.getElementById('index').focus();"), "_self"); 
+				focusManager.setFocus(username);
+//				username.setFocus(); 
+			}
+			
+			protected function initEvaluationWindow():void{
+				this.evaluation = new EvaluationWindow();
+				
+				PopUpManager.addPopUp(evaluation,this,true);
+				PopUpManager.centerPopUp(evaluation);
+			}
+			
+			protected function handleLoginRequest(event:MouseEvent):void
+			{
+//				var user:User = new User(username.text,password.text);
+				if (username.text.length > 0 && password.text.length > 0){
+//					new LoginEvent(user,loginCallbackResult, callbackFault).dispatch();
+					new LoginEvent(username.text,password.text, loginCallbackResult, callbackFault).dispatch();
+				}
+			}
+			
+			public function systemSettingCallbackResult(data:ResultEvent):void {
+				ReportModelLocator.getInstance().uiConfigurations = new UIConfiguration(new XML(data.message.body));
+				model.applicationState.currentState = "Reports";
+			}
+			public function settingsCallbackFault(info:Object): void
+			{
+				var xml:XML = <systemSettings></systemSettings>;
+				var str:String = "<defaultTestGrouping>" + 4 + "</defaultTestGrouping>";
+				xml.appendChild(XMLList(str));
+				ReportModelLocator.getInstance().systemSettings = new TestGroupingPolicy(xml);
+				model.applicationState.currentState = "Reports";
+			}
+			
+			public function loginCallbackResult(data:ResultEvent): void
+			{
+				var event:ResultEvent = data as ResultEvent;
+				if((event.result as XMLNode).nodeValue == "false"){
+					Alert.show("User is not Authorized");	
+				}
+				else{ //login success.
+					ReportModelLocator.getInstance().user = new User(new XML(data.message.body));
+					new GetUIConfigurationsEvent(systemSettingCallbackResult,settingsCallbackFault).dispatch();
+					model.applicationState.currentState = "Reports";
+				}
+			}
+			
+			
+			public function callbackFault(info:Object): void
+			{
+				Alert.show("Invalid user");
+				username.text = "";
+				password.text = "";
+//				var event:FaultEvent = FaultEvent(info);
+//				model.error.setMessage(event);
+//				model.applicationState.currentState = "ErrorPage";	
+			}
+			
+			protected function disclaimer_clickHandler(event:MouseEvent):void
+			{
+				var disc:Disclaimer = new Disclaimer();
+				PopUpManager.addPopUp(disc,UIComponent(this.parentApplication),false);
+				PopUpManager.centerPopUp(disc);	
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:Label x="51" y="99" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="Username:"/>
+	<s:TextInput id="username" x="158" y="97" width="215" height="25"
+				 contentBackgroundColor="#FFFFFF" text="{model.user.username}"/>
+	
+	<s:Label x="51" y="144" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="Password:"/>
+	<s:TextInput id="password" x="158" y="141" width="213" height="25"
+				 contentBackgroundColor="#FFFFFF" displayAsPassword="true"
+				 text="{model.user.password}"/>
+	
+	<s:Label x="50" y="32" color="#FFFFFF" fontFamily="Calibri" fontSize="28" text="Login"/>
+	
+	<s:Button id="login" x="51" y="210" width="62" height="31" label="Login" chromeColor="#254061"
+			  click="handleLoginRequest(event)" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+	<!--<s:Button id="login0" x="51" y="249" width="155" height="31" label="Create a new user"
+			  chromeColor="#254061" click="handleLoginRequest(event)" color="#FFFFFF"
+			  fontFamily="Calibri" fontSize="18"/>-->
+<!--<s:CheckBox x="158" y="250" label="Remember Me" color="#FFFFFF" fontSize="14" fontFamily="Calibri"/>-->
+</s:BorderContainer>

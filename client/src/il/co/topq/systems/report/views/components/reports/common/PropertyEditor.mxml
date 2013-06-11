@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   close="closePropertyEditor(event)"
+			   width="400" height="224" title="Property Editor" >
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.local.SaveTestPropertyEvent;
+			import il.co.topq.systems.report.models.valueobjects.TestProperty;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.managers.PopUpManager;		
+			
+			protected function closePropertyEditor(event:Event):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function saveButton_clickHandler(event:MouseEvent):void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			
+			public function set key(key:String):void{
+				Alert.show("Need to inherit and override this method");
+			} 
+			
+			[Bindable]
+			public function get key():String{
+				Alert.show("Need to inherit and override this method");
+				return null;
+			}
+			
+			
+			public function set value(value:String):void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			[Bindable]
+			public function get value():String{
+				Alert.show("Need to inherit and override this method");
+				return null;
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:TextInput id="keyInput" x="115" y="36" width="181" text="@{key}"/>
+	<s:TextInput id="valueInput" x="115" y="82" width="182" text="@{value}"/>
+	<s:Label x="65" y="38" text="Key&#xd;"/>
+	<s:Label x="65" y="82" text="Value"/>
+	<s:Button id="saveButton" x="231" y="160" label="Save" click="saveButton_clickHandler(event)"
+			  enabled="{key.length > 0 &amp;&amp; value.length > 0}"/>
+	<s:Button x="318" y="160" label="Cancel" click="closePropertyEditor(event)"/>
+</s:TitleWindow>

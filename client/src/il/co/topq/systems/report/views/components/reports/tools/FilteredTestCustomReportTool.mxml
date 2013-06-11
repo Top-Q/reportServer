@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ComboBox xmlns:fx="http://ns.adobe.com/mxml/2009"
+			xmlns:s="library://ns.adobe.com/flex/spark"
+			xmlns:mx="library://ns.adobe.com/flex/mx"
+			xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+			width="200" height="100%"  contentBackgroundColor="#FFFFFF"
+			dataProvider="{model.testFilteredCustomReportTool}" selectedItem="Tools">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.scenario.ExportScenarioReportEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.Filter;
+			import il.co.topq.systems.report.views.components.reports.ExecutionReport;
+			
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			[Bindable]
+			[Embed(source='/assets/images/warning.gif')]
+			
+			private var Icon:Class;
+			
+			public function getTimeRange():TimeRangeChooser{
+				return timeRangeChooser;
+			}
+			
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<tools:TimeRangeChooser id="timeRangeChooser"/>
+		<!--<tools:CustomReportTimeRangeChooser id="timeRangeChooser"/>-->
+	</fx:Declarations>
+	
+</s:ComboBox>

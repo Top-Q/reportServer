@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<services>
+	<getScenarioService>http://localhost:8080/report-service/report/services/scenario</getScenarioService>
+	<getTestPerScenario>http://localhost:8080/report-service/report/services/tests</getTestPerScenario>
+</services>

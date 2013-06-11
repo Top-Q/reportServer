@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Skin xmlns:fx="http://ns.adobe.com/mxml/2009" xmlns:s="library://ns.adobe.com/flex/spark">
+	<fx:Metadata><![CDATA[
+		[HostComponent("spark.components.ToggleButton")]
+	]]></fx:Metadata>
+	<s:states>
+		<s:State name="up"/>
+		<s:State name="over"/>
+		<s:State name="down"/>
+		<s:State name="disabled"/>
+		<s:State name="upAndSelected"/>
+		<s:State name="overAndSelected"/>
+		<s:State name="downAndSelected"/>
+		<s:State name="disabledAndSelected"/>
+	</s:states>
+	<s:Rect height="100%"  width="100%" >
+		<s:stroke>
+			<s:SolidColorStroke color="#FFFFFF"/>
+		</s:stroke>
+		<s:fill>
+			<s:SolidColor color="#FFFFFF"/>
+		</s:fill>
+	</s:Rect>
+	<s:Rect height="100%" id="rect1" includeIn="down, downAndSelected" width="100%" >
+		<s:stroke>
+			<s:LinearGradientStroke rotation="90">
+				<s:GradientEntry alpha="0.25" color="#5380D0" ratio="0"/>
+				<s:GradientEntry alpha="0" color="#5380D0" ratio="1"/>
+			</s:LinearGradientStroke>
+		</s:stroke>
+	</s:Rect>
+	<s:RichText color="#376092" fontFamily="Calibri" verticalAlign="middle" height="100%" fontWeight="bold" id="labelDisplay" textAlign="center" width="100%"  fontSize="14" textDecoration="underline" tabStops="S0 S50" textDecoration.up="none" tabStops.up="S0 S50"/>
+</s:Skin>

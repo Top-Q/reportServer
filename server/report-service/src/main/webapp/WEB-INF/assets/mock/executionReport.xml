@@ -1,0 +1,21 @@
+<?xml version="1.0" encoding="utf-8"?>
+<reports>
+	<executionreport>
+		<action>Delete</action>
+		<date>21/1/2010</date>
+		<total>100</total>
+		<pass>80</pass>
+		<fail>19</fail>
+		<warning>1</warning>
+		<report>Link</report>
+	</executionreport>
+	<executionreport>
+		<action>Delete</action>
+		<date>18/1/2010</date>
+		<total>100</total>
+		<pass>80</pass>
+		<fail>19</fail>
+		<warning>1</warning>
+		<report>Link</report>
+	</executionreport>
+</reports>

@@ -1,0 +1,79 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+        "http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated May 2, 2011 10:49:15 AM by Hibernate Tools 3.2.1.GA -->
+<hibernate-mapping>
+	<class name="il.co.topq.systems.report.common.model.Scenario"
+		table="published_runs_01">
+		<id name="id" type="java.lang.Integer">
+			<column name="runIndex" />
+			<generator class="identity" />
+		</id>
+		<property name="scenarioName" type="string">
+			<column name="scenarioName" length="65535" />
+		</property>
+
+		<property name="propertiesStr" type="string">
+			<column name="propertiesStr" length="65535" />
+		</property>
+
+		<property name="startTime" type="long">
+			<column name="startTime" length="19" />
+		</property>
+
+		<property name="duration" type="double">
+			<column name="duration" />
+		</property>
+
+		<property name="runTest" type="java.lang.Integer">
+			<column name="runTest" />
+		</property>
+		<property name="failTests" type="java.lang.Integer">
+			<column name="failTests" />
+		</property>
+		<property name="successTests" type="java.lang.Integer">
+			<column name="successTests" />
+		</property>
+		<property name="warningTests" type="java.lang.Integer">
+			<column name="warningTests" />
+		</property>
+		<property name="description" type="string">
+			<column name="description" length="65535" />
+		</property>
+		<property name="htmlDir" type="string">
+			<column name="htmlDir" length="65535" />
+		</property>
+		<property name="isDeleted" type="java.lang.Short">
+			<column name="isDeleted" />
+		</property>
+		<property name="lastUpdate" type="timestamp">
+			<column name="lastUpdate" length="19" />
+		</property>
+		<set name="properties" inverse="false"
+			table="scenario_properties_has_published_runs_01" lazy="false">
+			<key>
+				<column name="published_runs_01_runIndex" not-null="true" />
+			</key>
+			<many-to-many
+				entity-name="il.co.topq.systems.report.common.model.ScenarioProperty">
+				<column name="scenario_properties_index1" not-null="true" />
+			</many-to-many>
+		</set>
+
+
+		<set order-by="startTime" name="tests" inverse="true" cascade="all"
+			lazy="true">
+			<key on-delete="cascade">
+				<column name="runIndex" />
+			</key>
+			<one-to-many class="il.co.topq.systems.report.common.model.Test" />
+		</set>
+
+		<!-- <list name="tests" cascade="all" lazy="true"> -->
+		<!-- <key column="runIndex" /> -->
+		<!-- <list-index column="idx" base="3" /> -->
+		<!-- <one-to-many class="il.co.topq.systems.report.common.model.Test" /> -->
+		<!-- </list> -->
+
+	</class>
+</hibernate-mapping>

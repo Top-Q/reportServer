@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
+		 xmlns:s="library://ns.adobe.com/flex/spark"
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="100%" height="100%" creationComplete="systemConfig_creationCompleteHandler(event)"
+		 fontFamily="Calibri" fontSize="16">
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.config.SetSystemSettingEvent;
+			import il.co.topq.systems.report.events.config.SetUIConfigurationsEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.TestGroupingPolicy;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			
+			private var isTestGroupConfigurationChanged:Boolean = false;
+			
+			[Bindable]
+			private var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+//			private var systemSettings:SystemSettings = model.systemSettings.clone();
+			private var testGrouping:TestGroupingPolicy = model.uiConfigurations.testGrouping;
+			
+			protected function testGroupConfigurationChanged(event:Event):void
+			{
+				if (checkBoxTestGroupScenario.selected){
+					testGrouping.groupBy = 2;
+				}else {
+					testGrouping.groupBy = 1;
+				}
+				new SetUIConfigurationsEvent().dispatch();
+			}
+			
+			protected function buttonSave_clickHandler(event:MouseEvent):void
+			{
+				if (isTestGroupConfigurationChanged){
+//					if (checkBoxTestGroupParameters.selected){
+//						if (checkBoxTestGroupScenario.selected){
+//							systemSettings.defaultTestGrouping = 4;
+//						}else {
+//							systemSettings.defaultTestGrouping = 3;
+//						}
+//					}
+//					else if (checkBoxTestGroupScenario.selected){
+					if (checkBoxTestGroupScenario.selected){
+//						systemSettings.defaultTestGrouping = 2;
+						testGrouping.groupBy = 2;
+					}else {
+//						systemSettings.defaultTestGrouping = 1;
+						testGrouping.groupBy = 1;
+					}
+					new SetUIConfigurationsEvent().dispatch();
+//					new SetSystemSettingEvent(systemSettings, setSystemSettingCallbackResult, setSystemSettingCallbackFault).dispatch();
+				}
+			}
+			
+			public function setSystemSettingCallbackResult(data:ResultEvent):void {
+//				ReportModelLocator.getInstance().systemSettings = systemSettings;
+				Alert.show("Settings saved");
+			}
+			
+			public function setSystemSettingCallbackFault(info:Object): void
+			{
+				var event:FaultEvent = FaultEvent(info);
+				model.error.setMessage(event);
+				model.applicationState.currentState = "ErrorPage";	
+			}
+			
+			protected function systemConfig_creationCompleteHandler(event:FlexEvent):void
+			{
+				var testGrouping:TestGroupingPolicy = ReportModelLocator.getInstance().uiConfigurations.testGrouping;
+				if (testGrouping != null){
+					if (testGrouping.groupBy == 2){
+						checkBoxTestGroupScenario.selected = true;
+					}
+				}else {
+					checkBoxTestGroupScenario.selected = false;
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:VGroup paddingLeft="50" paddingTop="50">
+	<!--	<mx:FormHeading label="Database:" fontSize="16"  fontWeight="bold"/>
+		<mx:Form>
+			<mx:FormItem label="IP:">
+				<mx:TextInput/>	
+			</mx:FormItem>
+			<mx:FormItem label="Username:">
+				<mx:TextInput/>
+			</mx:FormItem>
+			<mx:FormItem label="Password:">
+				<mx:TextInput/>
+			</mx:FormItem>
+			<mx:FormItem label="Scheme:">
+				<mx:TextInput/>
+			</mx:FormItem>
+		</mx:Form>-->
+		<mx:FormHeading label="Default Grouping Settings" fontSize="16" fontWeight="bold"/>
+		<mx:Form>
+			<mx:FormItem height="40" label="Test Group:">
+				<s:HGroup width="100%" height="100%">
+					<s:CheckBox id="checkBoxTestGroupName" label="Test Name" enabled="false"
+								selected="true"/>
+					<s:CheckBox id="checkBoxTestGroupScenario" label="Scenario"
+								change="testGroupConfigurationChanged(event)"/>
+					<!--<s:CheckBox id="checkBoxTestGroupScenario" label="Scenario" change="testGroupConfigurationChanged(event)"
+								selected="{model.systemSettings.defaultTestGrouping == 2 || model.systemSettings.defaultTestGrouping == 4}"/>-->
+					<!--<s:CheckBox id="checkBoxTestGroupParameters" label="Parameters" change="testGroupConfigurationChanged(event)"
+								selected="{model.systemSettings.defaultTestGrouping == 3 || model.systemSettings.defaultTestGrouping == 4}"/>-->
+				</s:HGroup>
+			</mx:FormItem>
+		</mx:Form>
+	</s:VGroup>
+	<s:HGroup width="100%" height="100%" horizontalAlign="right" paddingBottom="20" paddingRight="20"
+			  verticalAlign="bottom">
+		<s:Button id="buttonSave" x="937" y="414" height="24" label="Save" chromeColor="#0A1E39"
+				  click="buttonSave_clickHandler(event)" color="#FFFFFF" focusColor="#85AED4" visible="false"
+				  fontWeight="bold"/>
+	</s:HGroup>
+</s:Group>

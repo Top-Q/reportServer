@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+	© 2011 Top-Q Intellectual Property. All rights reserved.
+	Authors: Tomer Gafner & Eran Golan
+
+	Description:
+	This is the general form that appeares the very first time the report server is created 
+	allowing to configure the super user and the database.
+	
+-->
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   x="430" y="251" width="450" height="300" 
+				   cornerRadius="50" backgroundColor="#4F81BD" 
+				   defaultButton="{username}"
+				   creationComplete="init()">
+
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.config.SetConfigEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.views.components.settings.Disclaimer;
+			import mx.core.UIComponent;
+			import mx.managers.PopUpManager;
+			
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			/**
+			 * Set the default focus in the application on the username input text.
+			 */
+			private function init():void{
+				navigateToURL(new URLRequest("javascript: document.getElementById('index').focus();"), "_self"); 
+				username.setFocus(); 
+			}
+			
+			private function setSetupConfig(event:MouseEvent):void
+			{
+				new SetConfigEvent(username.text,password.text).dispatch();
+			}
+			
+			protected function disclaimerLink_clickHandler(event:MouseEvent):void
+			{
+				var disc:Disclaimer = new Disclaimer();
+				PopUpManager.addPopUp(disc,UIComponent(this.parentApplication),true);
+				PopUpManager.centerPopUp(disc);		
+			}
+			
+			protected function disclaimerLink_mouseOverHandler(event:MouseEvent):void
+			{
+								
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	
+	<s:Label x="52" y="125" text="Username:" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+	<s:TextInput id="username" x="159" y="123" width="215" height="25"  contentBackgroundColor="#FFFFFF"/>
+	<s:Label x="52" y="173" text="Password:" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+	<s:TextInput id="password" x="159" y="170" width="213" height="25" displayAsPassword="true"  contentBackgroundColor="#FFFFFF"/>
+	<s:Label x="51" y="24" text="Create a new  user" fontSize="28" fontFamily="Calibri" color="#FFFFFF"/>
+	
+	
+	
+<!--	<s:Label x="50" y="224" text="Database Setup" fontSize="28" fontFamily="Calibri" color="#FFFFFF"/>
+	
+	<s:Label x="51" y="272" text="Host:" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+	<s:TextInput id="localhost" x="159" y="269" width="215" height="25" enabled="false" text="localhost" contentBackgroundColor="#FFFFFF" fontWeight="bold"/>
+	<s:Label x="51" y="320" text="Port:" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+	<s:TextInput id="dbPort" x="159" y="316" width="213" height="25" displayAsPassword="false" enabled="false" text="3306" contentBackgroundColor="#FFFFFF" fontWeight="bold"/>
+	
+	<s:Label x="51" y="363" text="Schema:" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+	<s:TextInput id="schema" x="159" y="359" width="213" height="25" displayAsPassword="false" enabled="false" text="jsystem" contentBackgroundColor="#FFFFFF" fontWeight="bold"/>
+	
+	<s:Label x="50" y="76" text="Admin Setup" fontSize="28" fontFamily="Calibri" color="#FFFFFF"/>
+	
+	<s:Label x="52" y="410" text="Username:" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+	<s:TextInput id="dbUsername" x="160" y="406" width="213" height="25" displayAsPassword="false" enabled="false" text="root" contentBackgroundColor="#FFFFFF" fontWeight="bold"/>
+	<s:Label x="52" y="458" text="Password:" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+	<s:TextInput id="dbPassword" x="160" y="454" width="213" height="25" displayAsPassword="true" enabled="false" text="root" fontWeight="bold" contentBackgroundColor="#FFFFFF"/>-->
+	
+	<s:Button id="saveConfigBtn" enabled="{disclaimerChkBox.selected}" x="52" y="220" label="Save" width="79" height="31" chromeColor="#254061" color="#FFFFFF" fontFamily="Calibri" fontSize="18" click="setSetupConfig(event)"/>
+	<s:CheckBox id="disclaimerChkBox" x="52" y="259" width="320" />
+	<s:Label id="disclaimerLink" x="71" y="264" buttonMode="true"
+			 click="disclaimerLink_clickHandler(event)" color="#FFFFFF" mouseChildren="false"
+			 mouseEnabled="true" text="I agree to the license agreement" textAlign="right"
+			 textDecoration="underline" useHandCursor="true" mouseOver="disclaimerLink_mouseOverHandler(event)" toolTip="Click here to view the agreement"/>
+			
+	
+</s:BorderContainer>

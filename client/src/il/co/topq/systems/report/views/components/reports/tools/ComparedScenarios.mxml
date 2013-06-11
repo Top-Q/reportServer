@@ -1,0 +1,115 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:grid="il.co.topq.systems.report.models.grid.*"
+			   width="938" height="604" chromeColor="#D4E4FB"  color="#000000" contentBackgroundColor="#FFFFFF" title="Compared Executions"
+			   close="cancel_clickHandler(event)" creationComplete="comparedScenarios_creationCompleteHandler(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.grid.ComparedScenariosGridColumn;
+			import il.co.topq.systems.report.renderers.ComparedScenarioColumnGridItemRenderer;
+			
+			import mx.containers.HBox;
+			import mx.controls.Alert;
+			import mx.controls.Image;
+			import mx.controls.dataGridClasses.DataGridColumn;
+			import mx.controls.dataGridClasses.DataGridItemRenderer;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			private var scenarioColMinWidth:Number = 100;
+
+			[Bindable]
+			private var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			[Bindable]
+			private var testsWidth:Number = 350;
+			
+			protected function cancel_clickHandler(event:Event):void
+			{
+				Alert.show("this method must be implemented in extending calss");
+			}
+			
+			public function comparedScenarios_creationCompleteHandler(event:FlexEvent):void
+			{
+				var cols:Array = comparedScenariosGrid.columns;
+				
+				var scenarios:XMLList = model.comparedScenarios.comparedScenarios as XMLList;
+				for (var i:int; i < scenarios.length(); i++){
+					var scenario:String = scenarios[i];
+					var split:Array = scenario.split(";");
+				 	var scenarioName:String = split[0] as String;
+					var scenarioID:String = split[1] as String;
+					var dgc:ComparedScenariosGridColumn = new ComparedScenariosGridColumn();
+					var comparedScenarioColumnGridItemRenderer:ComparedScenarioColumnGridItemRenderer = new ComparedScenarioColumnGridItemRenderer();
+					dgc.headerToolTip = scenarioName;
+					dgc.headerToolTipPosition = "above";
+					dgc.headerTextTruncate = true;
+					dgc.setStyle("horizontalAlign","center");
+					dgc.itemRenderer = comparedScenarioColumnGridItemRenderer;
+					dgc.headerText = scenarioName;
+					dgc.setStyle("textAlign","center");
+					dgc.setScenarioID(scenarioID);
+					
+					cols.push(dgc);
+				}
+				//Adjust same width for all scenario colls
+				comparedScenariosGrid.columns = cols;
+				adjustWidthForScenarios();
+			}
+			
+			private function adjustWidthForScenarios():void{
+				//Adjust same width for all scenario colls
+				var cols:Array = comparedScenariosGrid.columns;
+				testNumberCol.width = getTestNumberColWidth();
+				var gridsWidth:Number = comparedScenariosGrid.width;
+				var testNumberColWidth:Number = testNumberCol.width;
+				var scenarioColWidth:Number = (gridsWidth - (testNumberColWidth*2 + testsWidth)) / (cols.length -2);
+				for (var j:int=2; j<cols.length; j++){
+					(cols[j] as ComparedScenariosGridColumn).minWidth = scenarioColMinWidth;
+					(cols[j] as ComparedScenariosGridColumn).width = scenarioColWidth;
+				}
+			}
+			
+			protected function getTestName(comparedTests:Object, column:DataGridColumn):String{
+				var testName:String = comparedTests.testName;
+				return testName;
+			}
+			protected function getTestIndex(comparedTests:Object, column:DataGridColumn):String{
+				var testIndex:String = comparedTests.testIndex;
+				return testIndex ;
+			}
+			protected function getTestNumberColWidth():Number{
+				var comparedTests:XMLList = model.comparedScenarios.comparedTests as XMLList;
+				var size:int = comparedTests.length();
+				var renderer:DataGridItemRenderer = new DataGridItemRenderer();
+				comparedScenariosGrid.addChild(renderer);
+				renderer.text = size.toString();
+				var measuredWidth2:Number = renderer.measuredWidth + 10;
+				comparedScenariosGrid.removeChild(renderer);
+				return measuredWidth2;	
+			}
+			
+		]]>
+	</fx:Script>
+
+	
+	<mx:DataGrid id="comparedScenariosGrid" width="100%" height="100%"
+				 dataProvider="{model.comparedScenarios.comparedTests}" horizontalScrollPolicy="auto"
+				 verticalScrollPolicy="auto">	
+		<mx:columns>
+			<mx:DataGridColumn id="testNumberCol" headerText="#" labelFunction="getTestIndex" textAlign="left"/>
+			<mx:DataGridColumn itemRenderer="mx.controls.Label" width="{testsWidth}" id="tests" headerText="Test \ Execution" labelFunction="getTestName" textAlign="left">
+				<mx:headerRenderer>
+					<fx:Component>				   			
+						<mx:Label textAlign="center" truncateToFit="true"/>
+					</fx:Component>
+				</mx:headerRenderer>
+			</mx:DataGridColumn>
+		
+		</mx:columns>
+	</mx:DataGrid>
+</s:TitleWindow>

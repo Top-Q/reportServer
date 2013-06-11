@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 
+	© 2011 Top-Q Intellectual Property. All rights reserved.
+	Authors: Tomer Gafner & Eran Golan
+	
+	Description:
+	The footer is included in all pages. 
+-->
+<s:HGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+          xmlns:s="library://ns.adobe.com/flex/spark"
+          height="5%" horizontalAlign="left" verticalAlign="middle"  contentBackgroundColor="#FFFFFF">
+	<fx:Script>
+		<![CDATA[
+        ]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+
+	
+		<s:Label text="© 2011 Top-Q Intellectual Property. All rights reserved." fontSize="16" fontFamily="Calibri" />
+		<s:Label color="#0000FF" useHandCursor="true" mouseChildren="false" buttonMode="true" mouseEnabled="true" textAlign="right" text='Top-Q' click="navigateToURL(new URLRequest('http://www.top-q.co.il/'))" />
+</s:HGroup>

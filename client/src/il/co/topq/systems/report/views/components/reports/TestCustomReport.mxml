@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*"
+				   xmlns:common="il.co.topq.systems.report.views.components.reports.common.*"
+				   width="100%" height="100%" borderVisible="false"
+				   creationComplete="testCustomReport_creationComplete(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.testCustomReport.TestCustomReportGridDoubleClickEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.TestCustomReportVO;
+			import il.co.topq.systems.report.models.valueobjects.TestGridModel;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+	
+			[Bindable]
+			public var testGridModel:TestGridModel = ReportModelLocator.getTestGridModel();//testGrid model.
+			
+			protected function testCustomReport_creationComplete(event:FlexEvent):void
+			{
+				addNavigationListners();
+			}
+			
+			/**
+			 * This method will add event listners to the Navigation component.
+			 * Will listen on next | previous clicks.
+			 **/
+			private function addNavigationListners():void {
+				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+			}
+			
+			protected function handleNextClicked(event:MouseEvent):void{
+				Alert.show("must be implemented in extanding class");
+			}
+			
+			protected  function handlePreviousClicked(event:MouseEvent):void{
+				Alert.show("must be implemented in extanding class");
+			}
+			
+			protected function testCustomReportGrid_doubleClickHandler(event:MouseEvent):void
+			{
+				var testCustomReportVO:TestCustomReportVO= ((event.currentTarget as CustomReportGrid).selectedItem as TestCustomReportVO);
+				dispatchEvent(new TestCustomReportGridDoubleClickEvent(testCustomReportVO));
+			}
+		]]>
+	</fx:Script>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:HGroup width="100%" height="100%" verticalAlign="bottom">
+			<grids:CustomReportGrid id="testCustomReportGrid" doubleClick="testCustomReportGrid_doubleClickHandler(event)"/>
+		</s:HGroup>
+		<common:Navigation paddingBottom="8" width="100%" paddingTop="8" verticalAlign="middle" horizontalAlign="center"
+						   id="navigation" navModel="{testGridModel.navigation}"/>
+	</s:VGroup>
+</s:BorderContainer>

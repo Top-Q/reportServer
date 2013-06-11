@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Application xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:services="il.co.topq.systems.report.services.*"
+			   xmlns:controllers="il.co.topq.systems.report.controllers.*"
+			   xmlns:views="il.co.topq.systems.report.views.*"
+			   xmlns:components="il.co.topq.systems.report.views.components.*"
+			   minWidth="955" minHeight="600" creationComplete="init(event)"
+			   width="96%" height="100%"
+			   applicationComplete="applicationCompleteHandler(event)"
+			   currentState="{model.applicationState.currentState}" fontFamily="Calibri"
+			   fontSize="16">
+	
+	<fx:Style source="index.css"/>
+	
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.LogoutEvent;
+			import il.co.topq.systems.report.events.config.IsConfigAvailableEvent;
+			import il.co.topq.systems.report.events.local.SaveTestPropertyEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			protected function init(event:FlexEvent):void
+			{
+//				new IsConfigAvailableEvent().dispatch();
+			}
+			
+			protected function handleLogoutRequest(event:MouseEvent):void {
+				model.user.password = "";	
+				new LogoutEvent().dispatch();
+			}
+			
+			protected function applicationCompleteHandler(event:FlexEvent):void
+			{
+				if(ExternalInterface.available)
+				{
+					ExternalInterface.call("eval", "document.getElementById('" + ExternalInterface.objectID + "').tabIndex=0");
+					ExternalInterface.call("eval", "document.getElementById('" + ExternalInterface.objectID + "').focus()");
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:states>
+		<s:State name="LogIn"/>
+		<s:State name="Reports"/>
+		<s:State name="SetupConfiguration"/>
+		<s:State name="ErrorPage"/>
+	</s:states>
+	
+	<fx:Declarations>
+		<services:ReportServiceLocator/>
+		
+		<controllers:ReportController/>
+
+	</fx:Declarations>
+	
+	
+	
+	<s:VGroup includeIn="LogIn,Reports,SetupConfiguration,ErrorPage" width="100%" height="100%"
+			  gap="0" horizontalAlign="center" verticalAlign="middle">
+		<s:HGroup width="100%" height="50" horizontalAlign="left"
+				  contentBackgroundColor.LogIn="#FFFFFF">
+			<s:HGroup width="100%" height="100%" horizontalAlign="right" verticalAlign="middle">
+				<s:Label includeIn="Reports" color="#558EE3" fontFamily="Calibri" fontSize="16"
+						 text="Welcome"/>
+				<s:Label includeIn="Reports" color="#000000" fontFamily="Calibri" fontSize="16"
+						 text="Admin |"/>
+				<mx:LinkButton includeIn="Reports" label="Logout" click="handleLogoutRequest(event)"
+							   color="#558EE3" fontFamily="Calibri" fontSize="16" paddingBottom="4"/>
+			</s:HGroup>
+		</s:HGroup>
+		
+		<views:MainApp includeIn="Reports" contentBackgroundColor="#FFFFFF"/>
+		
+		<s:HGroup id="startForm" includeIn="LogIn,SetupConfiguration,ErrorPage" width="100%"
+				  height="100%" horizontalAlign="center" verticalAlign="middle">
+			<views:LogIn id="loginForm" includeIn="LogIn"/>	
+			<views:SetupConfiguration id="ConfigurationForm" includeIn="SetupConfiguration"/>
+			<views:ErrorPageForm id="errorPageForm" includeIn="ErrorPage"/>
+		</s:HGroup>
+		
+		<components:Footer/>	
+	</s:VGroup>
+	
+	
+</s:Application>

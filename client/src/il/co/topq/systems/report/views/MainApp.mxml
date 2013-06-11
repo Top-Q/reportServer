@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+© 2011 Top-Q Intellectual Property. All rights reserved.
+Authors: Tomer Gafner & Eran Golan
+
+Description:
+This class held the main componenets and dispach an event when the selection of those component is changed by the use	
+-->
+<s:VGroup xmlns:fx="http://ns.adobe.com/mxml/2009"
+		  xmlns:s="library://ns.adobe.com/flex/spark"
+		  xmlns:mx="library://ns.adobe.com/flex/mx"
+		  xmlns:com="com.*"
+		  xmlns:reports="il.co.topq.systems.report.views.components.reports.*"
+		  xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*"
+		  xmlns:components="il.co.topq.systems.report.views.components.*"
+		  width="100%" height="100%" currentState="{model.applicationState.topLevelState}"
+		  horizontalAlign="left" verticalAlign="top"
+		  horizontalAlign.Summary="center">
+	
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.states.ChangeReportsStateEvent;
+			import il.co.topq.systems.report.events.states.ChangeSettingStateEvent;
+			import il.co.topq.systems.report.events.states.ChangeTopLevelEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.views.components.reports.tools.AboutWindow;
+			
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			private static var selectedItem:String;
+			
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			protected function handleTopNavigatorClick(event:MouseEvent):void
+			{
+				var targetState:String = (event.currentTarget as ButtonBar).selectedItem;
+				new ChangeTopLevelEvent(targetState).dispatch();
+			}
+			
+			protected function handleReportsNavigatorClick(event:MouseEvent):void
+			{
+				var targetState:String = (event.currentTarget as ButtonBar).selectedItem;	
+				selectedItem = targetState;
+				new ChangeReportsStateEvent(targetState).dispatch();
+			}
+			
+			protected function handleSettingsNavigatorClick(event:MouseEvent):void
+			{
+				var targetState:String = (event.currentTarget as ButtonBar).selectedItem;
+				targetState = targetState.replace(" ","");
+				
+				if (targetState == "About"){
+					ShowAboutPopupWindow();
+				}else {
+					new ChangeSettingStateEvent(targetState).dispatch();
+				}
+			}
+			
+			protected function ShowAboutPopupWindow():void{
+				var aboutWindow:AboutWindow;
+				aboutWindow = new AboutWindow();
+				
+				PopUpManager.addPopUp(aboutWindow,this,true);
+				PopUpManager.centerPopUp(aboutWindow);
+			}
+			
+			protected function refreshHandler(event:IndexChangeEvent):void
+			{
+				if((event.currentTarget as ButtonBar).selectedItem  == "Execution"){					
+				}else if ((event.currentTarget as ButtonBar).selectedItem  == "Tests"){
+				}else if ((event.currentTarget as ButtonBar).selectedItem  == "Custom"){
+				}
+				else if ((event.currentTarget as ButtonBar).selectedItem  == "Summary")	{
+					Summary.refresh();
+				}
+				
+			}
+			
+			public static function changeReportButtonBarSelectedItem(item:String):void{
+				selectedItem = item;
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<s:ArrayCollection id="topMenuItem">
+			<fx:Object>Summary</fx:Object> 
+			<fx:Object>Reports</fx:Object> 
+			<fx:Object>Settings</fx:Object> 
+			<!--<fx:Object>Tools</fx:Object> --> 
+		</s:ArrayCollection>
+		
+		<s:ArrayCollection id="summarySubMenu">
+			<fx:String>Statistics</fx:String> 
+		</s:ArrayCollection>
+		
+		<s:ArrayCollection id="reportsSubMenu">
+			<fx:String>Execution</fx:String> 
+			<fx:String>Tests</fx:String> 
+			<fx:String>Custom</fx:String>
+			<!--<fx:String>Runtime</fx:String> --> 
+		</s:ArrayCollection>
+		
+		<s:ArrayCollection id="settingsSubMenu">
+			<!--<fx:String>Preferences</fx:String>-->
+			<fx:String>Users</fx:String> 	
+			<fx:String>System Configuration</fx:String> 
+			<fx:String>About</fx:String>
+		</s:ArrayCollection>
+		
+		<s:ArrayCollection id="helpMenuItem">
+			<fx:String>Tools</fx:String> 
+		</s:ArrayCollection>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<!--
+	<fx:Script>
+		<![CDATA[
+			topMenuItem.removeItemAt(3);
+				settingsSubMenu.refresh();
+			
+	]]>		
+	</fx:Script>
+	-->
+	
+	<s:states>
+		<s:State name="Summary"/>
+		<s:State name="Reports"/>
+		<s:State name="Settings"/>
+		<s:State name="Tools"/>
+	</s:states>
+	
+	
+	
+	
+	
+	<s:BorderContainer width="100%" height="12%" borderColor="#558ED5" borderWeight="2"
+					   cornerRadius="5">
+		<s:VGroup width="100%" height="100%" gap="0" horizontalAlign="left" textAlign="left"
+				  verticalAlign="top">
+			<s:ButtonBar id="TopNavigator" width="100%" height="50%" change="refreshHandler(event)"
+						 click="handleTopNavigatorClick(event)" dataProvider="{topMenuItem}"
+						 requireSelection="true"
+						 skinClass="il.co.topq.systems.report.views.skin.TopNavigatorSkin"/>
+			<s:ButtonBar includeIn="Summary" height="50%" dataProvider="{summarySubMenu}"
+						 requireSelection="true"
+						 skinClass="il.co.topq.systems.report.views.skin.SubMenuSkin"/>
+			<s:ButtonBar includeIn="Reports" height="50%" change="refreshHandler(event)"
+						 click="handleReportsNavigatorClick(event)" dataProvider="{reportsSubMenu}"
+						 requireSelection="true" selectedItem="{selectedItem}"
+						 skinClass="il.co.topq.systems.report.views.skin.SubMenuSkin"/>
+			<s:ButtonBar includeIn="Settings" height="50%"
+						 click="handleSettingsNavigatorClick(event)"
+						 dataProvider="{settingsSubMenu}" requireSelection="true"
+						 skinClass="il.co.topq.systems.report.views.skin.SubMenuSkin"/>
+			<s:ButtonBar includeIn="Tools" height="50%" dataProvider="{helpMenuItem}"
+						 requireSelection="true"
+						 skinClass="il.co.topq.systems.report.views.skin.SubMenuSkin"/>
+			
+		</s:VGroup>
+	</s:BorderContainer>
+	
+	<s:BorderContainer width="100%" height="100%" borderColor="#4F81BD" borderWeight="3"
+					   cornerRadius="5">
+		<components:Summary includeIn="Summary"/>
+		<components:Reports includeIn="Reports"/>
+		<components:Settings includeIn="Settings"/>
+		<components:Tools includeIn="Tools"/>
+	</s:BorderContainer>
+</s:VGroup>

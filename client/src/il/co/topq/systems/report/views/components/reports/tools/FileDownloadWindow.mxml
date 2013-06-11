@@ -1,0 +1,65 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="274" height="224" chromeColor="#D4E4FB" 
+			   fontWeight="bold" title="File Download"
+			   close="closeFileDownloadWindow(event)" creationComplete="fileDownloadWindowCreationComplete(event)">
+	
+	<fx:Script>
+		<![CDATA[
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;	
+			
+			[Bindable]
+			private var _isCloseButtonVisible:Boolean = false;
+			
+			protected function closeFileDownloadWindow(event:Event):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+			
+			public function set isCloseButtonVisible(value:Boolean):void 
+			{
+				_isCloseButtonVisible = value;
+			}
+			
+			protected function fileDownloadWindowCreationComplete(event:FlexEvent):void
+			{
+				this.closeButton.visible = false;				
+			}
+			
+
+			protected function setDownloadProgress(event:ProgressEvent):void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function completeHandler(event:Event):void{
+				Alert.show("Need to inherit and override this method");
+			}       
+			
+			protected function fileRef_select(event:Event):void
+			{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function fileRef_ioError(event:IOErrorEvent):void
+			{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<mx:ProgressBar id="pbProgress" x="32" y="105" label="" indeterminate="true"
+					labelPlacement="center" mode="event"/>
+	<s:Button id="buttonClose" x="192" y="160" label="Close" chromeColor="#0A1E39"
+			  click="closeFileDownloadWindow(event)" color="#FFFFFF" focusColor="#85AED4"
+			  fontWeight="bold" visible="{_isCloseButtonVisible}"/>
+	<s:TextArea id="textAreaStatus" x="32" y="23" width="208" height="57" borderVisible="false"
+				editable="false" text="Downloading File..."/>
+	
+</s:TitleWindow>

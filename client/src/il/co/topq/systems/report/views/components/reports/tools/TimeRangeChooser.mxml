@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   width="370" height="176" chromeColor="#3F68A1" color="#FFFFFF"
+			   creationComplete="titlewindow1_creationCompleteHandler(event)"
+			   title="Choose Time Range">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.scenario.GetScenarioEvent;
+			import il.co.topq.systems.report.events.scenario.GetScenarioSizeEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.Chunk;
+			import il.co.topq.systems.report.models.valueobjects.Filter;
+			import il.co.topq.systems.report.models.valueobjects.TimeRange;
+			import il.co.topq.systems.report.views.components.reports.ExecutionReport;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+
+			private var filter:Filter;
+			
+			public function getFilter():Filter{
+				return filter;
+			}
+			
+			private function setFilter():void{
+				filter =  new Filter();
+				filter.chunk = new Chunk(0,model.gridNumberOfRows);		
+				filter.timeRange = new TimeRange();
+				if (lowerDate.selectedDate != null){
+					filter.timeRange.lowBoundDate = lowerDate.selectedDate.getTime();
+				}else {
+					filter.timeRange.lowBoundDate = NaN;
+				}
+				
+				if (upperDate.selectedDate != null){
+					filter.timeRange.upBoundDate  = upperDate.selectedDate.getTime();
+				}else{
+					filter.timeRange.upBoundDate = NaN;
+				}
+			}
+			
+			public function save_closeHandler(event:MouseEvent):void
+			{
+				setFilter();
+			}
+
+
+			protected function titlewindow1_creationCompleteHandler(event:FlexEvent):void
+			{
+				filter = new Filter();
+				closeButton.visible = false;
+			}
+
+
+			protected function cancel_clickHandler(event:MouseEvent):void
+			{
+				PopUpManager.removePopUp(this);
+			}
+
+
+			protected function cleanButtonClicked(event:MouseEvent):void
+			{
+				upperDate.text = "";
+				upperDate.selectedDate = null;
+				lowerDate.text = "";
+				lowerDate.selectedDate = null;
+				setFilter();
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:Label x="46" y="22" color="#000000" fontWeight="bold" text="From:"/>
+	<s:Label x="47" y="68" color="#000000" fontWeight="bold" text="To:"/>
+	<mx:DateField id="lowerDate"  x="135" y="21" width="148" color="#000000" editable="true"
+				  contentBackgroundColor="#FFFFFF" formatString="DD/MM/YY"/>
+	<mx:DateField id="upperDate"  x="136" y="56" width="148" color="#000000" editable="true"
+				  contentBackgroundColor="#FFFFFF" formatString="DD/MM/YY"/>
+	<s:Button x="288" y="112" label="Cancel" click="cancel_clickHandler(event)" color="#FFFFFF"
+			  fontWeight="bold"/>
+	<s:Button id="saveButton" x="200" y="112" label="Save" click="save_closeHandler(event)"
+			  color="#FFFFFF" fontWeight="bold"/>
+
+	<s:Button id="cleanButton" x="106" y="112" label="Clean" click="cleanButtonClicked(event)" color="#FFFFFF"
+		  fontWeight="bold"/>
+</s:TitleWindow>

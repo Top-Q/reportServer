@@ -1,0 +1,444 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx"
+		 width="100%"
+		 height="100%"  
+		 xmlns:reports="il.co.topq.systems.report.views.components.reports.*" 
+		 xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*" 
+		 xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+		 creationComplete="creationCompleteHandler(event)" xmlns:common="il.co.topq.systems.report.views.components.reports.common.*">
+	<fx:Script>
+		<![CDATA[
+			[Event(name="updateEvent", type="il.co.topq.systems.report.events.general.UpdateEvent")]
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.models.valueobjects.Scenario;
+			import il.co.topq.systems.report.views.components.reports.grids.ScenarioTests;
+			import il.co.topq.systems.report.views.components.reports.grids.ScenarioTestsViewModel;
+			import il.co.topq.systems.report.views.components.reports.grids.TestReport;
+			
+			import mx.events.FlexEvent;
+			
+			private var _testReport:TestReport;
+			private var _scenarioTests:ScenarioTestsViewModel;
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				resetContainer();
+				_testReport = new TestReport();
+				testReportParentGroup.addElement(_testReport);
+			}
+			
+			/**
+			 * This method will reset the container of grids and will show the scenario tests grid instead.<br>
+			 */ 
+			public function showScenarioTests(scenario:Scenario):void{
+				resetContainer();
+				_scenarioTests = new ScenarioTestsViewModel(scenario)
+				testReportParentGroup.addElement(_scenarioTests);
+				_scenarioTests.allTestsLinkButton.addEventListener("click",allTestsLinkButton_clickHandler);
+				_scenarioTests.addEventListener(UpdateEvent.UPDATE_EVENT,updateHandler);
+			}
+			
+			
+			/**
+			 * This method will clean all the children elements of this container.<br>
+			 * It is used in order to change grids inside this container due to logic reasons.<br>
+			 */ 
+			private function resetContainer():void {
+				testReportParentGroup.removeAllElements();
+			}
+			
+			/**
+			 * This method will be called uppon a click on the: show all tests in system button.<br>
+			 * It reuires fetching of tests not by specific scenario;<br>
+			 * This method will change grids and fetch new data.<br>
+			 * 
+			 */ 
+			protected function allTestsLinkButton_clickHandler(event:MouseEvent):void
+			{
+				resetContainer();
+				if (testReport == null){				
+					testReportParentGroup.addElement(new TestReport());
+				}else {
+					testReportParentGroup.addElement(_testReport);
+				}
+			}
+			
+			/**
+			 * This method will handle the updateEvent.
+			 */ 
+			protected function updateHandler(event:Event):void
+			{
+				dispatchEvent(event);
+			}
+			
+			public function get testReport():TestReport{
+				return this._testReport;
+			}
+			
+//			[Bindable]
+//			private var model:ReportModelLocator = ReportModelLocator.getInstance();
+//			
+//			[Bindable]
+//			public var testGridModel:TestGridModel = ReportModelLocator.getTestGridModel();//testGrid model.
+//			
+//			[Bindable]
+//			public var testGroupGridModel:TestGridModel = ReportModelLocator.getTestGridModel();//testGroupGrid model.
+//			
+//			[Bindable]
+//			protected var testsGroupGrid:TestsGroupReportGrid ;
+//			
+//			private var testSummary:TestSummary//the last testSummary object rcvd from the double click event on the groupGrid will be used for the GroupTests query.
+//			
+//			private var timeRangeChooser:CustomReportTimeRangeChooser;
+//			
+//			[Bindable]
+//			private static var reportTitle:String = "Test Report";
+//			
+//			private var inGroupingMode:Boolean = false;// will indicate if the Grid showing is the group test.
+//			private var inGroupTestsMode:Boolean = false;// will indicate if the testGrid is in grouping mode.
+//			
+//			/**
+//			 * This method will set the custom report title according to the 
+//			 * last filtered timeRange values.
+//			 * in case no filter was made the defult will be preseted. 
+//			 **/
+//			protected function setReportTitle():void{
+//				var title:String = "Test Report ";
+//				if (timeRangeChooser != null){
+//					if ((timeRangeChooser.lowerDate.selectedDate != null) && (timeRangeChooser.upperDate.selectedDate != null)){
+//						var from:String = formatDate(timeRangeChooser.lowerDate.selectedDate.getTime());
+//						var to:String = formatDate(timeRangeChooser.upperDate.selectedDate.getTime());
+//						title += "between " + from + " and " + to +" \n";
+//					}
+//				}
+//				if (inGroupingMode){
+//					title += "Grouped by Test Name";
+//					if (checkBoxTestGroupScenario.selected){
+//						title += ", Scenario";
+//					}
+//				}else if(inGroupTestsMode){
+//					title += "Grouped by Test Name";
+//					if (testSummary.scenarioName != null && !testSummary.scenarioName.length == 0) {
+//						title += ", Scenario: " + testSummary.scenarioName;
+//					}
+//				}
+//				reportTitle = title;
+//			}
+//			
+//			private function formatDate(date:Number):String{
+//				var df:DateFormatter = new DateFormatter();   
+//				df.formatString = "DD/MM/YY";  
+//				var d:Date = new Date(date);   
+//				return df.format(d);
+//			}
+			
+//			protected function refreshButtonClicked(event:MouseEvent):void
+//			{
+//				getTestsResults();			
+//			}
+//			
+//			/**
+//			 * This method will add event listners to the Navigation component.
+//			 * Will listen on next | previous clicks.
+//			 **/
+//			private function addNavigationListners():void {
+//				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+//				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+//				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+//				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+//			}
+//			protected function creationCompleteHandler(event:FlexEvent):void
+//			{
+//				addNavigationListners();
+//				testsGrid.addEventListener(UpdateEvent.UPDATE_EVENT,updateHandler);
+//				testsGrid.addEventListener(DeleteTestButtonClickEvent.DELETE_TEST_BUTTON_CLICK_EVENT,deleteTestButtonClickHandler);
+//				initTestGroupModelTestQuery();
+//				initTestGroupGrid();
+//				getTestsResults();
+//			}
+			
+//			/**
+//			 * This method will be called upon a click on the navigation next label or button.<br>
+//			 * It will check if the grid is in grouping state or not
+//			 */ 
+//			protected function handleNextClicked(event:MouseEvent):void{
+//				if (inGroupingMode){
+//					testGroupGridModel.navigation.index++;
+//					testGroupGridModel.testQuery.chunk.length = testGroupGridModel.gridConfiguration.numberOfRows;
+//					testGroupGridModel.testQuery.chunk.startIndex = testGroupGridModel.navigation.index * testGroupGridModel.gridConfiguration.numberOfRows;
+//				}else if (inGroupTestsMode){
+//					testGridModel.navigation.index++;
+//					testGridModel.testQuery.chunk.length = testGridModel.gridConfiguration.numberOfRows;
+//					testGridModel.testQuery.chunk.startIndex = testGridModel.navigation.index * testGridModel.gridConfiguration.numberOfRows;
+//				}else if (testGridModel.navigation.index < testGridModel.gridData.numberOfPages){
+//					testGridModel.navigation.index++;
+//					testGridModel.testQuery.chunk.length = testGridModel.gridConfiguration.numberOfRows;
+//					testGridModel.testQuery.chunk.startIndex = testGridModel.navigation.index * testGridModel.gridConfiguration.numberOfRows;
+//				}
+//				getResults();
+//			}
+//			
+//			protected function handlePreviousClicked(event:MouseEvent):void{
+//				if (inGroupingMode){
+//					testGroupGridModel.navigation.index--;
+//					testGroupGridModel.testQuery.chunk.length = testGroupGridModel.gridConfiguration.numberOfRows;
+//					testGroupGridModel.testQuery.chunk.startIndex = testGroupGridModel.navigation.index * testGroupGridModel.gridConfiguration.numberOfRows;
+//				}else if (inGroupTestsMode){
+//					testGridModel.navigation.index--;
+//					testGridModel.testQuery.chunk.length = testGridModel.gridConfiguration.numberOfRows;
+//					testGridModel.testQuery.chunk.startIndex = testGridModel.navigation.index * testGridModel.gridConfiguration.numberOfRows;
+//				}else if (testGridModel.navigation.index > 0){
+//					testGridModel.navigation.index--;
+//					testGridModel.testQuery.chunk.length = testGridModel.gridConfiguration.numberOfRows;
+//					testGridModel.testQuery.chunk.startIndex = testGridModel.navigation.index * testGridModel.gridConfiguration.numberOfRows;
+//				}
+//				getResults();
+//			}
+//
+//			protected function testReportToolsChanged(event:IndexChangeEvent):void
+//			{
+//				var data:String = (event.currentTarget as TestsReportTools).selectedItem as String;
+//				
+//				if(data == "Export to Excel"){
+//					new ExportTestReportEvent("jsystem_test_report.xls","xls",testGridModel.testQuery).dispatch();
+//				}else if (data == "Export to PDF"){
+//					new ExportTestReportEvent("jsystem_test_report.pdf","pdf",testGridModel.testQuery).dispatch();
+//				}
+//				else if(data == "Time Range"){
+//					if (timeRangeChooser == null){
+//						timeRangeChooser= new CustomReportTimeRangeChooser();	
+//					}					
+//					PopUpManager.addPopUp(timeRangeChooser,this.parent);
+//					PopUpManager.centerPopUp(timeRangeChooser);
+//					timeRangeChooser.saveButton.addEventListener(MouseEvent.CLICK,saveTimeRangeClicked);
+//					timeRangeChooser.cleanButton.addEventListener(MouseEvent.CLICK,cleanTimeRangeClicked);
+//				}else if (data == "Add Columns"){
+//					testsGrid.addGridColumns();
+//				}
+//				tools.selectedItem="Tools";
+//			}
+//			
+//			public function cleanTimeRangeClicked(event:MouseEvent):void{	
+//				getTimeRangeData();
+//				PopUpManager.removePopUp(timeRangeChooser);
+//				getResults();
+//			}
+//			
+//			private function getTimeRangeData():void{
+//				testGroupGridModel.testQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+//				testGridModel.testQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+//			}
+//			
+//			public function getResults():void {
+//				if (inGroupingMode){
+//					getTestGroupResults();
+//				}else if (inGroupTestsMode){
+//					getGroupTestsResults();
+//				}else{
+//					getTestsResults();
+//				}
+//				setReportTitle();
+//			}
+//			
+//			public function getTestsResults():void{
+//				new GetTestSizeEvent(testGridModel).dispatch();
+//				new GetTestEvent(testGridModel.testQuery, getTestCallbackResult, callbackFault).dispatch();		
+//			}
+//			
+//			public function getTestCallbackResult(data:ResultEvent): void
+//			{
+//				var evt:ResultEvent = data as ResultEvent;
+//				var xmlList:XMLList = (new XML(evt.message.body)).test;
+//				testGridModel.gridData.items = TestXMLConverter.fromXMLList(xmlList); 
+//				
+//				grids.removeAllElements();
+//				grids.addElement(testsGrid);
+//				navigation.navModel = testGridModel.navigation;
+//				testGroupCheckBoxGroup.visible = false;		
+//			}
+//			
+//			/**
+//			 * This method will be called once save is clicked in the select Time range pop up.
+//			 **/
+//			public function saveTimeRangeClicked(event:MouseEvent):void{			
+//				getTimeRangeData();
+//				PopUpManager.removePopUp(timeRangeChooser);
+//				getResults();
+//			}
+//			
+//			
+//			protected function checkBoxTestGrouping_changeHandler(event:Event):void
+//			{
+//				if (checkBoxTestGrouping.selected){
+//					inGroupingMode = true;
+//				}else {
+//					inGroupingMode = false;	
+//					inGroupTestsMode = false;
+//				}
+//				getResults();
+//			}
+//			
+//			public function getTestGroupResults():void {
+//				new GetTestGroupSizeEvent(testGroupGridModel).dispatch();
+//				new GetTestGroupEvent(testGroupGridModel.testQuery,getTestGroupCallbackResult,callbackFault).dispatch();
+//			}
+//			
+//			public function getTestGroupCallbackResult(data:ResultEvent): void
+//			{
+//				var evt:ResultEvent = data as ResultEvent;
+//				var xmlList:XMLList = (new XML(evt.message.body)).TestSummary;
+//				testGroupGridModel.gridData.items = TestGroupXMLConverter.fromXMLList(xmlList,checkBoxTestGroupScenario.selected);
+//				
+//				testsGroupGrid.dataProvider = testGroupGridModel.gridData.items;
+//				grids.removeAllElements();
+//				grids.addElement(testsGroupGrid);
+//				navigation.navModel = testGroupGridModel.navigation;
+//				testGroupCheckBoxGroup.visible = true;				
+//			}
+//			
+//			/**
+//			 * This method will be called upon the failure of an event.<br>
+//			 * It will result an error page with the detailed failure reason.
+//			 */ 
+//			public function callbackFault(info:Object): void
+//			{
+//				var event:FaultEvent = FaultEvent(info);
+//				model.error.setMessage(event);
+//				model.applicationState.currentState = "ErrorPage";
+//			}
+//			
+//			protected function checkBoxTestGroup_changeHandler(event:Event):void
+//			{
+//				if (checkBoxTestGroupParameters.selected){
+//					if (checkBoxTestGroupScenario.selected){
+//						testGroupGridModel.testQuery.groupBy = 4;
+//					}else {
+//						testGroupGridModel.testQuery.groupBy = 3;
+//					}
+//				}else if (checkBoxTestGroupScenario.selected){
+//					testGroupGridModel.testQuery.groupBy = 2;
+//				}else {
+//					testGroupGridModel.testQuery.groupBy = 1;
+//				}
+////				getTestGroupResults();	
+//				getResults();
+//			}
+//			
+//			/**
+//			 * This method will init the testGroupGrid  model.<br>
+//			 * The default values for the sorting column:<br>
+//			 * Sorting Column name: testName;<br>
+//			 * Asc: true;
+//			 */ 
+//			private function initTestGroupModelTestQuery():void {
+//				testGroupGridModel.testQuery.sortingColumn.name = "testName";
+//				testGroupGridModel.testQuery.sortingColumn.asc = true;
+//				testGroupGridModel.testQuery.groupBy = model.systemSettings.defaultTestGrouping;//default group by is set from the configuration page.
+//			}
+//			
+//			/**
+//			 * This method will initialize the testGroupGrid;<br>
+//			 * It will add an event handler for double click event on the test group grid.
+//			 */ 
+//			private function initTestGroupGrid():void
+//			{
+//				testsGroupGrid = new TestsGroupReportGrid();
+//				testsGroupGrid.addEventListener(MouseEvent.DOUBLE_CLICK,testsGroupGridDoubleClicked);
+//			}
+//			
+//			/**
+//			 * This method will be called upon a double click event accured in testGroupGrid.<br>
+//			 * @assumptions: testGroupGrid was added an event listner for double click. 
+//			 */ 
+//			protected function testsGroupGridDoubleClicked(event:MouseEvent):void
+//			{
+//				inGroupTestsMode = true;
+//				inGroupingMode = false;
+//				testSummary = ((event.currentTarget as TestsGroupReportGrid).selectedItem as TestSummary);
+//				getResults();
+//			}
+//			
+//			private function getGroupTestsResults():void {
+//				new GetGroupTestsSizeEvent(new TestSummaryQuery(testGridModel.testQuery,testSummary),testGridModel).dispatch();
+//				new GetGroupTestsEvent(new TestSummaryQuery(testGridModel.testQuery,testSummary),getGroupTestsCallbackResult,callbackFault).dispatch();
+//			}
+//			
+//			/**
+//			 * This method will be called after fetching a chunk of tests in respond to a double click event accurd in testGroupGrid.<br>
+//			 * It switched the visibility of the grids and setting the data into the correct data provider.
+//			 */ 
+//			public function getGroupTestsCallbackResult(data:ResultEvent): void
+//			{
+//				var evt:ResultEvent = data as ResultEvent;
+//				var xmlList:XMLList = (new XML(evt.message.body)).test;
+//				testGridModel.gridData.items = TestXMLConverter.fromXMLList(xmlList);
+//				
+//				grids.removeAllElements();
+//				grids.addElement(testsGrid);
+//				navigation.navModel = testGridModel.navigation;
+//				testGroupCheckBoxGroup.visible = false;	//will hide the group of check box: testName, Scenario, params		
+//				inGroupingMode = false;
+//				inGroupTestsMode = true;
+//			}
+//			
+//			/**
+//			 * This method will be called upon testReportGrid delete button was clicked,
+//			 * and confirmed the deletion in the dialog box.<br>;
+//			 * It will dispatch a delete test event.<br>
+//			 */ 
+//			protected function deleteTestButtonClickHandler(event:DeleteTestButtonClickEvent):void
+//			{
+//				new DeleteTestEvent(event.testID,deleteTestCallbackResult,deleteTestCallbackFault).dispatch();
+//			}
+//			
+//			protected function deleteTestCallbackResult(data:ResultEvent): void
+//			{
+//				Alert.show('Test was deleted successfully', '', mx.controls.Alert.OK);
+//				var updateEvent:UpdateEvent = new UpdateEvent(true);
+//				dispatchEvent(updateEvent);
+//			}
+//		
+//			protected function deleteTestCallbackFault(info:Object): void
+//			{
+//				var event:FaultEvent = FaultEvent(info);
+//				model.error.setMessage(event,"Test could not be deleted - internal error");
+//				model.applicationState.currentState = "ErrorPage";	
+//			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:VGroup id="testReportParentGroup" width="100%"  height="100%"/>
+	
+	<!--<s:VGroup id="testReportParentGroup" width="100%"  height="100%">
+		<s:HGroup width="100%" verticalAlign="middle" height="10%" horizontalAlign="center" paddingRight="20" paddingLeft="20">
+			<s:VGroup width="50%" verticalAlign="middle" height="100%" horizontalAlign="left" paddingRight="10">
+				<s:Label id="title" text="{reportTitle}" fontSize="16" fontWeight="bold"/>
+			</s:VGroup>
+			<s:HGroup width="50%" verticalAlign="middle" height="100%" horizontalAlign="right" paddingRight="10">
+				<s:HGroup id="testGroupCheckBoxGroup" visible="false">
+					<s:CheckBox id="checkBoxName" label="Name" selected="true" enabled="false" />
+					<s:CheckBox id="checkBoxTestGroupScenario" label="Scenario" change="checkBoxTestGroup_changeHandler(event)"
+								selected="{model.systemSettings.defaultTestGrouping == 2 || model.systemSettings.defaultTestGrouping == 4}"/>
+					<s:CheckBox id="checkBoxTestGroupParameters" label="Parameters" change="checkBoxTestGroup_changeHandler(event)" visible="false"
+								selected="{model.systemSettings.defaultTestGrouping == 3 || model.systemSettings.defaultTestGrouping == 4}"/>
+				</s:HGroup>
+				<s:Spacer x="242" y="15" width="42" height="36"/>
+				<s:CheckBox id="checkBoxTestGrouping" label="Test Grouping" change="checkBoxTestGrouping_changeHandler(event)" visible="true"/>
+				<tools:TestsReportTools id="tools" height="40%" change="testReportToolsChanged(event)"/>
+				<s:Button toolTip="Refresh" buttonMode="true" mouseChildren="false" useHandCursor="true" 
+						  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin" 
+						  x="468" y="221" click="refreshButtonClicked(event)"/>
+			</s:HGroup>
+		</s:HGroup>
+		<s:HGroup id="grids" width="100%" verticalAlign="bottom" height="85%" paddingTop="10">
+			<grids:TestsReportGrid id="testsGrid" dataProvider="{testGridModel.gridData.items}" />
+		</s:HGroup>
+		<common:Navigation paddingBottom="8" width="100%" paddingTop="8" verticalAlign="middle" horizontalAlign="center"
+						   id="navigation" navModel="{testGridModel.navigation}"/>
+	</s:VGroup>-->
+</s:BorderContainer>

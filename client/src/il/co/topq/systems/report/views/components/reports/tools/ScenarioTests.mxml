@@ -1,0 +1,87 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009" 
+			   xmlns:s="library://ns.adobe.com/flex/spark" 
+			   xmlns:mx="library://ns.adobe.com/flex/mx" 
+			   width="770" height="592" chromeColor="#D4E4FB" 
+			   title="Scenario Tests" color="#000000"	
+			   xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*" 
+			   xmlns:common="il.co.topq.systems.report.views.components.reports.common.*"
+			   creationComplete="scenarioTests_CreationComplete(event)"
+			   close="cancel_clickHandler(event)">
+	<fx:Script>
+		<![CDATA[
+			[Event(name="updateEvent", type="il.co.topq.systems.report.events.general.UpdateEvent")]
+
+			import il.co.topq.systems.report.events.test.DeleteTestButtonClickEvent;
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.events.scenario.GetScenarioTestsEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.*;
+			import il.co.topq.systems.report.events.scenario.GetScenarioByIDEvent;
+			
+			import mx.controls.Alert;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+			[Bindable]
+			protected var testGridModel:TestGridModel = ReportModelLocator.getTestGridModel();
+
+			protected function scenarioTests_CreationComplete(event:FlexEvent):void
+			{
+				addNavigationListners();	
+				testsGrid.addEventListener(UpdateEvent.UPDATE_EVENT,updateTestHandler);
+				testsGrid.addEventListener(DeleteTestButtonClickEvent.DELETE_TEST_BUTTON_CLICK_EVENT,deleteTestButtonClickHandler);
+			}
+			
+			protected function cancel_clickHandler(event:Event):void {
+				PopUpManager.removePopUp(this);
+			}
+			
+			/**
+			 * This method will add event listners to the Navigation component.
+			 * Will listen on next | previous clicks.
+			 **/
+			private function addNavigationListners():void {
+				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+			}
+			
+			public function handleNextClicked(event:MouseEvent):void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			public function handlePreviousClicked(event:MouseEvent):void{
+				Alert.show("Need to inherit and override this method");
+			}
+
+	        public function getResults():void {
+				Alert.show("Need to inherit and override this method");
+	        }
+	
+	        protected function initFilter():void {
+				Alert.show("Need to inherit and override this method");
+	        }
+			
+			protected function updateTestHandler(event:Event):void
+			{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function deleteTestButtonClickHandler(event:DeleteTestButtonClickEvent):void
+			{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+		]]>
+	</fx:Script>
+	<s:VGroup x="10" y="68" width="748" height="100%">
+		<grids:TestsReportGrid id="testsGrid" height="444" dataProvider="{testGridModel.gridData.items}"/>
+		<common:Navigation paddingBottom="8" width="100%" paddingTop="8"
+						   verticalAlign="middle" horizontalAlign="center"
+						   id="navigation" navModel="{testGridModel.navigation}"/>
+	</s:VGroup>
+	<s:Group x="11" y="628" width="919" height="48">
+	</s:Group>
+</s:TitleWindow>

@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<users>
+	<user>
+		<action></action>
+		<username>admin</username>
+		<password>admin</password>
+		<usertype>administrator</usertype>
+	</user>
+	<user>
+		<action></action>
+		<username>mic</username>
+		<password>12345</password>
+		<usertype>viewer</usertype>
+	</user>
+</users>

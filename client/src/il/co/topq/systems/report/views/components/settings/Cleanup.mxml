@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:Group xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" fontFamily="Calibri" fontSize="16" width="100%" height="100%">
+	
+	
+	<s:VGroup paddingTop="50" paddingLeft="50" gap="20">
+		<s:CheckBox label="Enable periodic cleanup"/>
+		<s:HGroup width="100%" verticalAlign="middle" >
+			<s:Label text="Number of weeks between cleanups:"/>
+			<s:TextInput/>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="middle" >
+			<s:Label text="Perform manual cleanup:"/>
+			<s:Button id="buttonCancel" height="24" label="Clean now" chromeColor="#0A1E39"
+					  color="#FFFFFF" focusColor="#85AED4"
+					  fontWeight="bold"/>
+		</s:HGroup>
+		
+		
+	</s:VGroup>
+	<s:HGroup  width="100%" height="100%" verticalAlign="bottom" horizontalAlign="right" paddingRight="20" paddingBottom="20">
+		<s:Button height="24" label="Save" chromeColor="#0A1E39"
+				  color="#FFFFFF" focusColor="#85AED4"
+				  fontWeight="bold"/>
+		<s:Button height="24" label="Cancel" chromeColor="#0A1E39"
+				  color="#FFFFFF" focusColor="#85AED4"
+				  fontWeight="bold"/>
+	</s:HGroup>
+</s:Group>

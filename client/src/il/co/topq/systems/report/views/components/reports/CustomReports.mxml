@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009"
+				   xmlns:s="library://ns.adobe.com/flex/spark"
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   xmlns:reports="il.co.topq.systems.report.views.components.reports.*"
+				   xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*"
+				   xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+				   width="100%" height="100%" creationComplete="customReport_creationComplete(event)" xmlns:common="il.co.topq.systems.report.views.components.reports.common.*">
+	<fx:Script>
+		<![CDATA[
+			[Event(name="showCustomReportsEvent", type="il.co.topq.systems.report.events.general.ShowCustomReportsEvent")]
+			import il.co.topq.systems.report.events.general.ScenarioDetailsGetScenarioTestsEvent;
+			import il.co.topq.systems.report.events.general.ShowCustomReportsEvent;
+			import il.co.topq.systems.report.events.scenarioCustomReport.ScenarioCustomReportGridDoubleClickEvent;
+			import il.co.topq.systems.report.events.testCustomReport.TestCustomReportGridDoubleClickEvent;
+			import il.co.topq.systems.report.views.components.reports.common.FilteredScenarioCustomReportViewModel;
+			import il.co.topq.systems.report.views.components.reports.common.FilteredTestCustomReportViewModel;
+			
+			import mx.events.FlexEvent;
+
+			private var _customReport:CustomReport;
+			
+			protected function customReport_creationComplete(event:FlexEvent):void
+			{
+				_customReport = new CustomReport();
+				_customReport.addEventListener(TestCustomReportGridDoubleClickEvent.TEST_CUSTOM_REPORT_GRID_DOUBLE_CLICK_EVENT,testCustomReportGridDoubleClickHandler);
+				_customReport.addEventListener(ScenarioCustomReportGridDoubleClickEvent.SCENARIO_CUSTOM_REPORT_GRID_DOUBLE_CLICK_EVENT,scenarioCustomReportGridDoubleClickHandler);
+				customReportParentGroup.addElement(_customReport);
+			}
+			
+			/**
+			 * This method will clean all the children elements of this container.<br>
+			 * It is used in order to change grids inside this container due to logic reasons.<br>
+			 */ 
+			private function resetContainer():void {
+				customReportParentGroup.removeAllElements();
+			}
+			
+			public function get customReport():CustomReport{
+				return _customReport;
+			}
+			
+			protected function testCustomReportGridDoubleClickHandler(event:TestCustomReportGridDoubleClickEvent):void
+			{
+				customReportParentGroup.removeAllElements();
+				var filteredTestCustomReportViewModel:FilteredTestCustomReportViewModel = new FilteredTestCustomReportViewModel(event.testCustomReportVO.id);
+				filteredTestCustomReportViewModel.addEventListener(ShowCustomReportsEvent.SHOW_CUSTOM_REPORTS_EVENT,customReportGridShowCustomReportsClickHandler);
+				customReportParentGroup.addElement(filteredTestCustomReportViewModel);
+			}
+			
+			protected function scenarioCustomReportGridDoubleClickHandler(event:ScenarioCustomReportGridDoubleClickEvent):void
+			{
+				customReportParentGroup.removeAllElements();
+				var filteredScenarioCustomReportViewModel:FilteredScenarioCustomReportViewModel = new FilteredScenarioCustomReportViewModel(event.scenarioCustomReportVO.id);
+				filteredScenarioCustomReportViewModel.addEventListener(ShowCustomReportsEvent.SHOW_CUSTOM_REPORTS_EVENT,customReportGridShowCustomReportsClickHandler);
+				filteredScenarioCustomReportViewModel.addEventListener(ScenarioDetailsGetScenarioTestsEvent.SCENARIO_DETAILS_GET_SCENARIO_TESTS_EVENT,getScenarioTestsEventsHandler);
+				customReportParentGroup.addElement(filteredScenarioCustomReportViewModel);
+			}
+			
+			protected function customReportGridShowCustomReportsClickHandler(event:ShowCustomReportsEvent):void
+			{
+				resetContainer();
+				customReportParentGroup.addElement(_customReport);
+			}
+			
+			protected function getScenarioTestsEventsHandler(event:ScenarioDetailsGetScenarioTestsEvent):void
+			{
+				dispatchEvent(new ScenarioDetailsGetScenarioTestsEvent(event.scenario,true));
+			}
+			
+		]]>		
+		
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup id="customReportParentGroup" width="100%" height="100%"/>
+</s:BorderContainer>

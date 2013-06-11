@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%"  xmlns:reports="il.co.topq.systems.report.views.components.reports.*" xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*" xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*" >
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.views.skin.RefreshButtonSkin;
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+
+			
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup width="100%"  height="100%">
+		<s:HGroup width="100%" verticalAlign="middle" height="10%" horizontalAlign="center" paddingRight="20" paddingLeft="20">
+			<s:HGroup width="50%" verticalAlign="middle" height="100%" horizontalAlign="left" paddingRight="10">
+				<s:Label text="Runtime Report" fontSize="16" fontWeight="bold"/>
+			</s:HGroup>
+			<s:HGroup width="50%" verticalAlign="middle" height="100%" horizontalAlign="right" paddingRight="10">
+				<tools:RuntimeReportTools height="40%"/>
+				<s:Button toolTip="Refresh" buttonMode="true" mouseChildren="false" useHandCursor="true" skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"  x="468" y="221"/>
+			</s:HGroup>
+		</s:HGroup>
+		<s:HGroup width="100%" verticalAlign="bottom" height="85%" paddingTop="10">
+			<grids:RuntimeReportGrid />
+		</s:HGroup>
+		
+		<s:HGroup width="100%" height="5%">
+			
+		</s:HGroup>	
+	</s:VGroup>
+</s:BorderContainer>

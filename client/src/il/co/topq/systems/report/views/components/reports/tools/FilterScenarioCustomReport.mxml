@@ -1,0 +1,208 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*"
+			   xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+			   xmlns:common="il.co.topq.systems.report.views.components.reports.common.*"
+			   width="942" height="720" chromeColor="#D4E4FB"  color="#000000" title="{reportTitle}"
+			   close="cancel_clickHandler(event)" creationComplete="onCreationComplete(event)" >
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.*;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.Alert;
+			import mx.controls.ComboBox;
+			import mx.events.FlexEvent;
+			import mx.events.ListEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			
+			import spark.components.HGroup;
+			import spark.components.Label;
+			import spark.events.IndexChangeEvent;
+			
+			[Bindable]
+			public var scenarioCustomReportGridModel:ScenarioCustomReportGridModel = ReportModelLocator.getScenarioCustomReportGridModel();
+			
+			[Bindable]
+			private var reportTitle:String = "Scenario Custom Report";
+			
+			protected var timeRangeChooser:TimeRangeChooser;
+			protected var  ANY_VALUE_INDEX:Number = 0;			
+			protected var comboBoxPropertyValueArr:Array;
+			
+			protected function onCreationComplete(event:FlexEvent):void
+			{
+				addNavigationListners();
+				populatePropertValuesComboBox();
+				setPropertiesInScenarioQuery();
+				getResults();
+			}
+			
+			protected function cancel_clickHandler(event:Event):void
+			{	
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function setCustomReportTitle():void{
+				
+				var title:String = "Scenario Custom Report";
+				
+				if (timeRangeChooser != null){
+					scenarioCustomReportGridModel.scenarioQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+					
+					if ((timeRangeChooser.lowerDate.selectedDate != null) && (timeRangeChooser.upperDate.selectedDate != null)){
+						var from:String = formatDate(timeRangeChooser.lowerDate.selectedDate.getTime());
+						var to:String = formatDate(timeRangeChooser.upperDate.selectedDate.getTime());
+						title += " between " + from + " and " + to ;
+					}
+				}
+				reportTitle = title;
+			}
+			
+			public function formatDate(date:Number):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY";  
+				var d:Date = new Date(date);   
+				return df.format(d);
+			}
+
+			
+			protected function handleNextClicked(event:MouseEvent):void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function handlePreviousClicked(event:MouseEvent):void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			/**
+			 * This method will add event listners to the Navigation component.
+			 * Will listen on next | previous clicks.
+			 **/
+			private function addNavigationListners():void {
+				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+			}
+			
+			private function populatePropertValuesComboBox():void {
+				comboBoxPropertyValueArr = new Array();				
+				var numOfProperties:Number = scenarioCustomReportGridModel.scenarioCustomReportPropertiesValues.length;
+				for (var i:int=0; i<numOfProperties; i++){
+					var propertyValuesWrapper:PropertyValuesWrapper = (scenarioCustomReportGridModel.scenarioCustomReportPropertiesValues[i]) as PropertyValuesWrapper;
+					propertyValuesWrapper.propertyValues.addItemAt("All",0);
+					
+					var hgroup:HGroup = new HGroup();
+					hgroup.name="group"+i;
+					hgroup.width=300;
+					hgroup.height=35;
+					hgroup.paddingLeft=25;
+					hgroup.paddingTop=10;
+					hgroup.verticalAlign="middle";
+					var label:Label = new Label();				
+					label.text = propertyValuesWrapper.propertyKey;
+					var comboBox:mx.controls.ComboBox = new mx.controls.ComboBox();
+					comboBox.width=142;
+					comboBox.name=label.text;
+					comboBox.editable = false;
+					comboBoxPropertyValueArr.push(comboBox);	
+					comboBox.dataProvider = propertyValuesWrapper.propertyValues;
+					comboBox.itemRenderer = new ClassFactory (mx.controls.Label);
+					comboBox.addEventListener("change",combobox_changeHandler);
+					hgroup.addElement(label);
+					hgroup.addElement(comboBox);
+					propertiesContainer.addElement(hgroup);
+				}
+			}
+			
+			protected function combobox_changeHandler(event:ListEvent):void
+			{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function getResults():void{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+			protected function onGetResultsClick(event:MouseEvent):void
+			{				
+				getResults();
+			}
+			
+			/**
+			 * This method will be called once save is clicked in the select Time range pop up.
+			 **/
+			public function saveTimeRangeClicked(event:MouseEvent):void{			
+				getTimeRangeData();
+				PopUpManager.removePopUp(timeRangeChooser);
+				getResults();
+			}
+			
+			private function getTimeRangeData():void{
+				scenarioCustomReportGridModel.scenarioQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+			}
+			
+			public function cleanTimeRangeClicked(event:MouseEvent):void{			
+				getTimeRangeData();
+				PopUpManager.removePopUp(timeRangeChooser);
+				getResults();
+			}
+			
+			protected function setPropertiesInScenarioQuery():void{
+				
+				scenarioCustomReportGridModel.scenarioQuery.scenarioProperties = new ArrayCollection();//will reset test query properties.
+				
+				for (var i:int=0; i<comboBoxPropertyValueArr.length; i++){
+					var c:ComboBox = comboBoxPropertyValueArr[i] as ComboBox;
+					
+					if (c.selectedIndex != ANY_VALUE_INDEX){
+						scenarioCustomReportGridModel.scenarioQuery.scenarioProperties.addItem(new ScenarioProperty(c.name,c.selectedItem as String));					
+					}else{
+						scenarioCustomReportGridModel.scenarioQuery.scenarioProperties.addItem(new ScenarioProperty(c.name,""));						
+					}
+				}
+			}
+			
+			protected function tools_changeHandler(event:IndexChangeEvent):void
+			{
+				Alert.show("Need to inherit and override this method");
+			}
+			
+		]]>
+	</fx:Script>
+	
+	<s:Group id="propertiesContainer" x="9" y="9" width="921" height="107">
+		<s:layout>
+			<s:TileLayout orientation="rows"/>
+		</s:layout>
+	</s:Group>
+	<s:HGroup x="0" y="124" width="100%" height="10%" horizontalAlign="center" paddingLeft="20"
+			  paddingRight="20" verticalAlign="middle">
+		<s:HGroup width="50%" height="100%" horizontalAlign="left" paddingRight="10"
+				  verticalAlign="middle">
+		</s:HGroup>
+		<s:HGroup width="50%" height="100%" horizontalAlign="right" paddingRight="10"
+				  verticalAlign="middle">
+			<tools:FilterdCustomReportTools id="tools" height="40%" selectedItem="Tools" change="tools_changeHandler(event)"/>
+			<s:Button x="468" y="221" buttonMode="true" click="onGetResultsClick(event)" mouseChildren="false"
+					  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"
+					  toolTip="Get Results" useHandCursor="true"/>
+		</s:HGroup>
+	</s:HGroup>
+	<s:VGroup x="10" y="178" width="920" height="442">
+
+	<grids:ExecutionReportGrid id="executionGrid" height="430" dataProvider="{scenarioCustomReportGridModel.gridData.items}">
+		
+	</grids:ExecutionReportGrid>
+	</s:VGroup>
+	<s:Group x="11" y="628" width="919" height="48">
+		<common:Navigation paddingBottom="8" width="100%" paddingTop="8" verticalAlign="middle" horizontalAlign="center"
+						   id="navigation" navModel="{scenarioCustomReportGridModel.navigation}"/>
+	</s:Group>
+
+</s:TitleWindow>

@@ -1,0 +1,69 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:ComboBox xmlns:fx="http://ns.adobe.com/mxml/2009"
+			xmlns:s="library://ns.adobe.com/flex/spark"
+			xmlns:mx="library://ns.adobe.com/flex/mx"
+			xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+			xmlns:wizards="il.co.topq.systems.report.views.components.reports.wizards.*" 
+			width="200" height="100%" change="changeHandler(event)" contentBackgroundColor="#FFFFFF"
+			dataProvider="{model.customReportTools}" selectedItem="Tools">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.scenarioCustomReport.GetScenarioCustomReportByChunkEvent;
+			import il.co.topq.systems.report.events.scenarioCustomReport.GetScenarioCustomReportSizeEvent;
+			import il.co.topq.systems.report.events.testCustomReport.GetTestCustomReportByChunkEvent;
+			import il.co.topq.systems.report.events.testCustomReport.GetTestCustomReportSizeEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.*;
+			import il.co.topq.systems.report.views.components.reports.CustomReports;
+			
+			import mx.core.UIComponent;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+
+			[Bindable]
+			[Embed(source='/assets/images/warning.gif')]
+			
+			private var Icon:Class;
+			
+			
+			protected function changeHandler(event:IndexChangeEvent):void
+			{
+//				var data:String = (event.currentTarget as CustomReportTools).selectedItem as String;
+//				var filter:Filter =  new Filter();
+//				filter.chunk = new Chunk(0,model.gridNumberOfRows);
+//				filter.timeRange = new TimeRange();
+//				filter.timeRange.lowBoundDate = NaN;
+//				filter.timeRange.upBoundDate = NaN;
+//				
+//				if(data == "New Custom Report"){
+//					//init values due to object binding.
+//					model.customReportVO = new CustomReportVO();
+//					model.customReport = new XML();
+//					
+//					var customReportWizard:CustomReportWizard = new CustomReportWizard();
+//					PopUpManager.addPopUp(customReportWizard,UIComponent(this.parentApplication),true);					
+//					PopUpManager.centerPopUp(customReportWizard);
+//				}else if (data == "Test Custom Report"){
+//					CustomReports.type = "Test";
+//					new GetTestCustomReportSizeEvent(filter).dispatch();
+//					new GetTestCustomReportByChunkEvent(filter).dispatch();
+//				}else if (data == "Execution Custom Report"){
+//					CustomReports.type = "Execution";
+//					new GetScenarioCustomReportSizeEvent(filter).dispatch();
+//					new GetScenarioCustomReportByChunkEvent(filter).dispatch();
+//				}
+//				selectedItem="Tools"						
+			}
+
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<wizards:CustomReportWizard id="customReportWizard"/>
+	</fx:Declarations>
+	
+</s:ComboBox>

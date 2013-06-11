@@ -1,0 +1,234 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009"
+			 xmlns:s="library://ns.adobe.com/flex/spark"
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+			 width="100%" height="100%" 
+			 doubleClickEnabled="true"
+			 horizontalScrollPolicy="auto" verticalScrollPolicy="auto"
+			 creationComplete="executionReportGrid_creationCompleteHandler(event)"
+			 verticalAlign="middle" xmlns:renderers="il.co.topq.systems.report.renderers.*">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.models.valueobjects.TestSummary;
+			
+			import mx.events.FlexEvent;
+			
+			[Event(name="removeColumnImgClick", type="mx.events.MoveEvent")]
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.renderers.RemovableDataGridHeaderRenderer;
+			import il.co.topq.systems.report.views.components.reports.tools.ScenarioDetail;
+			import il.co.topq.systems.report.views.components.reports.wizards.PropertiesWizard;
+			
+			import mx.collections.ArrayList;
+			import mx.controls.Alert;
+			import mx.controls.Image;
+			import mx.core.UIComponent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			
+			import org.as3commons.collections.Map;
+			import org.as3commons.collections.Set;
+			import org.as3commons.collections.framework.IIterator;
+			
+			public var map:Map = new Map();
+			private var propertiesWizard:PropertiesWizard;
+			private var propertiesColumns:Set = new Set();
+			
+			protected function executionReportGrid_creationCompleteHandler(event:FlexEvent):void
+			{
+				propertiesColumns = getGridDefaultColumns();
+				updateGrid();
+			}
+			
+			public function calculateTotal(testSummary:TestSummary, column:DataGridColumn):String{
+				var total:Number = Number(testSummary.passed)+Number(testSummary.failed)+Number(testSummary.warned);
+				return total.toString();
+			}
+			
+			public function addToSelectedItems(id:String):void{
+				map.add(id,true);
+			}
+			
+			public function removeFromSelectedItem(id:String):void{
+				map.removeKey(id);
+			}
+			
+			public function setSelectedItem(id:String):Boolean{
+				if (map.hasKey(id)){
+					return true;
+				}else{
+					return false;
+				}
+			}
+			
+			private function nextClicked(event:MouseEvent):void{		
+//				PopUpManager.removePopUp(propertiesWizard);
+//				var propertiesSet:Set = propertiesWizard.getSelectedProperties();
+//				var iterator:IIterator = propertiesSet.iterator();
+//				var properties:String = "";
+//				while(iterator.hasNext()){
+//					var propertyCol:String = iterator.next();
+//					if (!propertiesColumns.has(propertyCol)){
+//						propertiesColumns.add(propertyCol);
+//					}
+//				}
+//				updateGrid();
+			}
+			
+			private function getGridColumnsToSet():Set {
+				var cols:Array = this.columns;
+				var gridColumns : Set = new Set();
+				
+				for (var i:int = 0; i<cols.length; i++){
+					gridColumns.add((cols[i] as DataGridColumn).headerText);
+				}
+				return gridColumns;
+			}
+			
+			private function updateGrid():void {
+				
+				var cols:Array = this.columns;
+				
+				var gridColumns:Set = getGridColumnsToSet();
+				
+				var iterator:IIterator = propertiesColumns.iterator();
+				while (iterator.hasNext()){
+					var propertyCol:String = iterator.next();
+					if (!gridColumns.has(propertyCol)){
+						var dgc:DataGridColumn = new DataGridColumn();
+						dgc.headerText = propertyCol;
+						dgc.setStyle("textAlign","center");
+						if (propertyCol == "Total"){
+							dgc.labelFunction = calculateTotal;
+						}else if (propertyCol == "Pass"){
+							dgc.dataField = "passed";
+						}else if (propertyCol == "Fail"){
+							dgc.dataField = "failed";
+						}else if (propertyCol == "Warning"){
+							dgc.dataField = "warned";
+						}else if (propertyCol == "Scenario"){
+							dgc.dataField = "scenarioName";
+						}else if (propertyCol == "Parameters"){
+							dgc.dataField = "params";
+							dgc.width = 120;
+						}
+						
+						//property as column
+//						else {
+//							dgc.labelFunction = formatPropertyColumn;
+//						}
+						
+						dgc.showDataTips = true;
+						dgc.itemRenderer = new ClassFactory (mx.controls.Label);
+						this.addEventListener("removeColumnImgClick",imgClicked);
+						dgc.headerRenderer = new ClassFactory (RemovableDataGridHeaderRenderer);
+						
+						cols.push(dgc);
+					}
+				}
+				this.columns = cols;
+			}
+			
+			public function addGridColumns():void
+			{
+				propertiesWizard = new PropertiesWizard();
+				propertiesWizard.finishButton.addEventListener(MouseEvent.CLICK,nextClicked);
+				PopUpManager.addPopUp(propertiesWizard,this,false);
+				PopUpManager.centerPopUp(propertiesWizard);
+			}
+			
+//			public function formatPropertyColumn(scenario:Object, column:DataGridColumn):String{
+//				var xmlList:XMLList = (scenario.scenarioProperties as XMLList);
+//				for (var i:int = 0; i < xmlList.length(); i++) {
+//					if (column.headerText == xmlList[i].propertyKey){
+//						return xmlList[i].propertyValue;
+//					}
+//				}
+//				if (xmlList is XMLList){
+//					
+//				}
+//				return "/";
+//			}
+			
+			protected function imgClicked(event:MouseEvent):void
+			{
+				var headerText:String = (event.target as RemovableDataGridHeaderRenderer).headerText;
+				var columns:Array = this.columns;
+				var newColumns:Array = new Array();
+				for (var i:int = 0; i<columns.length; i++){
+					if ((columns[i] as DataGridColumn).headerText != headerText){
+						newColumns.push(columns[i] as DataGridColumn);
+					}
+				}
+				this.columns = newColumns;
+				propertiesColumns.remove(headerText);
+			}
+			
+			private function getGridDefaultColumns():Set {
+				var defaultColumns:Set = new Set();
+				defaultColumns.add("Total");
+				defaultColumns.add("Pass");
+				defaultColumns.add("Fail");
+				defaultColumns.add("Warning");
+				defaultColumns.add("Scenario");
+				defaultColumns.add("Parameters");
+				return defaultColumns;
+			}
+			
+			private function getGridsAvailableColumns():Set {
+				
+				var availableColumns : Set = new Set();
+				var defaultColumns:Set = getGridDefaultColumns();
+				var gridColumns:Set = getGridColumnsToSet();
+				
+				var iterator:IIterator = defaultColumns.iterator();
+				while (iterator.hasNext()){
+					var propertyCol:String = iterator.next();
+					if (!gridColumns.has(propertyCol)){
+						availableColumns.add(propertyCol);
+					}
+				}
+				return availableColumns	;
+			}
+			
+			private function getGridsExistingColumns():Set {
+				var existingColumns : Set = new Set();
+				var defaultColumns:Set = getGridDefaultColumns();
+				var gridColumns:Set = getGridColumnsToSet();
+				
+				var iterator:IIterator = defaultColumns.iterator();
+				while (iterator.hasNext()){
+					var propertyCol:String = iterator.next();
+					if (gridColumns.has(propertyCol)){
+						existingColumns.add(propertyCol);
+					}
+				}
+				return existingColumns	;
+			}
+		]]>	
+	</fx:Script>
+	<fx:Declarations>
+		<renderers:RemovableDataGridHeaderRenderer id="removableDataGridHeaderRenderer" />
+	</fx:Declarations>
+	
+	<mx:columns>
+		<mx:DataGridColumn showDataTips="true" itemRenderer="mx.controls.Label" width="350" dataField="testName" headerText="Test Name" textAlign="left">
+			<mx:headerRenderer>
+				<fx:Component>				   			
+					<mx:Label textAlign="center"/>
+				</fx:Component>
+			</mx:headerRenderer>
+		</mx:DataGridColumn>
+		<!--		<mx:DataGridColumn width="180" dataField="startTime" headerText="Start Time"
+		labelFunction="formatDate" textAlign="center" />
+		<mx:DataGridColumn width="120" dataField="duration" headerText="Duration"
+		labelFunction="formatDuration" textAlign="center"/>
+		<mx:DataGridColumn width="60" dataField="total" headerText="Total"
+		labelFunction="calculateTotal" textAlign="center"/>
+		<mx:DataGridColumn width="60" dataField="successTests" headerText="Pass" textAlign="center"/>
+		<mx:DataGridColumn width="60" dataField="failTests" headerText="Fail" textAlign="center"/>
+		<mx:DataGridColumn width="70" dataField="warningTests" headerText="Warning"
+		textAlign="center"/>-->
+	</mx:columns>
+</mx:DataGrid>

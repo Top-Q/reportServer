@@ -1,0 +1,517 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009"
+			 xmlns:s="library://ns.adobe.com/flex/spark"
+			 xmlns:mx="library://ns.adobe.com/flex/mx"
+			 xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+			 xmlns:renderers="il.co.topq.systems.report.renderers.*"
+			 width="100%" height="100%"
+			 creationComplete="executionReportGrid_creationCompleteHandler(event)"
+			 doubleClick="executionReportGrid_doubleClickHandler(event)" doubleClickEnabled="true"
+			 horizontalScrollPolicy="auto" verticalAlign="middle" verticalScrollPolicy="auto">
+	<fx:Script>
+		<![CDATA[
+			import flash.utils.getDefinitionByName;
+			
+			import il.co.topq.systems.report.business.config.GridColumnRemover;
+			import il.co.topq.systems.report.events.config.GetGridConfigurationEvent;
+			import il.co.topq.systems.report.events.config.SetUIConfigurationsEvent;
+			import il.co.topq.systems.report.events.config.UpdateGridConfigurationEvent;
+			import il.co.topq.systems.report.events.general.SelectAllCheckBoxClickedEvent;
+			import il.co.topq.systems.report.models.valueobjects.GridConfiguration;
+			import il.co.topq.systems.report.models.valueobjects.TypeEnum;
+			import il.co.topq.systems.report.models.valueobjects.uiConfigurations.GridUIConfiguration;
+			
+			import mx.controls.Alert;
+			import mx.events.ListEvent;
+			import mx.rpc.events.ResultEvent;
+			[Event(name="removeColumnImgClick", type="mx.events.MoveEvent")]
+			[Event(name="updateEvent", type="il.co.topq.systems.report.events.general.UpdateEvent")]
+			[Event(name="deleteScenarioButtonClickEvent", type="il.co.topq.systems.report.events.scenario.DeleteScenarioButtonClickEvent")]
+			[Event(name="scenarioDetailsGetScenarioTestsEvent", type="il.co.topq.systems.report.events.general.ScenarioDetailsGetScenarioTestsEvent")]			
+			[Event(name="selectAllCheckBoxClickedEvent", type="il.co.topq.systems.report.events.general.SelectAllCheckBoxClickedEvent")]	
+			[Event(name="updateGridConfigurationEvent", type="il.co.topq.systems.report.events.config.UpdateGridConfigurationEvent")]
+
+			import il.co.topq.systems.report.events.general.ScenarioDetailsGetScenarioTestsEvent;
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.Scenario;
+			import il.co.topq.systems.report.models.valueobjects.ScenarioGridModel;
+			import il.co.topq.systems.report.models.valueobjects.ScenarioProperty;
+			import il.co.topq.systems.report.renderers.RemovableDataGridHeaderRenderer;
+			import il.co.topq.systems.report.views.components.reports.scenario.ScenarioDetailsViewModel;
+			import il.co.topq.systems.report.views.components.reports.wizards.ScenarioAddColumnsWizard;
+			
+			import mx.collections.ArrayCollection;
+			import mx.controls.dataGridClasses.DataGridItemRenderer;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			
+			import org.as3commons.collections.Map;
+			
+			private var gridBaseColumns:Array;
+			public var gridColumns:ArrayCollection = new ArrayCollection();
+			
+			[Bindable]
+			public var selectedScenarios:Map = new Map();
+			
+			[Bindable]
+			public var areAllScenariosSelected:Boolean = false; /// are all scenarios from DB selected.
+			
+			[Bindable]
+			public var headerCheckBoxSelected:Boolean = false; // is all chunk selected
+			
+			private var scenarioAddColumnsWizard:ScenarioAddColumnsWizard;
+			
+			[Inspectable]
+			public var scenarioGridModel:ScenarioGridModel;
+			
+			public var gridUIConfiguration:GridUIConfiguration;
+			
+			protected function executionReportGrid_creationCompleteHandler(event:FlexEvent):void
+			{
+				saveGridBaseColumns();
+//				getGridColumns();
+//				rebuildGrid(getGridDefaultColumns());
+			}
+			
+			
+			/**
+			 * This method will rebuild the component (DataGrid).<br>
+			 * It will get an arrayCollection of columns (string: columnHeader),
+			 * And it will use the grid's base columns which are not configurable.
+			 */ 
+			private function rebuildGrid(gridDefaultColumns:ArrayCollection):void {
+				var cols:Array = new Array(); //will be used as the new grid columns array.
+				
+				//set the grid base columns to the new columns array.
+				for (var i:int = 0; i < gridBaseColumns.length; i++){
+					cols.push(gridBaseColumns[i]);
+				}
+				
+				for (var j:int = 0; j < gridDefaultColumns.length; j++){
+					
+					var dgc:DataGridColumn = new DataGridColumn();
+					var columnHeader:String = gridDefaultColumns[j];
+					dgc.headerText = columnHeader;
+					dgc.setStyle("textAlign","center");
+					
+					if (columnHeader == "StartTime"){
+						dgc.dataField = "startTime";
+						dgc.width = 180;
+						dgc.labelFunction = formatDate;
+					}else if (columnHeader == "Duration"){
+						dgc.dataField = "duration";
+						dgc.width = 140;
+						dgc.labelFunction = formatDuration;
+					}else if (columnHeader == "Total"){
+						dgc.dataField = "total";
+					}else if (columnHeader == "Pass"){
+						dgc.dataField = "pass";
+					}else if (columnHeader == "Fail"){
+						dgc.dataField = "fail";
+					}else if (columnHeader == "Warning"){
+						dgc.dataField = "warn";
+					}else {
+						dgc.labelFunction = formatPropertyColumn;
+					}
+					
+					dgc.showDataTips = true;
+					dgc.itemRenderer = new ClassFactory (mx.controls.Label);
+					this.addEventListener("removeColumnImgClick",removeColumnImageClickHandler);
+					dgc.headerRenderer = new ClassFactory (RemovableDataGridHeaderRenderer);
+					
+					cols.push(dgc);
+				}
+				this.columns = cols;
+			}
+			
+			/**
+			 * This method will rebuild the component (DataGrid).<br>
+			 * It will get an arrayCollection of columns (string: columnHeader),
+			 * And it will use the grid's base columns which are not configurable.
+			 */ 
+			public function rebuildGridUsingUIConfiguration(gridUIConfiguration:GridUIConfiguration):void {
+				if ((gridUIConfiguration == null) || (gridUIConfiguration.fieldColumns.length == 0 && gridUIConfiguration.propertiesColumns.length == 0)){
+					addColumnsToGrid(getGridDefaultColumns());
+				}else{
+					addColumnsToGrid(gridUIConfiguration.fieldColumns);
+					addColumnsToGrid(gridUIConfiguration.propertiesColumns);
+				}
+				this.gridUIConfiguration = gridUIConfiguration;
+			}
+			
+			private function addColumnsToGrid(columns:ArrayCollection):void{
+				
+				var cols:Array = new Array(); //will be used as the new grid columns array.
+				
+				//set the grid base columns to the new columns array.
+				for (var i:int = 0; i < this.columns.length; i++){
+					cols.push(this.columns[i]);
+				}
+				
+				for (var j:int = 0; j < columns.length; j++){
+					
+					var dgc:DataGridColumn = new DataGridColumn();
+					var columnHeader:String = columns[j];
+					dgc.headerText = columnHeader;
+					dgc.setStyle("textAlign","center");
+					
+					if (columnHeader == "StartTime"){
+						dgc.dataField = "startTime";
+						dgc.width = 180;
+						dgc.labelFunction = formatDate;
+					}else if (columnHeader == "Duration"){
+						dgc.dataField = "duration";
+						dgc.width = 140;
+						dgc.labelFunction = formatDuration;
+					}else if (columnHeader == "Total"){
+						dgc.dataField = "total";
+					}else if (columnHeader == "Pass"){
+						dgc.dataField = "pass";
+					}else if (columnHeader == "Fail"){
+						dgc.dataField = "fail";
+					}else if (columnHeader == "Warning"){
+						dgc.dataField = "warn";
+					}else {
+						dgc.labelFunction = formatPropertyColumn;
+					}
+					
+					dgc.showDataTips = true;
+					dgc.itemRenderer = new ClassFactory (mx.controls.Label);
+					this.addEventListener("removeColumnImgClick",removeColumnImageClickHandler);
+					dgc.headerRenderer = new ClassFactory (RemovableDataGridHeaderRenderer);
+					
+					cols.push(dgc);
+				}
+				this.columns = cols;
+			}
+			
+			/**
+			 * This method will be called on creation complete.<Br>
+			 * It will save the base columns of the grid.<br>
+			 * Base columns: the columns which are not configurable.
+			 */ 
+			private function saveGridBaseColumns():void {
+				gridBaseColumns = this.columns;
+			}
+			
+			private function formatDate(scenario:Scenario, column:DataGridColumn):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY at HH:NN:SS";  
+				var d:Date = new Date(new Number(scenario.startTime));   
+				return df.format(d);
+			}
+			
+			/**
+			 * This method will format the duration of the scenario.
+			 */ 
+			private function formatDuration(scenario:Scenario, column:DataGridColumn):String{
+				
+				var duration:Number = new Number(scenario.duration);
+				duration *= 1000;
+				
+				if (duration > 0){
+					
+					var result: String= new String();
+					var dayValue:int = 24 * 60 * 60 * 1000;
+					var hrValue:int = 60 * 60 * 1000;
+					var minValue:int = 60 * 1000;
+					var secValue:int = 1000;
+					
+					
+					var hrLeft:int = duration % dayValue;
+					dayValue = (duration - hrLeft)/dayValue;
+					var minLeft:int = hrLeft % hrValue;
+					hrValue = (hrLeft - minLeft)/hrValue;
+					var secLeft:int = minLeft % minValue;
+					minValue = (minLeft - secLeft)/minValue;
+					var milliSecLeft:int = secLeft % secValue;
+					secValue = (secLeft - milliSecLeft)/secValue;
+					
+					if (dayValue != 0){
+						result += dayValue.toFixed(0) + "d:" + hrValue + "h:" + minValue + "m:" + secValue + "s:" + milliSecLeft.toFixed(0) +"ms";
+					}else if (hrValue != 0){
+						result += hrValue + "h:" + minValue + "m:" + secValue + "s:"+ milliSecLeft.toFixed(0) +"ms";
+					}else if (minValue != 0){
+						result += minValue + "m:" + secValue + "s:"+ milliSecLeft.toFixed(0) +"ms";
+					}else if (secValue != 0){
+						result += secValue + "s:"+ milliSecLeft.toFixed(0) +"ms";
+					}else if (milliSecLeft != 0){
+						result += milliSecLeft.toFixed(0) + "ms";
+					}
+					return result;
+				}else {
+					return "0";
+				}
+			}
+			
+			/**
+			 * This method will be called upon a double click on the grid.<br>
+			 * will open the scenario details pop up window and will add all required listners.
+			 */ 
+			protected function executionReportGrid_doubleClickHandler(event:MouseEvent):void
+			{
+				var scenarioDetail:ScenarioDetailsViewModel = new ScenarioDetailsViewModel(selectedItem as Scenario);
+				scenarioDetail.addEventListener(UpdateEvent.UPDATE_EVENT,updateHandler);
+				scenarioDetail.addEventListener(ScenarioDetailsGetScenarioTestsEvent.SCENARIO_DETAILS_GET_SCENARIO_TESTS_EVENT,getScenarioTestsHandler);
+				PopUpManager.addPopUp(scenarioDetail,UIComponent(this.parentApplication),false);
+				PopUpManager.centerPopUp(scenarioDetail);
+			}
+			
+			/**
+			 * This method will be called when Tests button in scenario details popup window is clicked.<br>
+			 * Scenario's Tests will be shown in tests grid and an event to upper layer must be dispatched.
+			 * 
+			 */ 
+			protected function getScenarioTestsHandler(event:ScenarioDetailsGetScenarioTestsEvent):void
+			{
+				dispatchEvent(new ScenarioDetailsGetScenarioTestsEvent(event.scenario));
+			}
+			
+			protected function updateHandler(event:UpdateEvent):void
+			{
+				dispatchEvent(new UpdateEvent(true));				
+			}
+			
+			public function addToSelectedItems(id:String):void{
+				selectedScenarios.add(id,true);
+			}
+			
+			public function removeFromSelectedItem(id:String):void{
+				selectedScenarios.removeKey(id);
+			}
+			
+			public function setSelectedItem(id:String):Boolean{
+				if (selectedScenarios.hasKey(id)){
+					return true;
+				}else{
+					return false;
+				}
+			}
+			
+			/**
+			 * This method will be called upon completion of the scenarioAddColumnsWizard.<br>
+			 * It will rebuild the grid: base columns + target List data from the wizard.<br>
+			 * It will save the grid's new configuration to server.
+			 */ 
+			private function scenarioAddColumnsWizardFinishClicked(event:MouseEvent):void{		
+				PopUpManager.removePopUp(scenarioAddColumnsWizard);
+				rebuildGrid(scenarioAddColumnsWizard.target);
+				this.gridUIConfiguration.update(getUnremovableColumns(),getGridDefaultColumns(),this.columns);
+//				rebuildGridUsingUIConfiguration(this.gridUIConfiguration);
+				//set the grid columns to be the base+target columns
+				//save configuration to server.
+			}
+			
+			/**
+			 * This method will be called upon the click on the add Columns from the executionReport tools.<br>
+			 * It will open the ScenarioAddColumnsWizard and will allow the selection of the different columns to grid.<br>
+			 * The user will be able to add or remove columns to the grid.
+			 */ 
+			public function addGridColumns():void
+			{
+				scenarioAddColumnsWizard = new ScenarioAddColumnsWizard(getGridDefaultColumns());
+				scenarioAddColumnsWizard.finishButton.addEventListener(MouseEvent.CLICK,scenarioAddColumnsWizardFinishClicked);
+				PopUpManager.addPopUp(scenarioAddColumnsWizard,this,true);
+				PopUpManager.centerPopUp(scenarioAddColumnsWizard);
+			}
+			
+			/**
+			 * This method will be called upon the grid getching data to put into a columns which represents a scenario property.<br>
+			 * It will search the scenario properties for the matching property, if exist will return its value, else return Undefined synbol.
+			 */ 
+			public function formatPropertyColumn(scenario:Scenario, column:DataGridColumn):String{
+				
+				for (var i:int = 0; i < scenario.scenarioProperties.length; i++) {
+					if (column.headerText.toLowerCase() == ((scenario.scenarioProperties[i])as ScenarioProperty).propertyKey.toLowerCase()){
+						return ((scenario.scenarioProperties[i])as ScenarioProperty).propertyValue;
+					}
+				}
+				return "/";
+			}
+			
+			protected function removeColumnImageClickHandler(event:MouseEvent):void
+			{
+				this.columns = GridColumnRemover.removeColumn(this.columns, getUnremovableColumns(),(event.target as RemovableDataGridHeaderRenderer).headerText,getGridDefaultColumns(),
+					this.gridUIConfiguration);
+			}
+			
+			
+			/**
+			 * This method will return the grid's default columns which are not part of the base columns and are not property columns.
+			 */ 
+			public function getGridDefaultColumns():ArrayCollection {
+				var defaultColumns:ArrayCollection = new ArrayCollection();
+				defaultColumns.addItem("StartTime");
+				defaultColumns.addItem("Duration");
+				defaultColumns.addItem("Total");
+				defaultColumns.addItem("Pass");
+				defaultColumns.addItem("Fail");
+				defaultColumns.addItem("Warning");
+				return defaultColumns;
+			}
+			
+			public function getUnremovableColumns():ArrayCollection {
+				var columns:ArrayCollection = new ArrayCollection();
+				columns.addItem("");//check box columns;
+				columns.addItem("Name");//scenario name;
+				columns.addItem("Log");//scenario log file.
+				return columns;
+			}
+			
+			public function selectAllCheckBox():void {
+				headerCheckBoxSelected = true;
+				var scenarios:ArrayCollection = (this.dataProvider) as ArrayCollection;
+				for each (var scenario:Scenario in scenarios) 
+				{
+					scenario.isSelected = true;
+					addToSelectedItems(scenario.id);
+				}
+			}
+			
+			public function deselectAllCheckBox():void {
+				areAllScenariosSelected = false;
+				headerCheckBoxSelected = false;
+				var scenarios:ArrayCollection = (this.dataProvider) as ArrayCollection;
+				for each (var scenario:Scenario in scenarios) 
+				{
+					scenario.isSelected = false;
+				}
+				selectedScenarios.clear();
+			}
+			
+			public function selectAllCheckBoxClicked(select:Boolean):void{
+				if (select){
+					selectAllCheckBox();
+				}
+				else{
+					deselectAllCheckBox();	
+				}
+				dispatchEvent(new SelectAllCheckBoxClickedEvent(select,true));
+			}
+			
+//			private function lfRowNum(oItem:Object,iCol:int):String
+//			{
+//				var iIndex:int = (this.dataProvider as ArrayCollection).getItemIndex(oItem) + 1 + scenarioGridModel.scenarioQuery.chunk.startIndex;
+//				getRowNumberWidth();
+//				return String(iIndex);
+//			}
+			
+//			private function getRowNumberWidth():Number {
+//				renderer.text = (scenarioGridModel.scenarioQuery.chunk.startIndex + scenarioGridModel.scenarioQuery.chunk.length).toString(); 
+//				//				renderer.text = (this.dataProvider as ArrayCollection).length.toString();
+//				rowCol.width = renderer.measuredWidth + 10;
+//				return renderer.measuredWidth + 10;
+//			}
+			
+			
+		]]>	
+	</fx:Script>
+	<fx:Declarations>
+		<renderers:RemovableDataGridHeaderRenderer id="removableDataGridHeaderRenderer"/>
+		<mx:DataGridItemRenderer id="renderer"/>
+	</fx:Declarations>
+	
+	
+	<mx:columns>
+		<!--<mx:DataGridColumn id="rowCol" headerText="#" labelFunction="lfRowNum" textAlign="left"/>-->
+		<mx:DataGridColumn width="30" headerText="" resizable="false" sortable="false"
+						   textAlign="center">
+			<mx:headerRenderer>
+				<fx:Component>				   			
+					<mx:CheckBox click="{outerDocument.selectAllCheckBoxClicked(selected)}"
+								 selected="{outerDocument.headerCheckBoxSelected}"
+								 textAlign="center"/>
+				</fx:Component>
+			</mx:headerRenderer>
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox horizontalAlign="center">
+						<mx:CheckBox id="columnCheckbox" width="30"
+									 click="checkbox1_clickHandler(event,columnCheckbox.selected)"
+									 selected="{outerDocument.selectedScenarios.hasKey((data as Scenario).id) || outerDocument.areAllScenariosSelected || outerDocument.headerCheckBoxSelected}"
+									 textAlign="center">
+							
+							<fx:Script>
+								<![CDATA[
+									import il.co.topq.systems.report.events.general.SelectAllCheckBoxClickedEvent;
+									import il.co.topq.systems.report.models.valueobjects.Scenario;
+									
+									import mx.controls.Alert;
+									/**
+									 * This method will be called upon a click on a specific row checkBox<br>
+									 * It will differ between 2 situations:<br>
+									 * 1. Header check box is selected:<br>
+									 * It will deselect the header, change the state back to normal in execution report and remove the selected item id from selected ids.<br>
+									 * 2. Header check box is not selected:<br>
+									 * If selected = true --> add the selected row to selected items.<br>
+									 * else --> remove the selected row from selected items.<br>
+									 * "finally" will deselect all scenarios and header checkbox to false.
+									 */ 
+									protected function checkbox1_clickHandler(event:MouseEvent,selected:Boolean):void
+									{
+										if (outerDocument.headerCheckBoxSelected){
+											outerDocument.removeFromSelectedItem(this.data.id);
+											outerDocument.dispatchEvent(new SelectAllCheckBoxClickedEvent(false,true));
+										}else{
+											var selected:Boolean = (event.currentTarget as CheckBox).selected as Boolean;
+											if (selected){
+												outerDocument.addToSelectedItems(this.data.id);
+											}else{
+												outerDocument.removeFromSelectedItem(this.data.id);
+											}
+										}
+										outerDocument.areAllScenariosSelected = false;
+										outerDocument.headerCheckBoxSelected = false;
+									}
+								]]>
+							</fx:Script>
+						</mx:CheckBox>		
+					</mx:HBox>
+				</fx:Component>								
+			</mx:itemRenderer>
+		</mx:DataGridColumn>
+		<mx:DataGridColumn width="350" dataField="scenarioName" headerText="Name"
+						   itemRenderer="mx.controls.Label" showDataTips="true" textAlign="left">
+			<mx:headerRenderer>
+				<fx:Component>				   			
+					<mx:Label textAlign="center"/>
+				</fx:Component>
+			</mx:headerRenderer>
+		</mx:DataGridColumn>
+		<mx:DataGridColumn dataField="report" headerText="Log" headerWordWrap="true"
+						   textAlign="center">
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox width="100%" horizontalAlign="center" verticalAlign="middle">
+						
+						<fx:Script>
+							<![CDATA[
+								import il.co.topq.systems.report.models.ReportModelLocator;
+								import il.co.topq.systems.report.models.valueobjects.ReportServerService;
+								import il.co.topq.systems.report.services.ReportServiceLocator;
+								
+								import mx.controls.Alert;
+								
+								[Bindable]
+								public var model:ReportModelLocator = ReportModelLocator.getInstance(); 
+								
+								private function openOldReport(event:MouseEvent):void{
+									var url:String = ReportServiceLocator.domain;
+//									var urlRequest:URLRequest = new URLRequest("/results/"+data.htmlDir+"/index.html");
+									var urlRequest:URLRequest = new URLRequest(data.htmlDir);
+									navigateToURL(urlRequest);	
+								}	
+								
+							]]>
+						</fx:Script>
+						<mx:LinkButton label="Link" click="openOldReport(event)"
+									   rollOverColor="#2E44C7" textRollOverColor="#ffffff"/>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+		</mx:DataGridColumn>
+	</mx:columns>
+</mx:DataGrid>

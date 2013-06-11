@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*" creationComplete="creationCompleteHandler(event)" xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.legacy.LegacyGetScenarioEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.Chunk;
+			import il.co.topq.systems.report.models.valueobjects.Filter;
+			import il.co.topq.systems.report.models.valueobjects.TimeRange;
+			
+			import mx.controls.Alert;
+			import mx.controls.LinkButton;
+			import mx.events.FlexEvent;
+			import mx.events.ItemClickEvent;
+			
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+
+			[Bindable]
+			[Embed(source='assets/images/warning.gif')]
+			
+			private var Icon:Class;
+			
+			public static var index:Number = 0;
+			
+			protected function exportPdfHandler(event:MouseEvent):void
+			{
+				Alert.show("Exporting to Pdf is not available in the beta version","Warning Beta Version",4,null,null,Icon);
+			}
+			
+			protected function exportExcelHandler(event:MouseEvent):void
+			{
+				Alert.show("Exporting to Excel is not available in the beta version","Warning Beta Version",4,null,null,Icon);
+			}
+			
+			protected function loadChunk(event:ItemClickEvent):void
+			{
+				var arr:Array = chunkBar.getChildren();
+				for (var i:int = 0; i<arr.length; i++){
+					(arr[i] as LinkButton).enabled = true;
+				}
+				(event.relatedObject as LinkButton).enabled = false; 
+				index = new Number((event.relatedObject as LinkButton).label)-1;
+				sendChuckRequest();
+			}
+
+			private function sendChuckRequest():void{
+				var filter:Filter =  new Filter();
+				filter.chunk = new Chunk();
+				filter.chunk.length = model.gridNumberOfRows-3;
+				filter.chunk.startIndex = (model.gridNumberOfRows-3)*index;
+				filter.timeRange = new TimeRange();
+				new LegacyGetScenarioEvent(filter).dispatch();
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				sendChuckRequest();
+			}
+			
+			public static function refresh():void{
+				var filter:Filter =  new Filter();
+				filter.chunk = new Chunk();
+				filter.chunk.length = ReportModelLocator.gridNumberOfRowsStatic-3;
+				filter.chunk.startIndex = (ReportModelLocator.gridNumberOfRowsStatic-3)*index;
+				filter.timeRange = new TimeRange();
+				new LegacyGetScenarioEvent(filter).dispatch();
+			}
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	
+	<s:VGroup width="100%" height="100%">
+		<s:VGroup width="100%" verticalAlign="middle" height="10%" horizontalAlign="center" paddingRight="20" paddingLeft="20">
+			<s:HGroup width="100%" verticalAlign="middle" height="20%" horizontalAlign="left" paddingRight="10" paddingTop="10">
+				<s:Label text="Runtime Report" fontSize="16" fontWeight="bold"/>
+			</s:HGroup>
+			<s:HGroup width="100%" verticalAlign="middle" height="80%" horizontalAlign="left" paddingRight="10">
+				<tools:LegacyReportTools/>
+			</s:HGroup>
+		</s:VGroup>
+		<s:HGroup width="100%" verticalAlign="bottom" height="100%">
+			<grids:LegacyReportGrid />
+		</s:HGroup>
+		<s:HGroup id="navBar" width="100%" height="5%" verticalAlign="middle" horizontalAlign="center">
+			<mx:LinkBar id="chunkBar" dataProvider="{model.numberOfPagesToPresent}" itemClick="loadChunk(event)" selectedIndex="0"/>
+		</s:HGroup>	
+	</s:VGroup>
+	
+</s:BorderContainer>

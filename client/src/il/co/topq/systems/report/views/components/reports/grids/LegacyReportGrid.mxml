@@ -1,0 +1,126 @@
+<?xml version="1.0" encoding="utf-8"?>
+<mx:DataGrid xmlns:fx="http://ns.adobe.com/mxml/2009" 
+		 xmlns:s="library://ns.adobe.com/flex/spark" 
+		 xmlns:mx="library://ns.adobe.com/flex/mx" width="100%" height="100%" verticalAlign="middle" dataProvider="{model.legacySceanarios.scenario}"  doubleClickEnabled="true" doubleClick="datagrid1_doubleClickHandler(event)" xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*">
+	<fx:Script>
+		<![CDATA[
+			import com.adobe.cairngorm.model.ModelLocator;
+			
+			import il.co.topq.systems.report.events.legacy.LegacyGetScenarioEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.Chunk;
+			import il.co.topq.systems.report.models.valueobjects.Filter;
+			import il.co.topq.systems.report.models.valueobjects.TimeRange;
+			
+			import mx.controls.Alert;
+			import mx.core.FlexGlobals;
+			import mx.core.UIComponent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			
+	
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+
+			protected function datagrid1_doubleClickHandler(event:MouseEvent):void
+			{
+				PopUpManager.addPopUp(scenarioDetail,UIComponent(this.parentApplication),true);
+				PopUpManager.centerPopUp(scenarioDetail);
+			}
+			
+			
+
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+		<tools:ScenarioDetail id="scenarioDetail" 
+							  scenarioId="{this.selectedItem.id}"
+							  scenarioName="{this.selectedItem.scenarioName}"
+							  setupName="{this.selectedItem.setupName}"
+							  build="{this.selectedItem.build}"
+							  station="{this.selectedItem.station}"
+							  user_r="{this.selectedItem.user_r}"
+							  startTime="{this.selectedItem.startTime}"
+							  total="{this.selectedItem.runTest}"
+							  failTests="{this.selectedItem.failTests}"
+							  successTests="{this.selectedItem.successTests}"
+							  ignoreTests="{this.selectedItem.ignoreTests}"
+							  description="{this.selectedItem.description}"/>
+	</fx:Declarations>
+	
+	<mx:columns>
+		<mx:DataGridColumn headerText="Scenario Name" dataField="scenarioName" headerWordWrap="true" />
+		<mx:DataGridColumn headerText="Setup Name" dataField="sut" headerWordWrap="true" />
+		<mx:DataGridColumn headerText="Version" dataField="version" headerWordWrap="true" />
+		<mx:DataGridColumn headerText="Station" dataField="station" headerWordWrap="true"  />
+		<mx:DataGridColumn headerText="User Name" dataField="userR" headerWordWrap="true" />
+		<mx:DataGridColumn headerText="Build" dataField="build" headerWordWrap="true" />
+		<mx:DataGridColumn  headerText="Execution Log" dataField="report" headerWordWrap="true" >
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox horizontalAlign="center" verticalAlign="middle" width="100%">
+
+						<fx:Script>
+							<![CDATA[
+								import il.co.topq.systems.report.models.ReportModelLocator;
+								
+								import mx.controls.Alert;
+								
+								[Bindable]
+								public var model:ReportModelLocator = ReportModelLocator.getInstance(); 
+								
+								private function openOldReport(event:MouseEvent):void{
+									if((ReportModelLocator.OLD_REPORT_IP == "")||(ReportModelLocator.OLD_REPORT_PORT == "")){
+										Alert.show("Please configure the old service port and host in the settings section");
+									}
+									else{
+										var url:String = "http://"+ReportModelLocator.OLD_REPORT_IP+":"+ReportModelLocator.OLD_REPORT_PORT;
+										var urlRequest:URLRequest = new URLRequest(url+"\\"+data.htmlDir);
+										navigateToURL(urlRequest);	
+									}
+								}
+							]]>
+						</fx:Script>
+
+						<mx:LinkButton label="Link" click="openOldReport(event)"  rollOverColor="#2E44C7" textRollOverColor="#ffffff">
+						
+						</mx:LinkButton>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+		</mx:DataGridColumn>
+		<mx:DataGridColumn headerText="Action" dataField="action">
+			<mx:itemRenderer>
+				<fx:Component>
+					<mx:HBox horizontalAlign="center" verticalAlign="middle" width="100%">
+						<mx:LinkButton click="handleClick()" label="Delete"  rollOverColor="#2E44C7" textRollOverColor="#ffffff">
+							<fx:Script><![CDATA[
+								import il.co.topq.systems.report.events.general.DeleteScenarioEvent;
+								import il.co.topq.systems.report.views.components.reports.ExecutionReport;
+								
+								import mx.controls.Alert;
+								import mx.events.CloseEvent;
+								public function handleClick():void{
+									
+									//data.id
+									Alert.show("Are you sure you want to delete the scenario "+ data.scenarioName +"?", "Delete Scenario", Alert.OK | Alert.CANCEL, null,alertListener, null, Alert.OK);
+									
+								}
+								
+								private function alertListener(eventObj:CloseEvent):void {
+									// Check to see if the OK button was pressed.
+									if (eventObj.detail==Alert.OK) {
+										new DeleteScenarioEvent(data.id).dispatch(); 
+									}
+									
+								}
+								
+							]]></fx:Script>
+						</mx:LinkButton>
+					</mx:HBox>
+				</fx:Component>
+			</mx:itemRenderer>
+		</mx:DataGridColumn>
+	</mx:columns>
+</mx:DataGrid>

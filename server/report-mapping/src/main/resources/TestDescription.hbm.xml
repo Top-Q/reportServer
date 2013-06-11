@@ -1,0 +1,24 @@
+<?xml version="1.0"?>
+<!DOCTYPE hibernate-mapping PUBLIC "-//Hibernate/Hibernate Mapping DTD 3.0//EN"
+"http://hibernate.sourceforge.net/hibernate-mapping-3.0.dtd">
+<!-- Generated May 2, 2011 10:49:15 AM by Hibernate Tools 3.2.1.GA -->
+<hibernate-mapping>
+    <class name="il.co.topq.systems.report.common.model.TestDescription" table="test_description" >
+        <id name="testId" type="java.lang.Integer">
+            <column name="testId" />
+            <generator class="identity" />
+        </id>
+        <property name="testName" type="string">
+            <column name="testName" length="65535"/>
+        </property>
+        <property name="testDescription" type="string">
+            <column name="testDescription" length="65535"/>
+        </property>
+        <set name="publishedTest01s" inverse="true">
+            <key>
+                <column name="testName" not-null="true" />
+            </key>
+            <one-to-many class="il.co.topq.systems.report.common.model.Test" />
+        </set>
+    </class>
+</hibernate-mapping>

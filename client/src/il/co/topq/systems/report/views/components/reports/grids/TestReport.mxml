@@ -1,0 +1,548 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:BorderContainer xmlns:fx="http://ns.adobe.com/mxml/2009" 
+				   xmlns:s="library://ns.adobe.com/flex/spark" 
+				   xmlns:mx="library://ns.adobe.com/flex/mx"
+				   width="100%"
+				   height="100%"  
+				   xmlns:reports="il.co.topq.systems.report.views.components.reports.*" 
+				   xmlns:grids="il.co.topq.systems.report.views.components.reports.grids.*" 
+				   xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
+				   creationComplete="creationCompleteHandler(event)" xmlns:common="il.co.topq.systems.report.views.components.reports.common.*">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.events.general.SelectAllCheckBoxClickedEvent;
+			import il.co.topq.systems.report.events.test.GetGroupTestsEvent;
+			import il.co.topq.systems.report.events.test.GetGroupTestsSizeEvent;
+			
+			import mx.collections.ArrayList;
+			import mx.events.CloseEvent;
+			
+			import org.as3commons.collections.framework.IIterator;
+			[Event(name="updateEvent", type="il.co.topq.systems.report.events.general.UpdateEvent")]
+			
+			import il.co.topq.systems.report.events.general.DeleteTestEvent;
+			import il.co.topq.systems.report.events.test.DeleteTestButtonClickEvent;
+			import il.co.topq.systems.report.events.test.GetTestGroupEvent;
+			import il.co.topq.systems.report.events.test.GetTestGroupSizeEvent;
+			import il.co.topq.systems.report.models.valueobjects.TestSummary;
+			import il.co.topq.systems.report.models.valueobjects.TestSummaryQuery;
+			import il.co.topq.systems.report.views.components.reports.grids.TestsGroupReportGrid;
+			import il.co.topq.systems.report.xml_utils.TestGroupXMLConverter;
+			import il.co.topq.systems.report.xml_utils.TestXMLConverter;
+			import il.co.topq.systems.report.events.general.UpdateEvent;
+			import il.co.topq.systems.report.events.test.ExportTestReportEvent;
+			import il.co.topq.systems.report.events.test.GetTestEvent;
+			import il.co.topq.systems.report.events.test.GetTestSizeEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.models.valueobjects.Filter;
+			import il.co.topq.systems.report.models.valueobjects.TestGridModel;
+			import il.co.topq.systems.report.views.components.reports.tools.CustomReportTimeRangeChooser;
+			import il.co.topq.systems.report.views.skin.RefreshButtonSkin;
+			
+			import mx.controls.Alert;
+			import mx.rpc.events.FaultEvent;
+			import mx.rpc.events.ResultEvent;
+			import mx.events.FlexEvent;
+			import mx.formatters.DateFormatter;
+			import mx.managers.PopUpManager;
+			
+			import spark.events.IndexChangeEvent;
+			
+			[Embed(source="/assets/images/recycle.png")]
+			[Bindable]
+			protected var deleteImgSource:Class;
+			
+			[Bindable]
+			private var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+			[Bindable]
+			public var testGridModel:TestGridModel = ReportModelLocator.getTestGridModel();//testGrid model.
+			
+			[Bindable]
+			public var testGroupGridModel:TestGridModel = ReportModelLocator.getTestGridModel();//testGroupGrid model.
+			
+			[Bindable]
+			protected var testsGroupGrid:TestsGroupReportGrid ;
+			
+			private var testSummary:TestSummary//the last testSummary object rcvd from the double click event on the groupGrid will be used for the GroupTests query.
+			
+			private var timeRangeChooser:CustomReportTimeRangeChooser;
+			
+			[Bindable]
+			private static var reportTitle:String = "Test Report";
+			
+			private var inGroupingMode:Boolean = false;// will indicate if the Grid showing is the group test.
+			private var inGroupTestsMode:Boolean = false;// will indicate if the testGrid is in grouping mode.
+			
+			/**
+			 * This method will set the custom report title according to the 
+			 * last filtered timeRange values.
+			 * in case no filter was made the defult will be preseted. 
+			 **/
+			protected function setReportTitle():void{
+				var title:String = "Test Report ";
+				if (timeRangeChooser != null){
+					if ((timeRangeChooser.lowerDate.selectedDate != null) && (timeRangeChooser.upperDate.selectedDate != null)){
+						var from:String = formatDate(timeRangeChooser.lowerDate.selectedDate.getTime());
+						var to:String = formatDate(timeRangeChooser.upperDate.selectedDate.getTime());
+						title += "between " + from + " and " + to +" \n";
+					}
+				}
+				if (inGroupingMode){
+					title += "Grouped by Test Name";
+					if (checkBoxTestGroupScenario.selected){
+						title += ", Scenario";
+					}
+				}else if(inGroupTestsMode){
+					title += "Grouped by Test Name";
+					if (testSummary.scenarioName != null && !testSummary.scenarioName.length == 0) {
+						title += ", Scenario: " + testSummary.scenarioName;
+					}
+				}
+				reportTitle = title;
+			}
+			
+			private function formatDate(date:Number):String{
+				var df:DateFormatter = new DateFormatter();   
+				df.formatString = "DD/MM/YY";  
+				var d:Date = new Date(date);   
+				return df.format(d);
+			}
+			
+			protected function refreshButtonClicked(event:MouseEvent):void
+			{
+				getTestsResults();			
+			}
+			
+			/**
+			 * This method will add event listners to the Navigation component.
+			 * Will listen on next | previous clicks.
+			 **/
+			private function addNavigationListners():void {
+				navigation.LinkButtonPreviousLabel.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonPreviousIcon.addEventListener(MouseEvent.CLICK,handlePreviousClicked);
+				navigation.LinkButtonNextLabel.addEventListener(MouseEvent.CLICK,handleNextClicked);
+				navigation.LinkButtonNextIcon.addEventListener(MouseEvent.CLICK,handleNextClicked);
+			}
+			
+			protected function creationCompleteHandler(event:FlexEvent):void
+			{
+				addNavigationListners();
+				testsGrid.addEventListener(UpdateEvent.UPDATE_EVENT,updateHandler);
+				this.addEventListener(SelectAllCheckBoxClickedEvent.SELECT_ALL_CHECK_BOX_CLICKED_EVENT,selectAllCheckBoxClicked);
+				initTestGroupModelTestQuery();
+				initTestGroupGrid();
+				getTestsResults();
+			}
+
+			protected function selectAllCheckBoxClicked(event:SelectAllCheckBoxClickedEvent):void
+			{
+				if (event.select){
+					this.currentState = "SelectAllCheckBoxSelected"; //show the select all from db option.
+				}else{
+					this.currentState = "Normal";//back to normal.
+				}
+			}
+			
+			/**
+			 * This method will be called upon a click on the navigation next label or button.<br>
+			 * It will check if the grid is in grouping state or not
+			 */ 
+			protected function handleNextClicked(event:MouseEvent):void{
+				if (inGroupingMode){
+					testGroupGridModel.navigation.index++;
+					testGroupGridModel.testQuery.chunk.length = testGroupGridModel.gridConfiguration.numberOfRows;
+					testGroupGridModel.testQuery.chunk.startIndex = testGroupGridModel.navigation.index * testGroupGridModel.gridConfiguration.numberOfRows;
+				}else if (inGroupTestsMode){
+					testGridModel.navigation.index++;
+					testGridModel.testQuery.chunk.length = testGridModel.gridConfiguration.numberOfRows;
+					testGridModel.testQuery.chunk.startIndex = testGridModel.navigation.index * testGridModel.gridConfiguration.numberOfRows;
+				}else if (testGridModel.navigation.index < testGridModel.gridData.numberOfPages){
+					if (!testsGrid.areAllTestsSelected){//next chunk will not be selected in case not all scenarios from db are selected.
+						testsGrid.headerCheckBoxSelected = false;
+						currentState = "Normal";
+					}
+					testGridModel.navigation.index++;
+					testGridModel.testQuery.chunk.length = testGridModel.gridConfiguration.numberOfRows;
+					testGridModel.testQuery.chunk.startIndex = testGridModel.navigation.index * testGridModel.gridConfiguration.numberOfRows;
+				}
+				getResults();
+			}
+			
+			protected function handlePreviousClicked(event:MouseEvent):void{
+				if (inGroupingMode){
+					testGroupGridModel.navigation.index--;
+					testGroupGridModel.testQuery.chunk.length = testGroupGridModel.gridConfiguration.numberOfRows;
+					testGroupGridModel.testQuery.chunk.startIndex = testGroupGridModel.navigation.index * testGroupGridModel.gridConfiguration.numberOfRows;
+				}else if (inGroupTestsMode){
+					testGridModel.navigation.index--;
+					testGridModel.testQuery.chunk.length = testGridModel.gridConfiguration.numberOfRows;
+					testGridModel.testQuery.chunk.startIndex = testGridModel.navigation.index * testGridModel.gridConfiguration.numberOfRows;
+				}else if (testGridModel.navigation.index > 0){
+					if (!testsGrid.areAllTestsSelected){//next chunk will not be selected in case not all scenarios from db are selected.
+						testsGrid.headerCheckBoxSelected = false;
+						currentState = "Normal";
+					}
+					testGridModel.navigation.index--;
+					testGridModel.testQuery.chunk.length = testGridModel.gridConfiguration.numberOfRows;
+					testGridModel.testQuery.chunk.startIndex = testGridModel.navigation.index * testGridModel.gridConfiguration.numberOfRows;
+				}
+				getResults();
+			}
+			
+			protected function testReportToolsChanged(event:IndexChangeEvent):void
+			{
+				var data:String = (event.currentTarget as TestsReportTools).selectedItem as String;
+				
+				if(data == "Export to Excel"){
+					new ExportTestReportEvent("jsystem_test_report.xls","xls",testGridModel.testQuery).dispatch();
+				}else if (data == "Export to PDF"){
+					new ExportTestReportEvent("jsystem_test_report.pdf","pdf",testGridModel.testQuery).dispatch();
+				}
+				else if(data == "Time Range"){
+					if (timeRangeChooser == null){
+						timeRangeChooser= new CustomReportTimeRangeChooser();	
+					}					
+					PopUpManager.addPopUp(timeRangeChooser,this.parent);
+					PopUpManager.centerPopUp(timeRangeChooser);
+					timeRangeChooser.saveButton.addEventListener(MouseEvent.CLICK,saveTimeRangeClicked);
+					timeRangeChooser.cleanButton.addEventListener(MouseEvent.CLICK,cleanTimeRangeClicked);
+				}else if (data == "Add Columns"){
+					testsGrid.addGridColumns();
+				}
+				tools.selectedItem="Tools";
+			}
+			
+			public function cleanTimeRangeClicked(event:MouseEvent):void{	
+				getTimeRangeData();
+				PopUpManager.removePopUp(timeRangeChooser);
+				getResults();
+			}
+			
+			private function getTimeRangeData():void{
+				testGroupGridModel.testQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+				testGridModel.testQuery.timeRange = timeRangeChooser.getFilter().timeRange;
+			}
+			
+			public function getResults():void {
+				if (inGroupingMode){
+					getTestGroupResults();
+				}else if (inGroupTestsMode){
+					getGroupTestsResults();
+				}else{
+					getTestsResults();
+				}
+				setReportTitle();
+			}
+			
+			public function getTestsResults():void{
+				new GetTestSizeEvent(testGridModel).dispatch();
+				new GetTestEvent(testGridModel.testQuery, getTestCallbackResult, callbackFault).dispatch();		
+			}
+			
+			public function getTestCallbackResult(data:ResultEvent): void
+			{
+				var evt:ResultEvent = data as ResultEvent;
+				var xmlList:XMLList = (new XML(evt.message.body)).tests;
+				testGridModel.gridData.items = TestXMLConverter.fromXMLList(xmlList); 
+				
+				grids.removeAllElements();
+				grids.addElement(testsGrid);
+				navigation.navModel = testGridModel.navigation;
+				testGroupCheckBoxGroup.visible = false;		
+			}
+			
+			/**
+			 * This method will be called once save is clicked in the select Time range pop up.
+			 **/
+			public function saveTimeRangeClicked(event:MouseEvent):void{			
+				getTimeRangeData();
+				PopUpManager.removePopUp(timeRangeChooser);
+				getResults();
+			}
+			
+			/**
+			 * This method will handle the updateEvent.
+			 */ 
+			protected function updateHandler(event:UpdateEvent):void
+			{
+				getResults();
+				dispatchEvent(new UpdateEvent());
+			}
+			
+			protected function checkBoxTestGrouping_changeHandler(event:Event):void
+			{
+				if (checkBoxTestGrouping.selected){
+					inGroupingMode = true;
+				}else {
+					inGroupingMode = false;	
+					inGroupTestsMode = false;
+				}
+				getResults();
+			}
+			
+			public function getTestGroupResults():void {
+				new GetTestGroupSizeEvent(testGroupGridModel).dispatch();
+				new GetTestGroupEvent(testGroupGridModel.testQuery,getTestGroupCallbackResult,callbackFault).dispatch();
+			}
+			
+			public function getTestGroupCallbackResult(data:ResultEvent): void
+			{
+				var evt:ResultEvent = data as ResultEvent;
+				var xmlList:XMLList = (new XML(evt.message.body)).testsSummary;
+				testGroupGridModel.gridData.items = TestGroupXMLConverter.fromXMLList(xmlList,checkBoxTestGroupScenario.selected);
+				
+				testsGroupGrid.dataProvider = testGroupGridModel.gridData.items;
+				grids.removeAllElements();
+				grids.addElement(testsGroupGrid);
+				navigation.navModel = testGroupGridModel.navigation;
+				testGroupCheckBoxGroup.visible = true;				
+			}
+			
+			/**
+			 * This method will be called upon the failure of an event.<br>
+			 * It will result an error page with the detailed failure reason.
+			 */ 
+			public function callbackFault(info:Object): void
+			{
+				Alert.show("Server Error: Operation Failed");
+			}
+			
+			protected function checkBoxTestGroup_changeHandler(event:Event):void
+			{
+				if (checkBoxTestGroupParameters.selected){
+					if (checkBoxTestGroupScenario.selected){
+						testGroupGridModel.testQuery.groupBy = 4;
+					}else {
+						testGroupGridModel.testQuery.groupBy = 3;
+					}
+				}else if (checkBoxTestGroupScenario.selected){
+					testGroupGridModel.testQuery.groupBy = 2;
+				}else {
+					testGroupGridModel.testQuery.groupBy = 1;
+				}
+				//				getTestGroupResults();	
+				getResults();
+			}
+			
+			/**
+			 * This method will init the testGroupGrid  model.<br>
+			 * The default values for the sorting column:<br>
+			 * Sorting Column name: testName;<br>
+			 * Asc: true;
+			 */ 
+			private function initTestGroupModelTestQuery():void {
+				testGroupGridModel.testQuery.sortingColumn.name = "testName";
+				testGroupGridModel.testQuery.sortingColumn.asc = true;
+				testGroupGridModel.testQuery.groupBy = model.uiConfigurations.testGrouping.groupBy;//default group by is set from the configuration page.
+//				testGroupGridModel.testQuery.groupBy = model.systemSettings.testGrouping;//default group by is set from the configuration page.
+			}
+			
+			/**
+			 * This method will initialize the testGroupGrid;<br>
+			 * It will add an event handler for double click event on the test group grid.
+			 */ 
+			private function initTestGroupGrid():void
+			{
+				testsGroupGrid = new TestsGroupReportGrid();
+				testsGroupGrid.addEventListener(MouseEvent.DOUBLE_CLICK,testsGroupGridDoubleClicked);
+			}
+			
+			/**
+			 * This method will be called upon a double click event accured in testGroupGrid.<br>
+			 * @assumptions: testGroupGrid was added an event listner for double click. 
+			 */ 
+			protected function testsGroupGridDoubleClicked(event:MouseEvent):void
+			{
+				inGroupTestsMode = true;
+				inGroupingMode = false;
+				testSummary = ((event.currentTarget as TestsGroupReportGrid).selectedItem as TestSummary);
+				getResults();
+			}
+			
+			private function getGroupTestsResults():void {
+				new GetGroupTestsSizeEvent(new TestSummaryQuery(testGridModel.testQuery,testSummary),testGridModel).dispatch();
+				new GetGroupTestsEvent(new TestSummaryQuery(testGridModel.testQuery,testSummary),getGroupTestsCallbackResult,callbackFault).dispatch();
+			}
+			
+			/**
+			 * This method will be called after fetching a chunk of tests in respond to a double click event accurd in testGroupGrid.<br>
+			 * It switched the visibility of the grids and setting the data into the correct data provider.
+			 */ 
+			public function getGroupTestsCallbackResult(data:ResultEvent): void
+			{
+				var evt:ResultEvent = data as ResultEvent;
+				var xmlList:XMLList = (new XML(evt.message.body)).test;
+				testGridModel.gridData.items = TestXMLConverter.fromXMLList(xmlList);
+				
+				grids.removeAllElements();
+				grids.addElement(testsGrid);
+				navigation.navModel = testGridModel.navigation;
+				testGroupCheckBoxGroup.visible = false;	//will hide the group of check box: testName, Scenario, params		
+				inGroupingMode = false;
+				inGroupTestsMode = true;
+			}
+			
+			protected function deleteTestCallbackResult(data:ResultEvent): void
+			{
+				Alert.show('Test was deleted successfully', '', mx.controls.Alert.OK);
+				var updateEvent:UpdateEvent = new UpdateEvent(true);
+				dispatchEvent(updateEvent);
+			}
+			
+			protected function deleteTestCallbackFault(info:Object): void
+			{
+				Alert.show("Test Deletion Failed");
+			}
+			
+			protected function deleteImg_clickHandler(event:MouseEvent):void
+			{
+				if (testsGrid.areAllTestsSelected){
+					deleteAllHandler();
+				}else {
+					
+					var selectedTests:ArrayList = getAllSelectedTests();
+					var selectedTestsString:String = concatListToString(selectedTests,",");
+					if (selectedTests.length > 0){
+						new DeleteTestEvent(selectedTestsString,deleteScenarioCallbackResult,callbackFault).dispatch(); 
+					}else {
+						Alert.show("Select at least one test to delete");
+					}
+				}
+			}
+			
+			/**
+			 * This method will get all the selected tests from the grid and will return them as array collection
+			 */ 
+			private function getAllSelectedTests():ArrayList{
+				var testsArr:ArrayList = new ArrayList();
+				var keyIterator:IIterator = testsGrid.selectedTests.keyIterator();
+				while(keyIterator.hasNext()){
+					testsArr.addItem(keyIterator.next() as String);
+				}		
+				return testsArr;
+			}
+			
+			/**
+			 * This method will be called upon the selection of all scenario from grid and the request for delete.<br>
+			 * This is needed in order to prevent from the user to erase all executions in DB in case he did not mean to.
+			 */ 
+			private function deleteAllHandler():void {
+				Alert.show("All Tests will be deleted from DB.\Do you wish to proceed?","Delete All Tests from DB", Alert.OK | Alert.CANCEL, null, deleteAllAlertListner, null, Alert.OK);
+			}
+			
+			/**
+			 * This method will be called in case user CONFIRMS the deletion of all scenario from DB.<br>
+			 * It will dispatch a delete all scenarios event<br>
+			 */ 
+			private function deleteAllAlertListner(eventObj:CloseEvent):void {
+				if (eventObj.detail==Alert.OK) {
+					new DeleteTestEvent("all",deleteScenarioCallbackResult,callbackFault).dispatch(); 
+				}
+			}
+			
+			
+			/**
+			 * This method will get an arrayList of objects which has toString implementation and a delimiter.<br>
+			 * It will create a string which concat each object in list and delimiter.<br>
+			 */ 
+			private function concatListToString(objectList:ArrayList,delimiter:String):String{
+				var result:String ="";
+				for(var i:int=0; i<objectList.length; i++){
+					result += objectList.getItemAt(i) + delimiter;
+				}
+				return result;
+			}
+			
+			protected function deleteScenarioCallbackResult(data:ResultEvent): void
+			{
+				currentState = "Normal";//back to normal state.
+				testsGrid.headerCheckBoxSelected = false;//after deletion completed header checkbox should not be selected.
+				testsGrid.selectedTests.clear();
+				Alert.show('Delete operation completed successfully', '', mx.controls.Alert.OK);
+				var updateEvent:UpdateEvent = new UpdateEvent(true);
+				dispatchEvent(updateEvent);
+			}
+			
+			protected function LinkButtonSelectAllTestsFromDB_clickHandler(event:MouseEvent):void
+			{
+				testsGrid.areAllTestsSelected = true;
+				testsGrid.headerCheckBoxSelected = true;
+				currentState = 	"AllTestsSelected";				
+			}
+			
+			protected function LinkButtonDeselectAllTestsFromDB_clickHandler(event:MouseEvent):void
+			{
+				testsGrid.areAllTestsSelected = false;
+				testsGrid.deselectAllCheckBox();
+				currentState = 	"Normal";
+			}
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		<!-- Place non-visual elements (e.g., services, value objects) here -->
+	</fx:Declarations>
+	<s:VGroup width="100%"  height="100%">
+		<s:HGroup width="100%" verticalAlign="middle" height="10%" horizontalAlign="center" paddingRight="20" paddingLeft="20">
+			<s:VGroup width="50%" height="100%">
+				<s:VGroup  width="100%" height="50%" horizontalAlign="left">
+					<s:HGroup	 width="100%" height="100%" horizontalAlign="left"  verticalAlign="middle">
+						<s:Label id="title" fontSize="16" fontWeight="bold" text="{reportTitle}"/>
+					</s:HGroup>
+				</s:VGroup>
+			</s:VGroup>
+			
+			<s:VGroup width="50%" height="100%" paddingTop="5">
+				<s:HGroup  width="100%" height="100%" horizontalAlign="right" paddingRight="10" verticalAlign="middle">
+					<s:HGroup id="testGroupCheckBoxGroup" visible="false">
+						<s:CheckBox id="checkBoxName" label="Name" selected="true" enabled="false" />
+						<s:CheckBox id="checkBoxTestGroupScenario" label="Scenario" change="checkBoxTestGroup_changeHandler(event)"
+									selected="{model.uiConfigurations.testGrouping.groupBy== 2 || model.uiConfigurations.testGrouping.groupBy == 4}"/>
+						<!--<s:CheckBox id="checkBoxTestGroupScenario" label="Scenario" change="checkBoxTestGroup_changeHandler(event)"
+									selected="{model.systemSettings.groupBy == 2 || model.systemSettings.groupBy == 4}"/>-->
+						<s:CheckBox id="checkBoxTestGroupParameters" label="Parameters" change="checkBoxTestGroup_changeHandler(event)" visible="false"
+									selected="{model.systemSettings.groupBy == 3 || model.systemSettings.groupBy == 4}"/>
+					</s:HGroup>
+					<s:Spacer x="242" y="15" width="42" height="36"/>
+					<s:CheckBox id="checkBoxTestGrouping" label="Test Grouping" change="checkBoxTestGrouping_changeHandler(event)" visible="true"/>
+					<s:HGroup width="200" height="40%" horizontalAlign="right">
+						<!--<s:Image id="deleteImg" height="100%" buttonMode="true" 
+								 click="deleteImg_clickHandler(event)" fillMode="scale"
+								 mouseChildren="false" scaleMode="stretch" source="{deleteImgSource}"
+								 toolTip="Delete Execution" useHandCursor="true"/>-->
+						<s:Button buttonMode="true" click="refreshButtonClicked(event)" mouseChildren="false"
+								  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"
+								  toolTip="Refresh" useHandCursor="true"/>
+					</s:HGroup>
+					<tools:TestsReportTools id="tools" height="40%" change="testReportToolsChanged(event)"/>
+				</s:HGroup>
+				
+				<s:VGroup width="100%" height="50%" horizontalAlign="left" verticalAlign="bottom" >
+					<s:HGroup id="selectAllExecutionsGroup" width="100%" height="100%" horizontalAlign="right"  verticalAlign="bottom" includeIn="SelectAllCheckBoxSelected">
+						<mx:LinkButton id="LinkButtonSelectAllTestssFromDB" click="LinkButtonSelectAllTestsFromDB_clickHandler(event)"
+									   label="Select all Tests that match this search"
+									   enabled="true" textDecoration="underline"/>
+					</s:HGroup>
+					<s:HGroup id="deselectAllExecutionsGroup" width="100%" height="100%" horizontalAlign="right"  verticalAlign="bottom" includeIn="AllTestsSelected">
+						<mx:LinkButton id="LinkButtonDeselectAllTestsFromDB" click="LinkButtonDeselectAllTestsFromDB_clickHandler(event)" 
+									   label="All Tests that match this search are selected. Clear selection"
+									   enabled="true" textDecoration="underline"/>
+					</s:HGroup>
+				</s:VGroup>
+				
+			</s:VGroup>
+		</s:HGroup>
+		<s:HGroup id="grids" width="100%" verticalAlign="bottom" height="85%" paddingTop="10">
+			<grids:TestsReportGrid id="testsGrid" dataProvider="{testGridModel.gridData.items}" testGridModel="{testGridModel}" />
+		</s:HGroup>
+		<common:Navigation paddingBottom="8" width="100%" paddingTop="8" verticalAlign="middle" horizontalAlign="center"
+						   id="navigation" navModel="{testGridModel.navigation}"/>
+	</s:VGroup>
+	
+	<s:states>
+		<s:State name="Normal"/>
+		<s:State name="AllTestsSelected" />
+		<s:State name="SelectAllCheckBoxSelected"/>
+	</s:states>
+	
+</s:BorderContainer>

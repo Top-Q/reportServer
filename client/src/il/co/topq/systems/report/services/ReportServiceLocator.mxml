@@ -1,0 +1,264 @@
+<?xml version="1.0" encoding="utf-8"?>
+<services:ServiceLocator xmlns:fx="http://ns.adobe.com/mxml/2009"
+						 xmlns:s="library://ns.adobe.com/flex/spark"
+						 xmlns:mx="library://ns.adobe.com/flex/mx"
+						 xmlns:adobe="http://www.adobe.com/2006/cairngorm"
+						 xmlns:services="com.adobe.cairngorm.business.*">
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			
+			[Bindable]
+			public var model:ReportModelLocator = ReportModelLocator.getInstance();
+			
+//			[Bindable]
+//			static public var domain:String = "";
+
+			[Bindable]
+			static public var domain:String = "http://localhost:8080";
+			
+		]]>
+	</fx:Script>
+	<fx:Declarations>
+		
+		<!-- Services for legacy report section-->
+		<s:HTTPService id="getLegacyScenariosChunk" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="domain/report-service/report/services/legacy/scenario/read"
+					   useProxy="false"/>
+		
+		<!--
+		******General Services******		
+		When the application starts it send a request to the server to see whether a configuration is available or not
+		-->
+		<s:HTTPService id="getUIConfigurations" method="GET" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/authorization/configuration"
+					   useProxy="false"/>
+		<s:HTTPService id="setUIConfigurations" contentType="application/xml" method="POST"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/authorization/set-configuration"
+					   useProxy="false"/>
+		<s:HTTPService id="getGridConfiguration" method="GET" resultFormat="xml"
+					   showBusyCursor="false"
+					   url="{domain}/report-service/report/settings/system/getGridConfiguration/"
+					   useProxy="false"/>
+		<s:HTTPService id="createGridConfiguration" contentType="application/xml" method="POST"
+					   resultFormat="xml" showBusyCursor="false"
+					   url="{domain}/report-service/report/settings/system/createGridConfiguration/"
+					   useProxy="false"/>
+		<s:HTTPService id="setSystemSettings" contentType="application/xml" method="POST"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/settings/system/create" useProxy="false"/>
+		<s:HTTPService id="isConfigAvailable" method="GET" resultFormat="xml" showBusyCursor="true"
+					   useProxy="false"/>
+		<s:HTTPService id="setConfig" contentType="application/xml" method="POST" resultFormat="xml"
+					   showBusyCursor="true" useProxy="false"/>
+		
+		<s:HTTPService id="isUserAuthorized" contentType="application/xml" method="POST"
+					   resultFormat="xml" showBusyCursor="true" useProxy="false"/>
+		
+		
+		<s:HTTPService id="loginService" contentType="application/xml" method="POST"
+					   resultFormat="xml" showBusyCursor="true" url="domain" useProxy="false"/>
+		<!-- General Services -->
+		
+		<!--USER-->
+		<s:HTTPService id="getUsers"  method="GET" resultFormat="xml"
+					   showBusyCursor="false" url="{domain}/report-service/report/user/allUsers"
+					   useProxy="false" />
+		<!--TESTS-->
+		<s:HTTPService id="deleteTestOrphanProperties" method="get" resultFormat="xml"
+					   showBusyCursor="false" url="{domain}/report-service/report/test/deleteOrphan"
+					   useProxy="false"/>
+		<s:HTTPService id="getTestLogFolder" method="get" resultFormat="xml" showBusyCursor="false"
+					   url="{domain}/report-service/report/test/testLogFolder" useProxy="false"/>
+		<s:HTTPService id="scenarioOfTest" method="get" resultFormat="xml" showBusyCursor="false"
+					   url="{domain}/report-service/report/test/scenarioOfTest" useProxy="false"/>
+		<s:HTTPService id="getGroupTests" contentType="application/xml" method="POST"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test/group/tests" useProxy="false"/>
+		<s:HTTPService id="getGroupTestsSize" contentType="application/xml" method="POST"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test/group/tests/size" useProxy="false"/>
+		<s:HTTPService id="getTestGroup" contentType="application/xml" method="POST"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test/group" useProxy="false"/>
+		<s:HTTPService id="getTestGroupSize" contentType="application/xml" method="POST"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test/group/size" useProxy="false"/>
+		<s:HTTPService id="updateTest" contentType="application/xml" method="post" resultFormat="xml"
+					   showBusyCursor="true" url="{domain}/report-service/report/test/update/"
+					   useProxy="false"/>
+		<s:HTTPService id="getTest" contentType="application/xml" method="get" resultFormat="xml"
+					   showBusyCursor="true" url="{domain}/report-service/report/services/test/"
+					   useProxy="false"/>
+		<s:HTTPService id="getTests" contentType="application/xml" method="post" resultFormat="xml"
+					   showBusyCursor="true" url="{domain}/report-service/report/test"
+					   useProxy="false"/>
+		<s:HTTPService id="getTestsByFilter" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test" useProxy="false"/>
+		<s:HTTPService id="getTestsByFilterSize" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test/querySize" useProxy="false"/>
+		<s:HTTPService id="getTestsSize" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test/querySize" useProxy="false"/>
+		<s:HTTPService id="getTestOfAScenario" contentType="application/xml" method="get"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/services/tests/" useProxy="false"/>
+		<s:HTTPService id="countTests" contentType="application/xml" method="post" resultFormat="xml"
+					   showBusyCursor="true" url="{domain}/report-service/report/test/count"
+					   useProxy="false"/>		
+		<s:HTTPService id="deleteTest" method="get" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test/delete/" useProxy="false"/>
+		<s:HTTPService id="getTestsPropertiesValues" method="get" resultFormat="xml"
+					   showBusyCursor="true"
+					   url="{domain}/report-service/report/testProperties/uniqueKeys"
+					   useProxy="false"/>
+		<s:HTTPService id="getTestsPropertiesValuesInEditMode" method="get" resultFormat="xml"
+					   showBusyCursor="true"
+					   url="{domain}/report-service/report/testProperties/uniqueKeysInEdit/"
+					   useProxy="false"/>		
+		<s:HTTPService id="getTestByID" method="post" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test/" useProxy="false"/>
+		<s:HTTPService id="getTestScenario" method="get" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/test/testScenario/" useProxy="false"/>
+		<!--TESTS-->
+
+		<!--SCENARIOS-->	
+		<s:HTTPService id="updateScenario" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/update/" useProxy="false"/>
+		<s:HTTPService id="executionStatistics" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/scenarioStatistics"
+					   useProxy="false"/>
+		<s:HTTPService id="countTestsByScenarioQuery" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/countScenarioTests"
+					   useProxy="false"/>
+		<s:HTTPService id="getScenarioPropertiesValues" method="get" resultFormat="xml"
+					   showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/propertyValues/"
+					   useProxy="false"/>
+		<s:HTTPService id="deleteScenarioOrphanProperties" method="get" resultFormat="xml"
+					   showBusyCursor="false"
+					   url="{domain}/report-service/report/scenario/deleteOrphan/" useProxy="false"/>
+		<s:HTTPService id="compareScenarios" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/compareScenarios/"
+					   useProxy="false"/>
+		<s:HTTPService id="getScenarios" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario" useProxy="false"/>
+		<s:HTTPService id="getScenariosByFilter" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario" useProxy="false"/>
+		<s:HTTPService id="deleteScenarioByScenarioQuery" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/delete" useProxy="false"/>
+		<s:HTTPService id="getScenariosSize" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/querySize" useProxy="false"/>
+		<s:HTTPService id="getScenariosByFilterSize" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/querySize" useProxy="false"/>
+		<s:HTTPService id="countScenario" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/count" useProxy="false"/>
+		<!--<s:HTTPService id="countScenario" showBusyCursor="true" url="{domain}/report-service/report/scenario/count" useProxy="false" method="get"  resultFormat="xml" />-->
+		<s:HTTPService id="deleteScenario" method="get" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/delete/" useProxy="false"/>
+		<s:HTTPService id="getScenariosPropertiesValues" method="get" resultFormat="xml"
+					   showBusyCursor="true"
+					   url="{domain}/report-service/report/scenarioProperties/uniqueKeys"
+					   useProxy="false"/>
+<!--		<s:HTTPService id="getScenariosTests" showBusyCursor="true" url="{domain}/report-service/report/scenario/scenarioTests/" useProxy="false" method="post"  resultFormat="xml" />
+-->		
+		<s:HTTPService id="getScenariosTestsSize" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/scenarioTestsSize/"
+					   useProxy="false"/>
+		<s:HTTPService id="getScenariosTests" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/tests/" useProxy="false"/>
+		<s:HTTPService id="exportScenario" method="post" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/export/writeScenario/" useProxy="false"/>
+		<s:HTTPService id="getScenarioByID" method="get" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenario/" useProxy="false"/>
+		<!--SCENARIOS-->
+		
+		<!--TEST_CUSTOM_REPORT-->
+		<s:HTTPService id="deleteTestCustomReport" method="get" resultFormat="xml"
+					   showBusyCursor="true"
+					   url="{domain}/report-service/report/testCustomReport/delete/"
+					   useProxy="false"/>
+		<s:HTTPService id="getTestCustomReport" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/testCustomReport/chunk" useProxy="false"/>
+		<s:HTTPService id="getTestCustomReportSize" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/testCustomReport/querySize"
+					   useProxy="false"/>
+		<s:HTTPService id="createTestCustomReport" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/testCustomReport" useProxy="false"/>
+		<s:HTTPService id="getTestCustomReportByID" method="get" resultFormat="xml"
+					   showBusyCursor="true" url="{domain}/report-service/report/testCustomReport/"
+					   useProxy="false"/>
+		<s:HTTPService id="getTestCustomReportPropertiesValues" method="get" resultFormat="xml"
+					   showBusyCursor="true"
+					   url="{domain}/report-service/report/testCustomReport/values/"
+					   useProxy="false"/>
+		<!--TEST_CUSTOM_REPORT-->
+		
+		<!--SCENARIO_CUSTOM_REPORT-->
+		<s:HTTPService id="getScenarioCustomReport" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenarioCustomReport/chunk"
+					   useProxy="false"/>
+		<s:HTTPService id="deleteScenarioCustomReport" method="get" resultFormat="xml"
+					   showBusyCursor="true"
+					   url="{domain}/report-service/report/scenarioCustomReport/delete/"
+					   useProxy="false"/>
+		<s:HTTPService id="getScenarioCustomReportSize" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenarioCustomReport/querySize"
+					   useProxy="false"/>
+		<s:HTTPService id="createScenarioCustomReport" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenarioCustomReport" useProxy="false"/>
+		<s:HTTPService id="getScenarioCustomReportByID" method="get" resultFormat="xml"
+					   showBusyCursor="true"
+					   url="{domain}/report-service/report/scenarioCustomReport/" useProxy="false"/>
+		<s:HTTPService id="getScenarioCustomReportPropertiesValues" method="get" resultFormat="xml"
+					   showBusyCursor="true"
+					   url="{domain}/report-service/report/scenarioCustomReport/values/"
+					   useProxy="false"/>
+		<!--SCENARIO_CUSTOM_REPORT-->
+		
+		
+		<s:HTTPService id="getVersions" method="get" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/services/scenario/version"
+					   useProxy="false"/>
+		
+		
+		<s:HTTPService id="getBuilds" method="get" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/services/scenario/build" useProxy="false"/>
+		
+		<s:HTTPService id="getScenarioName" method="get" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/services/scenario/name" useProxy="false"/>
+		
+		<s:HTTPService id="getSuts" method="get" resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/services/scenario/sut" useProxy="false"/>
+				
+		<s:HTTPService id="lastVersionExecution" contentType="application/xml" method="post"
+					   resultFormat="xml" showBusyCursor="true"
+					   url="{domain}/report-service/report/scenarioProperties/lastVersionExecution"
+					   useProxy="false"/>
+		<!--<s:HTTPService id="lastVersionExecution" showBusyCursor="true" url="{domain}/report-service/report/scenarioProperties/lastVersionExecution" useProxy="false" method="get"  resultFormat="xml" />-->
+				
+	</fx:Declarations>
+	
+</services:ServiceLocator>
