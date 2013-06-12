@@ -30,7 +30,7 @@ public enum UserRole {
 	private String value;
 
 	public static UserRole getUserRole(String role) {
-		return lookup.get(role.toLowerCase());
+		return lookup.get(role.trim().toLowerCase());
 	}
 
 	public String getValue() {
