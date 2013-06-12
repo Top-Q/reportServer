@@ -1,5 +1,5 @@
 Manifest-Version: 1.0
-Built-By: eran_g
-Build-Jdk: 1.6.0_30
+Built-By: erango
+Build-Jdk: 1.7.0_10
 Created-By: Maven Integration for Eclipse
 
