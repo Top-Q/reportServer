@@ -51,5 +51,15 @@
 			<type>2</type>
 			<location>C:/Users/eran_g/reportServerWorkspace/addUserSupport/report-service/src/main/webapp</location>
 		</link>
+		<link>
+			<name>bin-release6</name>
+			<type>2</type>
+			<location>C:/Users/eran_g/topq/reportServer-github-src/reportServer/server/report-service/src/main/webapp/WEB-INF</location>
+		</link>
+		<link>
+			<name>bin-release7</name>
+			<type>2</type>
+			<location>C:/Users/eran_g/topq/reportServer-github-src/reportServer/server/report-service/src/main/webapp</location>
+		</link>
 	</linkedResources>
 </projectDescription>
