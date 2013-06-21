@@ -89,9 +89,8 @@ public class TestCustomReportServiceBeanTest extends SpringBaseTest {
 			testCustomReportFromDB = testCustomReportService
 					.get(customReportId);
 			String newName = testCustomReportFromDB.getName();
-			Assert.assertNotEquals(
-					"Expecting custom report name to be updated", oldName,
-					newName);
+			Assert.assertNotSame("Expecting custom report name to be updated",
+					oldName, newName);
 			testCustomReportService.delete(customReportId);
 		} catch (Exception e) {
 			log.error(e);

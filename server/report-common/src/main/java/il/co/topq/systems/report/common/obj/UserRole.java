@@ -4,7 +4,8 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This enum will represent the different roles that may be assigned to a User in the system.<br>
+ * This ENUM will represent the different roles that may be assigned to a User
+ * in the system.<br>
  * Role constant must begin with ROLE_XXX<br>
  * the value of the user permission will be the enum name
  * 
@@ -13,7 +14,7 @@ import java.util.Map;
  */
 public enum UserRole {
 
-	ROLE_DELETE_SCENARIO("Delete Scenario"),ROLE_USER_MANAGER("User Manager");
+	ROLE_DELETE_SCENARIO("Delete Scenario"), ROLE_USER_MANAGER("User Manager");
 	private static Map<String, UserRole> lookup;
 
 	static {
@@ -30,7 +31,7 @@ public enum UserRole {
 	private String value;
 
 	public static UserRole getUserRole(String role) {
-		return lookup.get(role.toLowerCase());
+		return lookup.get(role.trim().toLowerCase());
 	}
 
 	public String getValue() {

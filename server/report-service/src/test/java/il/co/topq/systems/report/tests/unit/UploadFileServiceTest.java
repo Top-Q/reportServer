@@ -32,26 +32,16 @@ import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
-import com.sun.jersey.test.framework.JerseyTest;
-import com.sun.jersey.test.framework.util.ApplicationDescriptor;
-
 /**
+ * this class was integrated with the spring version of the report server by
+ * Eran.Golan, coding and business logic was made by Liel.Ran
  * 
- * @author liel.ran this class was integrated with the spring version of the report server by Eran.Golan, coding and
- *         business logic was made by Liel.Ran
+ * @author liel.ran
  * 
  */
-public class UploadFileServiceTest extends JerseyTest {
+public class UploadFileServiceTest {
 
 	private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
-
-	public UploadFileServiceTest() throws Exception {
-		super();
-		ApplicationDescriptor appDescriptor = new ApplicationDescriptor();
-		appDescriptor.setContextPath("report-service");
-		appDescriptor.setRootResourcePackageName("il.co.topq.systems.report.component.service");
-		super.setupTestEnvironment(appDescriptor);
-	}
 
 	/**
 	 * 
@@ -69,18 +59,23 @@ public class UploadFileServiceTest extends JerseyTest {
 	 * @throws IOException
 	 *             If Failed to create new zip file
 	 */
-	public static void zipDirectory(final String directory, File destinationFile) throws IOException {
+	public static void zipDirectory(final String directory, File destinationFile)
+			throws IOException {
 
 		File zipFile = destinationFile;
 		File srcFolder = new File(directory);
 		if (srcFolder != null && srcFolder.isDirectory()) {
-			Iterator<File> i = org.apache.commons.io.FileUtils.iterateFiles(srcFolder, null, true);
+			Iterator<File> i = org.apache.commons.io.FileUtils.iterateFiles(
+					srcFolder, null, true);
 			// Iterator<File> i = FileUtils.iterateFiles(srcFolder, new String
 			// []{"xcf"}, true);
 			/*
-			 * public static Iterator<File> iterateFiles(File directory, String[] extensions, boolean recursive)
-			 * directory - the directory to search in extensions - an array of extensions, ex. {"java","xml"}. If this
-			 * parameter is null, all files are returned. recursive - if true all subdirectories are searched as well
+			 * public static Iterator<File> iterateFiles(File directory,
+			 * String[] extensions, boolean recursive) directory - the directory
+			 * to search in extensions - an array of extensions, ex.
+			 * {"java","xml"}. If this parameter is null, all files are
+			 * returned. recursive - if true all subdirectories are searched as
+			 * well
 			 */
 
 			zipFile.createNewFile();
@@ -100,8 +95,10 @@ public class UploadFileServiceTest extends JerseyTest {
 																				// separator
 				while (i.hasNext()) {
 					File file = i.next();
-					String relativePath = file.getAbsolutePath().substring(srcFolderLength);
-					ArchiveEntry zipArchiveEntry = new ZipArchiveEntry(relativePath);
+					String relativePath = file.getAbsolutePath().substring(
+							srcFolderLength);
+					ArchiveEntry zipArchiveEntry = new ZipArchiveEntry(
+							relativePath);
 					zipOutputStream.putArchiveEntry(zipArchiveEntry);
 					FileInputStream fis = null;
 					try {
@@ -132,7 +129,8 @@ public class UploadFileServiceTest extends JerseyTest {
 		final String dirName = "tempDir" + currentTimeMillis;
 		final String htmlName = "tempHtmlLogFile.html";
 		final int randomSize = (int) (5 + (Math.random() * (15 - 5)));
-		String url = "http://localhost:8080/report-service/file/upload/?scenarioId=" + currentTimeMillis / 1000;
+		String url = "http://localhost:8080/report-service/file/upload/?scenarioId="
+				+ currentTimeMillis / 1000;
 		File dirToDelete = null;
 
 		System.out.println(url);
@@ -140,12 +138,14 @@ public class UploadFileServiceTest extends JerseyTest {
 			// create the main directory
 			File dir = new File(dirName);
 			boolean created = dir.mkdirs();
-			Assert.assertTrue("the temp folder was not created - test failed", created);
+			Assert.assertTrue("the temp folder was not created - test failed",
+					created);
 			dirToDelete = dir;
 
 			File logFolder = new File(dir, logFolderName);
 			created = logFolder.mkdirs();
-			Assert.assertTrue("the temp folder was not created - test failed", created);
+			Assert.assertTrue("the temp folder was not created - test failed",
+					created);
 
 			// Create Temp empty File inside the temp Dir
 			File html = new File(logFolder, htmlName);
@@ -154,29 +154,35 @@ public class UploadFileServiceTest extends JerseyTest {
 			} catch (IOException e) {
 				e.printStackTrace();
 			}
-			Assert.assertTrue("the temp file was not created - test failed", created);
+			Assert.assertTrue("the temp file was not created - test failed",
+					created);
 
 			// TODO: improve impl
 			// this function take about 2-3 mins for 25 mb
 			log.info("The Log html file with random size =" + randomSize);
 
 			html = RandomData.generateRandomFile(randomSize, html);
-			Assert.assertTrue("the HTML file(inside the log folder) was not created with data - test failed",
+			Assert.assertTrue(
+					"the HTML file(inside the log folder) was not created with data - test failed",
 					html.exists());
 
 			long htmlFileLength = html.length();
 
 			File zipFile = new File(dir, uploadFileName);
 			zipDirectory(dir.getAbsolutePath(), zipFile);
-			Assert.assertTrue("the zip file(of the log folder) was not created - test failed", zipFile.exists());
+			Assert.assertTrue(
+					"the zip file(of the log folder) was not created - test failed",
+					zipFile.exists());
 
 			// Sending the HTTP
 			HttpClient client = new DefaultHttpClient();
 
-			client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+			client.getParams().setParameter(
+					CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
 
 			HttpPost post = new HttpPost(url);
-			MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+			MultipartEntity entity = new MultipartEntity(
+					HttpMultipartMode.BROWSER_COMPATIBLE);
 
 			// For File parameters
 			entity.addPart("file", new FileBody((zipFile), "application/zip"));
@@ -197,9 +203,11 @@ public class UploadFileServiceTest extends JerseyTest {
 			log.info("UPLOAD TOOK =" + (end - start) + " Secs");
 			log.info(response);
 
-			url = "http://localhost:8080/report-service/" + response + "/" + logFolderName + "/" + htmlName;
+			url = "http://localhost:8080/report-service/" + response + "/"
+					+ logFolderName + "/" + htmlName;
 			client = new DefaultHttpClient();
-			client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+			client.getParams().setParameter(
+					CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
 
 			HttpGet get = new HttpGet(url);
 
@@ -215,12 +223,15 @@ public class UploadFileServiceTest extends JerseyTest {
 
 			client.getConnectionManager().shutdown();
 			StatusLine statusLine = getResponse.getStatusLine();
-			Assert.assertTrue("the file(upload html after unzip the uploaded file) was not found on the server",
+			Assert.assertTrue(
+					"the file(upload html after unzip the uploaded file) was not found on the server",
 					statusLine.getStatusCode() == 200);
 
 			long contentLength = getResponse.getEntity().getContentLength();
-			Assert.assertEquals("the created html len=" + htmlFileLength + ", and the uploaded html on the server len="
-					+ contentLength + ",Test failed!", htmlFileLength, contentLength);
+			Assert.assertEquals("the created html len=" + htmlFileLength
+					+ ", and the uploaded html on the server len="
+					+ contentLength + ",Test failed!", htmlFileLength,
+					contentLength);
 			log.info("the Html Files are the same sizes");
 
 		} catch (Exception e) {
@@ -230,7 +241,8 @@ public class UploadFileServiceTest extends JerseyTest {
 			// Delete//
 			deleteFiles(dirToDelete);
 
-			Assert.assertFalse("The Temp Dir folder was not deleted after the delete temp folder funcation",
+			Assert.assertFalse(
+					"The Temp Dir folder was not deleted after the delete temp folder funcation",
 					dirToDelete.exists());
 		}
 	}
@@ -290,9 +302,25 @@ public class UploadFileServiceTest extends JerseyTest {
 // import org.apache.http.util.EntityUtils;
 // import org.apache.log4j.Logger;
 //
-// public class UploadFileServiceTest {
+// /**
+// *
+// * @author liel.ran this class was integrated with the spring version of the
+// * report server by Eran.Golan, coding and business logic was made by
+// * Liel.Ran
+// *
+// */
+// public class UploadFileServiceTest extends JerseyTest {
 //
 // private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
+//
+// public UploadFileServiceTest() throws Exception {
+// super();
+// ApplicationDescriptor appDescriptor = new ApplicationDescriptor();
+// appDescriptor.setContextPath("report-service");
+// appDescriptor
+// .setRootResourcePackageName("il.co.topq.systems.report.component.service");
+// super.setupTestEnvironment(appDescriptor);
+// }
 //
 // /**
 // *
@@ -310,18 +338,23 @@ public class UploadFileServiceTest extends JerseyTest {
 // * @throws IOException
 // * If Failed to create new zip file
 // */
-// public static void zipDirectory(final String directory, File destinationFile) throws IOException {
+// public static void zipDirectory(final String directory, File destinationFile)
+// throws IOException {
 //
 // File zipFile = destinationFile;
 // File srcFolder = new File(directory);
 // if (srcFolder != null && srcFolder.isDirectory()) {
-// Iterator<File> i = org.apache.commons.io.FileUtils.iterateFiles(srcFolder, null, true);
+// Iterator<File> i = org.apache.commons.io.FileUtils.iterateFiles(
+// srcFolder, null, true);
 // // Iterator<File> i = FileUtils.iterateFiles(srcFolder, new String
 // // []{"xcf"}, true);
 // /*
-// * public static Iterator<File> iterateFiles(File directory, String[] extensions, boolean recursive)
-// * directory - the directory to search in extensions - an array of extensions, ex. {"java","xml"}. If this
-// * parameter is null, all files are returned. recursive - if true all subdirectories are searched as well
+// * public static Iterator<File> iterateFiles(File directory,
+// * String[] extensions, boolean recursive) directory - the directory
+// * to search in extensions - an array of extensions, ex.
+// * {"java","xml"}. If this parameter is null, all files are
+// * returned. recursive - if true all subdirectories are searched as
+// * well
 // */
 //
 // zipFile.createNewFile();
@@ -341,8 +374,10 @@ public class UploadFileServiceTest extends JerseyTest {
 // // separator
 // while (i.hasNext()) {
 // File file = i.next();
-// String relativePath = file.getAbsolutePath().substring(srcFolderLength);
-// ArchiveEntry zipArchiveEntry = new ZipArchiveEntry(relativePath);
+// String relativePath = file.getAbsolutePath().substring(
+// srcFolderLength);
+// ArchiveEntry zipArchiveEntry = new ZipArchiveEntry(
+// relativePath);
 // zipOutputStream.putArchiveEntry(zipArchiveEntry);
 // FileInputStream fis = null;
 // try {
@@ -373,7 +408,8 @@ public class UploadFileServiceTest extends JerseyTest {
 // final String dirName = "tempDir" + currentTimeMillis;
 // final String htmlName = "tempHtmlLogFile.html";
 // final int randomSize = (int) (5 + (Math.random() * (15 - 5)));
-// String url = "http://localhost:8080/report-service/file/upload/?scenarioId=" + currentTimeMillis / 1000;
+// String url = "http://localhost:8080/report-service/file/upload/?scenarioId="
+// + currentTimeMillis / 1000;
 // File dirToDelete = null;
 //
 // System.out.println(url);
@@ -381,12 +417,14 @@ public class UploadFileServiceTest extends JerseyTest {
 // // create the main directory
 // File dir = new File(dirName);
 // boolean created = dir.mkdirs();
-// Assert.assertTrue("the temp folder was not created - test failed", created);
+// Assert.assertTrue("the temp folder was not created - test failed",
+// created);
 // dirToDelete = dir;
 //
 // File logFolder = new File(dir, logFolderName);
 // created = logFolder.mkdirs();
-// Assert.assertTrue("the temp folder was not created - test failed", created);
+// Assert.assertTrue("the temp folder was not created - test failed",
+// created);
 //
 // // Create Temp empty File inside the temp Dir
 // File html = new File(logFolder, htmlName);
@@ -395,29 +433,35 @@ public class UploadFileServiceTest extends JerseyTest {
 // } catch (IOException e) {
 // e.printStackTrace();
 // }
-// Assert.assertTrue("the temp file was not created - test failed", created);
+// Assert.assertTrue("the temp file was not created - test failed",
+// created);
 //
 // // TODO: improve impl
 // // this function take about 2-3 mins for 25 mb
 // log.info("The Log html file with random size =" + randomSize);
 //
 // html = RandomData.generateRandomFile(randomSize, html);
-// Assert.assertTrue("the HTML file(inside the log folder) was not created with data - test failed",
+// Assert.assertTrue(
+// "the HTML file(inside the log folder) was not created with data - test failed",
 // html.exists());
 //
 // long htmlFileLength = html.length();
 //
 // File zipFile = new File(dir, uploadFileName);
 // zipDirectory(dir.getAbsolutePath(), zipFile);
-// Assert.assertTrue("the zip file(of the log folder) was not created - test failed", zipFile.exists());
+// Assert.assertTrue(
+// "the zip file(of the log folder) was not created - test failed",
+// zipFile.exists());
 //
 // // Sending the HTTP
 // HttpClient client = new DefaultHttpClient();
 //
-// client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+// client.getParams().setParameter(
+// CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
 //
 // HttpPost post = new HttpPost(url);
-// MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
+// MultipartEntity entity = new MultipartEntity(
+// HttpMultipartMode.BROWSER_COMPATIBLE);
 //
 // // For File parameters
 // entity.addPart("file", new FileBody((zipFile), "application/zip"));
@@ -438,9 +482,11 @@ public class UploadFileServiceTest extends JerseyTest {
 // log.info("UPLOAD TOOK =" + (end - start) + " Secs");
 // log.info(response);
 //
-// url = "http://localhost:8080/report-service/" + response + "/" + logFolderName + "/" + htmlName;
+// url = "http://localhost:8080/report-service/" + response + "/"
+// + logFolderName + "/" + htmlName;
 // client = new DefaultHttpClient();
-// client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
+// client.getParams().setParameter(
+// CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
 //
 // HttpGet get = new HttpGet(url);
 //
@@ -456,12 +502,15 @@ public class UploadFileServiceTest extends JerseyTest {
 //
 // client.getConnectionManager().shutdown();
 // StatusLine statusLine = getResponse.getStatusLine();
-// Assert.assertTrue("the file(upload html after unzip the uploaded file) was not found on the server",
+// Assert.assertTrue(
+// "the file(upload html after unzip the uploaded file) was not found on the server",
 // statusLine.getStatusCode() == 200);
 //
 // long contentLength = getResponse.getEntity().getContentLength();
-// Assert.assertEquals("the created html len=" + htmlFileLength + ", and the uploaded html on the server len="
-// + contentLength + ",Test failed!", htmlFileLength, contentLength);
+// Assert.assertEquals("the created html len=" + htmlFileLength
+// + ", and the uploaded html on the server len="
+// + contentLength + ",Test failed!", htmlFileLength,
+// contentLength);
 // log.info("the Html Files are the same sizes");
 //
 // } catch (Exception e) {
@@ -471,7 +520,8 @@ public class UploadFileServiceTest extends JerseyTest {
 // // Delete//
 // deleteFiles(dirToDelete);
 //
-// Assert.assertFalse("The Temp Dir folder was not deleted after the delete temp folder funcation",
+// Assert.assertFalse(
+// "The Temp Dir folder was not deleted after the delete temp folder funcation",
 // dirToDelete.exists());
 // }
 // }

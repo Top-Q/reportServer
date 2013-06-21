@@ -21,6 +21,7 @@ public class UserMigrator extends Migrator implements MigratorTask {
 	private static final String PASSWORD = "password";
 	private static final String FIRST_NAME = "firstName";
 	private static final String LAST_NAME = "lastName";
+	private static final String EMAIL= "email";
 
 	private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
 
@@ -90,6 +91,13 @@ public class UserMigrator extends Migrator implements MigratorTask {
 			} else {
 				user.setLastName("admin");
 			}
+			
+			String email = super.propertiesFileHandler.getProperty(EMAIL);
+			if (email != null && !email.isEmpty()) {
+				user.setEmail(email);
+			} else {
+				user.setEmail("");//may need to leave null
+			}
 
 		} catch (Exception e) {
 			log.info("failed to load user details from " + USER_PROPERTIES
@@ -98,6 +106,7 @@ public class UserMigrator extends Migrator implements MigratorTask {
 			user.setPassword("admin");
 			user.setFirstName("admin");
 			user.setLastName("admin");
+			user.setEmail("");
 		} finally {
 			super.propertiesFileHandler.close();
 			super.propertiesFileHandler = keeper;

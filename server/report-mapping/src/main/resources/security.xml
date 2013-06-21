@@ -21,9 +21,6 @@
 		<!-- </security:authentication-provider> -->
 	</security:authentication-manager>
 
-	<bean id="userDetailsService"
-		class="il.co.topq.systems.report.service.impl.UserDetailsServiceImpl" />
-
 	<security:http entry-point-ref="preAuthenticatedEntryPoint">
 		<security:anonymous enabled="false" />
 	</security:http>

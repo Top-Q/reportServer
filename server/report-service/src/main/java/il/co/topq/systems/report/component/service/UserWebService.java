@@ -16,6 +16,7 @@ import javax.servlet.ServletResponse;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -31,16 +32,26 @@ public class UserWebService {
 	@Autowired
 	UserService userService;
 
+	@Secured(value = "ROLE_USER_MANAGER")
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
 	public @ResponseBody
-	User createUser(ServletResponse response, @RequestBody User user) throws Exception {
+	User createUser(ServletResponse response, @RequestBody User user)
+			throws Exception {
 		log.info("in create user method");
-		return userService.create(user);
+		try{
+			User createdUser = userService.create(user);
+			return createdUser; 
+		}catch(Exception e){
+			response.getWriter().println(e.getMessage());
+			return null;
+		}
 	}
 
+	@Secured(value = "ROLE_USER_MANAGER")
 	@RequestMapping(value = "/update", method = RequestMethod.POST)
 	public @ResponseBody
-	User updateUser(ServletResponse response, @RequestBody User user) throws Exception {
+	User updateUser(ServletResponse response, @RequestBody User user)
+			throws Exception {
 		log.info("in update user method");
 		try {
 			return userService.update(user);
@@ -50,8 +61,10 @@ public class UserWebService {
 		}
 	}
 
-	@RequestMapping(value = "/delete/{userId}", method = RequestMethod.DELETE)
-	public void deleteUser(ServletResponse response, @PathVariable("userId") int userId) {
+	@Secured(value = "ROLE_USER_MANAGER")
+	@RequestMapping(value = "/delete/{userId}", method = RequestMethod.GET)
+	public void deleteUser(ServletResponse response,
+			@PathVariable("userId") int userId) {
 		log.info("in delete user method");
 		userService.delete(userId);
 	}
@@ -98,10 +111,10 @@ public class UserWebService {
 	UserList getAllUsers() throws Exception {
 		log.info("in get all users method");
 		List<User> users = userService.getAll();
-		for (User user : users) {
-			user.setUsername("");
-			user.setPassword("");
-		}
+		// for (User user : users) {
+		// user.setUsername("");
+		// user.setPassword("");
+		// }
 		return new UserList(users);
 	}
 }

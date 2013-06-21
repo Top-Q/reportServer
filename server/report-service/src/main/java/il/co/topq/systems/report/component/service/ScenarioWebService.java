@@ -14,7 +14,6 @@ import il.co.topq.systems.report.component.jaxbWrappers.ScenarioStatistics;
 import il.co.topq.systems.report.component.jaxbWrappers.ScenarioStatisticsList;
 import il.co.topq.systems.report.component.jaxbWrappers.TestList;
 import il.co.topq.systems.report.component.jaxbWrappers.TestStatistics;
-import il.co.topq.systems.report.component.settings.ConfigurationService;
 import il.co.topq.systems.report.component.utils.FileUtils;
 import il.co.topq.systems.report.component.utils.converters.XmlToScenarioConverter;
 import il.co.topq.systems.report.service.infra.PropertyService;
@@ -32,12 +31,11 @@ import java.util.List;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,12 +43,10 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
-import org.springframework.web.servlet.ModelAndView;
-import org.springframework.web.servlet.mvc.AbstractController;
 
 @Controller
 @RequestMapping(value = "/scenario")
-public class ScenarioWebService extends AbstractController {
+public class ScenarioWebService {
 
 	private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
 
@@ -67,19 +63,21 @@ public class ScenarioWebService extends AbstractController {
 	private static ServletContext servletContext;
 
 	/**
-	 * This method gets Scenario id and return the matching Scenario from Database. URL:
-	 * http://host:port/report-service/report/scenario/scenarioId Method: GET
+	 * This method gets Scenario id and return the matching Scenario from
+	 * Database. URL: http://host:port/report-service/report/scenario/scenarioId
+	 * Method: GET
 	 * 
 	 * @param scenarioId
 	 *            -
-	 * @return Scenario matching the scenario ID; see the <a href="{@docRoot} /doc-files/scenario.xml">Produced XML
-	 *         file</a>.
+	 * @return Scenario matching the scenario ID; see the <a href="{@docRoot}
+	 *         /doc-files/scenario.xml">Produced XML file</a>.
 	 * @throws Exception
 	 *             -
 	 */
 	@RequestMapping(value = "/{scenarioId}", method = RequestMethod.GET)
 	public @ResponseBody
-	Scenario getScenario(@PathVariable("scenarioId") Integer scenarioId) throws Exception {
+	Scenario getScenario(@PathVariable("scenarioId") Integer scenarioId)
+			throws Exception {
 
 		log.info("in get scenario web service");
 		Scenario scenario;
@@ -94,17 +92,19 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	/**
-	 * This method gets a ScenarioQuery and return the size of its resultSet; URL:
-	 * http://host:port/report-service/report/scenario/querySize Method: POST
+	 * This method gets a ScenarioQuery and return the size of its resultSet;
+	 * URL: http://host:port/report-service/report/scenario/querySize Method:
+	 * POST
 	 * 
 	 * @param scenarioQuery
 	 *            -
-	 * @return Integer - size of result set according to ScenarioQuery received as parameter. see the <a
-	 *         href="{@docRoot} /doc-files/integer.xml">Produced XML file</a>.
+	 * @return Integer - size of result set according to ScenarioQuery received
+	 *         as parameter. see the <a href="{@docRoot}
+	 *         /doc-files/integer.xml">Produced XML file</a>.
 	 */
 	@RequestMapping(value = "/querySize", method = RequestMethod.POST)
-	public void getSizeOfScenarioQueryByFilter(ServletResponse response, @RequestBody ScenarioQuery scenarioQuery)
-			throws Exception {
+	public void getSizeOfScenarioQueryByFilter(ServletResponse response,
+			@RequestBody ScenarioQuery scenarioQuery) throws Exception {
 
 		log.info("in get size of scenario query by filter web service");
 		Integer querySize;
@@ -118,26 +118,31 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	/**
-	 * This method gets a ScenarioQuery and return List of Scenario from Database according to ScenarioQuery.
+	 * This method gets a ScenarioQuery and return List of Scenario from
+	 * Database according to ScenarioQuery.
 	 * URL:http://host:port/report-service/report/scenario Method: POST
 	 * 
 	 * @param scenarioQuery
 	 *            -
-	 * @return List of Test answering the ScenarioQuery. see the <a href="{@docRoot}
-	 *         /doc-files/listOfScenario.xml">Consumed XML file</a>.
+	 * @return List of Test answering the ScenarioQuery. see the <a
+	 *         href="{@docRoot} /doc-files/listOfScenario.xml">Consumed XML
+	 *         file</a>.
 	 */
 	@RequestMapping(method = RequestMethod.POST)
 	public @ResponseBody
-	ScenarioList getScenariosByFilter(@RequestBody ScenarioQuery scenarioQuery) throws Exception {
+	ScenarioList getScenariosByFilter(@RequestBody ScenarioQuery scenarioQuery)
+			throws Exception {
 		log.info("in get scenarios by filter web service");
 		try {
-			List<Scenario> scenarioList = scenarioService.getScenariosByFiltersWithSortingCol(scenarioQuery);
+			List<Scenario> scenarioList = scenarioService
+					.getScenariosByFiltersWithSortingCol(scenarioQuery);
 
 			for (Scenario scenario : scenarioList) {
 				/**
-				 * VERY IMPORTANT --> DO NOT REMOVE UNLESS UNDERSTANDING THE LOGIC!!! making the tests transient as it
-				 * is not needed. Tests are fetched in a separate chunk query. The improvement in sending time of this
-				 * HTTP request is big.
+				 * VERY IMPORTANT --> DO NOT REMOVE UNLESS UNDERSTANDING THE
+				 * LOGIC!!! making the tests transient as it is not needed.
+				 * Tests are fetched in a separate chunk query. The improvement
+				 * in sending time of this HTTP request is big.
 				 */
 				scenario.setTests(null);
 			}
@@ -150,32 +155,38 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	/**
-	 * This method will get a Scenario id (number of IDS may be concatenate using ',' delimiter<br>
+	 * This method will get a Scenario id (number of IDS may be concatenate
+	 * using ',' delimiter<br>
 	 * , if parameter == "all" will delete all scenarios from DB.<br>
 	 * and deletes the matching Scenarios from Database<br>
 	 * Method will delete the scenario log from file system if exist.<br>
-	 * URL:http://host:port/report-service/report/scenario/delete/scenarioId Method: GET
+	 * URL:http://host:port/report-service/report/scenario/delete/scenarioId
+	 * Method: GET
 	 * 
 	 * @param scenarioId
 	 *            (list of IDS using delimiter ',' | "all" - stating delete all.
-	 * @return Boolean representing the success of the operation. see the <a href="{@docRoot}
-	 *         /doc-files/boolean.xml">Consumed XML file</a>.
+	 * @return Boolean representing the success of the operation. see the <a
+	 *         href="{@docRoot} /doc-files/boolean.xml">Consumed XML file</a>.
 	 */
+	@Secured(value = "ROLE_DELETE_SCENARIO")
 	@RequestMapping(value = "/delete/{scenarioId}", method = RequestMethod.GET)
-	public void deleteScenario(ServletResponse response, ServletRequest request,
+	public void deleteScenario(ServletResponse response,
+			ServletRequest request,
 			@PathVariable("scenarioId") String scenarioIds) throws Exception {
 
 		log.info("in delete scenario web service");
 		try {
 			String[] scenarioIDs = scenarioIds.split(",");
 			for (String scenarioId : scenarioIDs) {
-				Scenario scenario = scenarioService.get(Integer.parseInt(scenarioId));
+				Scenario scenario = scenarioService.get(Integer
+						.parseInt(scenarioId));
 				if (scenario != null) {
 					String htmlDir = scenario.getHtmlDir();
 					scenarioService.delete(Integer.parseInt(scenarioId));
 					deleteScenarioLogDirectory(htmlDir);
 				} else {
-					log.error("Failed to retrieve scenarios with id: " + scenarioId);
+					log.error("Failed to retrieve scenarios with id: "
+							+ scenarioId);
 				}
 			}
 			response.getWriter().print(true);
@@ -188,7 +199,8 @@ public class ScenarioWebService extends AbstractController {
 
 	private void deleteScenarioLogDirectory(String logDirectory) {
 		try {
-			log.info("Attempt to delete scenario log directory: " + logDirectory);
+			log.info("Attempt to delete scenario log directory: "
+					+ logDirectory);
 			File applicationResultsFile = new File(getResultsPath());
 			if (applicationResultsFile.exists()) {
 				if (logDirectory != null) {
@@ -196,7 +208,9 @@ public class ScenarioWebService extends AbstractController {
 					if (logDirSplit.length > 1) {
 						String logDirIndexFile = logDirSplit[1];
 						String logDir = logDirIndexFile.split("index.html")[0];
-						if (!FileUtils.removeDirectory(new File(applicationResultsFile.getAbsoluteFile() + logDir))) {
+						if (!FileUtils.removeDirectory(new File(
+								applicationResultsFile.getAbsoluteFile()
+										+ logDir))) {
 							log.error("Log dir could not be deleted");
 						} else {
 							log.info("Deleted successfully");
@@ -207,7 +221,8 @@ public class ScenarioWebService extends AbstractController {
 				}
 			}
 		} catch (Exception e) {
-			log.error("Failed to delete scenario log directory: " + logDirectory);
+			log.error("Failed to delete scenario log directory: "
+					+ logDirectory);
 		}
 	}
 
@@ -225,7 +240,7 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	private String getResultsPath() throws Exception {
-		File configFile = new File(getServletContext().getRealPath(""), "");
+		File configFile = new File(servletContext.getRealPath(""), "");
 
 		if (new File(configFile + File.separator + "results").exists()) {
 			return configFile + File.separator + "results" + File.separator;
@@ -235,7 +250,8 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	@RequestMapping(value = "/deleteOrphan/", method = RequestMethod.GET)
-	public void deleteOrphanScenarioProperties(ServletResponse response) throws Exception {
+	public void deleteOrphanScenarioProperties(ServletResponse response)
+			throws Exception {
 		log.info("In Delete Orphan Scenario Properties Web Service");
 		try {
 			scenarioPropertyService.deleteOrphanProperties();
@@ -249,19 +265,22 @@ public class ScenarioWebService extends AbstractController {
 
 	/**
 	 * This method will delete all result that match query.<br>
-	 * It will set chunk inside query to be null, as chunk is meaningless for this feature.<br>
+	 * It will set chunk inside query to be null, as chunk is meaningless for
+	 * this feature.<br>
 	 * 
 	 * @param scenarioQuery
 	 * @return True if all the returned results were deleted, False otherwise.
 	 * @throws Exception
 	 */
 	@RequestMapping(value = "/delete/", method = RequestMethod.POST)
-	public void deleteScenarios(ServletResponse response, @RequestBody ScenarioQuery scenarioQuery) throws Exception {
+	public void deleteScenarios(ServletResponse response,
+			@RequestBody ScenarioQuery scenarioQuery) throws Exception {
 
 		log.info("In DeleteScenarioBYQuery WebService");
 		try {
 			scenarioQuery.setChunk(null);
-			List<Scenario> scenarios = scenarioService.getScenariosByFiltersWithSortingCol(scenarioQuery);
+			List<Scenario> scenarios = scenarioService
+					.getScenariosByFiltersWithSortingCol(scenarioQuery);
 			for (Scenario scenario : scenarios) {
 				String htmlDir = scenario.getHtmlDir();
 				log.info("deleting scenario: " + scenario.getId());
@@ -276,22 +295,25 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	/**
-	 * This method creates a scenario in DB as per scenario received as parameter.
-	 * URL:http://host:port/report-service/report/scenario/create Method: POST see the <a href="{@docRoot}
+	 * This method creates a scenario in DB as per scenario received as
+	 * parameter. URL:http://host:port/report-service/report/scenario/create
+	 * Method: POST see the <a href="{@docRoot}
 	 * /doc-files/scenario.xml">Consumed XML file</a>.
 	 * 
 	 * @param scenario
 	 *            -
-	 * @return Integer representing the created scenario's ID in DB. see the <a href="{@docRoot}
-	 *         /doc-files/integer.xml">Produced XML file</a>.
+	 * @return Integer representing the created scenario's ID in DB. see the <a
+	 *         href="{@docRoot} /doc-files/integer.xml">Produced XML file</a>.
 	 */
 	@RequestMapping(value = "/create", method = RequestMethod.POST)
-	public void createScenario(ServletResponse response, @RequestBody Scenario scenario) throws Exception {
+	public void createScenario(ServletResponse response,
+			@RequestBody Scenario scenario) throws Exception {
 		log.info("in create scenario web service");
 
 		/**
-		 * This is needed in order to make the connection between the tests and the scenario as scenario is xml
-		 * transient and data was lost with operation of the rest service.
+		 * This is needed in order to make the connection between the tests and
+		 * the scenario as scenario is xml transient and data was lost with
+		 * operation of the rest service.
 		 */
 		Collection<Test> scenarioTests = scenario.getTests();
 
@@ -315,10 +337,11 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	/**
-	 * This method will be the called from the JSystem client to check if the right data was entered as setting:
-	 * application url application port
+	 * This method will be the called from the JSystem client to check if the
+	 * right data was entered as setting: application url application port
 	 * 
-	 * @return true stating setting were correct if reached; else will catch an exception;
+	 * @return true stating setting were correct if reached; else will catch an
+	 *         exception;
 	 * @throws IOException
 	 */
 	@RequestMapping(value = "/connected", method = RequestMethod.GET)
@@ -328,18 +351,22 @@ public class ScenarioWebService extends AbstractController {
 
 	/**
 	 * This method gets a Scenario id and return all of its tests.
-	 * URL:http://host:port/report-service/report/scenario/tests/{scenarioId} Method: GET
+	 * URL:http://host:port/report-service/report/scenario/tests/{scenarioId}
+	 * Method: GET
 	 * 
 	 * @param scenarioId
 	 *            The scenario's ID, Chunk start ind, Chunk length
 	 * @return A List of tests for a specific scenario.<br>
-	 *         An empty list is return if no test exists for the specific scenarioId. TODO: create an xml represents the
-	 *         return value; see the <a href="{@docRoot} /doc-files/integer.xml">Produced XML file</a>.
+	 *         An empty list is return if no test exists for the specific
+	 *         scenarioId. TODO: create an xml represents the return value; see
+	 *         the <a href="{@docRoot} /doc-files/integer.xml">Produced XML
+	 *         file</a>.
 	 */
 	@RequestMapping(value = "tests/{scenarioId}", method = RequestMethod.POST)
 	public @ResponseBody
-	TestList getTestsSetByScenarioID(@PathVariable("scenarioId") Integer scenarioId, @RequestBody TestQuery testQuery)
-			throws Exception {
+	TestList getTestsSetByScenarioID(
+			@PathVariable("scenarioId") Integer scenarioId,
+			@RequestBody TestQuery testQuery) throws Exception {
 
 		log.info("in get tests set by scenario ID web service");
 		List<Test> testsList;
@@ -353,9 +380,11 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	/**
-	 * This method counts all the Tests in the DB. URL:http://host:port/report-service/report/scenario/count Method: GET
+	 * This method counts all the Tests in the DB.
+	 * URL:http://host:port/report-service/report/scenario/count Method: GET
 	 * 
-	 * @return Long - number of Tests in DB see the <a href="{@docRoot} /doc-files/long.xml">Produced XML file</a>.
+	 * @return Long - number of Tests in DB see the <a href="{@docRoot}
+	 *         /doc-files/long.xml">Produced XML file</a>.
 	 */
 	@RequestMapping(value = "/count", method = RequestMethod.POST)
 	public void countScenarios(ServletResponse response) throws Exception {
@@ -370,22 +399,25 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	/**
-	 * This method gets a ScenarioQuery and return the size of its resultSet; URL:
-	 * http://host:port/report-service/report/scenario/querySize Method: POST
+	 * This method gets a ScenarioQuery and return the size of its resultSet;
+	 * URL: http://host:port/report-service/report/scenario/querySize Method:
+	 * POST
 	 * 
 	 * @param scenarioId
 	 *            -
-	 * @return Integer - size of result set according to ScenarioQuery received as parameter. see the <a
-	 *         href="{@docRoot} /doc-files/integer.xml">Produced XML file</a>.
+	 * @return Integer - size of result set according to ScenarioQuery received
+	 *         as parameter. see the <a href="{@docRoot}
+	 *         /doc-files/integer.xml">Produced XML file</a>.
 	 */
 	@RequestMapping(value = "scenarioTestsSize/{scenarioId}", method = RequestMethod.POST)
-	public void getSizeOfScenarioTests(ServletResponse response, @PathVariable("scenarioId") Integer scenarioId)
-			throws Exception {
+	public void getSizeOfScenarioTests(ServletResponse response,
+			@PathVariable("scenarioId") Integer scenarioId) throws Exception {
 
 		log.info("in get size of scenario Tests web service");
 		Integer querySize;
 		try {
-			querySize = scenarioService.getSizeOfTestsSetByScenarioID(scenarioId);
+			querySize = scenarioService
+					.getSizeOfTestsSetByScenarioID(scenarioId);
 			response.getWriter().print(querySize);
 		} catch (Exception e) {
 			log.error(e);
@@ -395,7 +427,9 @@ public class ScenarioWebService extends AbstractController {
 
 	@RequestMapping(value = "/compareScenarios/{comparedScenarios}", method = RequestMethod.POST)
 	public @ResponseBody
-	ScenarioComparator compareScenarios(@PathVariable("comparedScenarios") String comparedScenarios) throws Exception {
+	ScenarioComparator compareScenarios(
+			@PathVariable("comparedScenarios") String comparedScenarios)
+			throws Exception {
 
 		log.info("in compare scenarios web service");
 
@@ -418,8 +452,8 @@ public class ScenarioWebService extends AbstractController {
 
 	@RequestMapping(value = "/propertyValues/{propertyKeys}", method = RequestMethod.GET)
 	public @ResponseBody
-	PropertyValuesWrapperList getScenarioPropertiesValues(@PathVariable("propertyKeys") String propertyKeys)
-			throws Exception {
+	PropertyValuesWrapperList getScenarioPropertiesValues(
+			@PathVariable("propertyKeys") String propertyKeys) throws Exception {
 
 		log.info("in get scenario properties values web service");
 
@@ -429,7 +463,9 @@ public class ScenarioWebService extends AbstractController {
 			scenarioPropList.add(new ScenarioProperty(key, ""));
 		}
 		try {
-			return new PropertyValuesWrapperList(scenarioPropertyService.getAllPropertiesValues(scenarioPropList));
+			return new PropertyValuesWrapperList(
+					scenarioPropertyService
+							.getAllPropertiesValues(scenarioPropList));
 
 		} catch (Exception e) {
 			log.error(e);
@@ -438,19 +474,22 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	/**
-	 * This method gets a ScenarioQuery and return the count of tests from all scenario matching the query.<br>
-	 * for each scenario in DB will count the number of tests run and will accumulate the sum of all tests from all
-	 * scenarios<br>
+	 * This method gets a ScenarioQuery and return the count of tests from all
+	 * scenario matching the query.<br>
+	 * for each scenario in DB will count the number of tests run and will
+	 * accumulate the sum of all tests from all scenarios<br>
 	 * URL:http://host:port/report-service/report/scenario Method: POST
 	 * 
 	 * @param scenarioQuery
 	 *            -
-	 * @return Integer number of Test answering the ScenarioQuery. see the <a href="{@docRoot}
-	 *         /doc-files/listOfScenario.xml">Consumed XML file</a>.
+	 * @return Integer number of Test answering the ScenarioQuery. see the <a
+	 *         href="{@docRoot} /doc-files/listOfScenario.xml">Consumed XML
+	 *         file</a>.
 	 */
 	@RequestMapping(value = "/countScenarioTests", method = RequestMethod.POST)
 	public @ResponseBody
-	TestStatistics countScenarioTests(@RequestBody ScenarioQuery scenarioQuery) throws Exception {
+	TestStatistics countScenarioTests(@RequestBody ScenarioQuery scenarioQuery)
+			throws Exception {
 
 		log.info("in count scenario tests web service");
 
@@ -461,7 +500,8 @@ public class ScenarioWebService extends AbstractController {
 
 		List<Scenario> scenarioList;
 		try {
-			scenarioList = scenarioService.getScenariosByFiltersWithSortingCol(scenarioQuery);
+			scenarioList = scenarioService
+					.getScenariosByFiltersWithSortingCol(scenarioQuery);
 			for (Scenario scenario : scenarioList) {
 				total += scenario.getRunTest();
 				passed += scenario.getSuccessTests();
@@ -476,7 +516,8 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	@RequestMapping(value = "/update", method = RequestMethod.POST)
-	public void updateScenario(ServletResponse response, @RequestBody Scenario scenario) throws Exception {
+	public void updateScenario(ServletResponse response,
+			@RequestBody Scenario scenario) throws Exception {
 		log.info("in update scenario web service");
 		try {
 			scenarioService.update(scenario);
@@ -488,34 +529,46 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	/**
-	 * This method gets a ScenarioQuery and return the scenarioStatistics object matching the query.<br>
-	 * for each scenario type (unique by scenario name) in DB will count the number of tests run and will accumulate the
-	 * sum of all tests from all scenario<br>
-	 * URL:http://host:port/report-service/report/scenario/ scenarioStatistics Method: POST
+	 * This method gets a ScenarioQuery and return the scenarioStatistics object
+	 * matching the query.<br>
+	 * for each scenario type (unique by scenario name) in DB will count the
+	 * number of tests run and will accumulate the sum of all tests from all
+	 * scenario<br>
+	 * URL:http://host:port/report-service/report/scenario/ scenarioStatistics
+	 * Method: POST
 	 * 
 	 * @return List of ScenarioStatistics wrapped in Response object.<br>
-	 *         see the <a href="{@docRoot} /doc-files/listOfScenario.xml">Consumed XML file</a>.
+	 *         see the <a href="{@docRoot}
+	 *         /doc-files/listOfScenario.xml">Consumed XML file</a>.
 	 */
 	@RequestMapping(value = "/scenarioStatistics", method = RequestMethod.POST)
 	public @ResponseBody
-	ScenarioStatisticsList getScenarioTypeStatistics(@RequestBody ScenarioQuery scenarioQuery) throws Exception {
+	ScenarioStatisticsList getScenarioTypeStatistics(
+			@RequestBody ScenarioQuery scenarioQuery) throws Exception {
 
 		log.info("in get scenario type statistics web service");
 		List<Scenario> scenarioList;
 		List<ScenarioStatistics> scenarioStatisticsList = new ArrayList<ScenarioStatistics>();
 
 		try {
-			scenarioList = scenarioService.getScenariosByFiltersWithSortingCol(scenarioQuery);
+			scenarioList = scenarioService
+					.getScenariosByFiltersWithSortingCol(scenarioQuery);
 			for (Scenario scenario : scenarioList) {
-				ScenarioStatistics scenarioStatistics = new ScenarioStatistics(scenario.getScenarioName(),
-						new TestStatistics(scenario.getFailTests(), scenario.getSuccessTests(),
-								scenario.getWarningTests(), scenario.getRunTest()));
+				ScenarioStatistics scenarioStatistics = new ScenarioStatistics(
+						scenario.getScenarioName(), new TestStatistics(
+								scenario.getFailTests(),
+								scenario.getSuccessTests(),
+								scenario.getWarningTests(),
+								scenario.getRunTest()));
 				if (!scenarioStatisticsList.contains(scenarioStatistics)) {
 					scenarioStatisticsList.add(scenarioStatistics);
 				} else {
-					ScenarioStatistics scenarioStatisticsToUpdate = scenarioStatisticsList.get(scenarioStatisticsList
-							.indexOf(scenarioStatistics));
-					scenarioStatisticsToUpdate.updateTestStatistics(scenarioStatistics.getTestStatistics());
+					ScenarioStatistics scenarioStatisticsToUpdate = scenarioStatisticsList
+							.get(scenarioStatisticsList
+									.indexOf(scenarioStatistics));
+					scenarioStatisticsToUpdate
+							.updateTestStatistics(scenarioStatistics
+									.getTestStatistics());
 				}
 			}
 		} catch (Exception e) {
@@ -526,11 +579,14 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	@RequestMapping(value = "/reportXML/", method = RequestMethod.POST)
-	public void createScenarioFromReportXML(ServletResponse responses, @RequestBody byte[] arr) throws Exception {
+	public void createScenarioFromReportXML(ServletResponse responses,
+			@RequestBody byte[] arr) throws Exception {
 		log.info("in create scenario from report xml web service");
-		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(arr);
+		ByteArrayInputStream byteArrayInputStream = new ByteArrayInputStream(
+				arr);
 		try {
-			Scenario scenario = XmlToScenarioConverter.convert(byteArrayInputStream);
+			Scenario scenario = XmlToScenarioConverter
+					.convert(byteArrayInputStream);
 			Scenario scenarioFromDB = scenarioService.create(scenario);
 			if (scenario != null) {
 				responses.getWriter().print(scenarioFromDB.getId());
@@ -543,7 +599,8 @@ public class ScenarioWebService extends AbstractController {
 	}
 
 	@RequestMapping(value = "/setLogDir/", method = RequestMethod.GET)
-	public void setScenarioLogDir(ServletResponse response, @RequestParam("logDir") String logDir,
+	public void setScenarioLogDir(ServletResponse response,
+			@RequestParam("logDir") String logDir,
 			@RequestParam("scenarioID") Integer scenarioID) throws Exception {
 		try {
 			log.info("in set scenario log dir web service");
@@ -555,12 +612,6 @@ public class ScenarioWebService extends AbstractController {
 			log.error(e);
 			throw e;
 		}
-	}
-
-	@Override
-	protected ModelAndView handleRequestInternal(HttpServletRequest arg0, HttpServletResponse arg1) throws Exception {
-		// TODO Auto-generated method stub
-		return null;
 	}
 
 	// @GET

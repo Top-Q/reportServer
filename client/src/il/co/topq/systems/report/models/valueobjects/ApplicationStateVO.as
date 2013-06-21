@@ -15,6 +15,6 @@ package il.co.topq.systems.report.models.valueobjects
 		public var reportsState:String = "Execution";
 		
 		[Bindable]
-		public var settingsState:String = "SystemConfiguration";
+		public var settingsState:String = "Users";
 	}
 }

@@ -48,7 +48,7 @@ public class UserWebServiceTest extends WebserviceBaseTest {
 		Assert.assertNotNull(createdUser);
 		User afterDeletion = null;
 		try {
-			getWebResource(URLParts.DELETE_USER + createdUser.getId()).delete();
+			getWebResource(URLParts.DELETE_USER + createdUser.getId()).get(String.class);
 			afterDeletion = userService.get(createdUser.getId());
 			Assert.assertNull(afterDeletion);
 		} finally {

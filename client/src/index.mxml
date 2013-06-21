@@ -74,7 +74,7 @@
 				<s:Label includeIn="Reports" color="#558EE3" fontFamily="Calibri" fontSize="16"
 						 text="Welcome"/>
 				<s:Label includeIn="Reports" color="#000000" fontFamily="Calibri" fontSize="16"
-						 text="Admin |"/>
+						 text="{model.user.username} |"/>
 				<mx:LinkButton includeIn="Reports" label="Logout" click="handleLogoutRequest(event)"
 							   color="#558EE3" fontFamily="Calibri" fontSize="16" paddingBottom="4"/>
 			</s:HGroup>

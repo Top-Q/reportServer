@@ -29,6 +29,9 @@ public class User implements Serializable {
 	private String firstName;
 	@XmlElement
 	private String lastName;
+	@XmlElement
+	private String email;
+
 
 	public User() {
 	}
@@ -95,4 +98,11 @@ public class User implements Serializable {
 		this.lastName = lastName;
 	}
 
+	public String getEmail() {
+		return email;
+	}
+
+	public void setEmail(String email) {
+		this.email = email;
+	}
 }

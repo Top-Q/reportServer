@@ -11,6 +11,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.InetAddress;
 import java.util.Enumeration;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipException;
@@ -40,8 +41,9 @@ import com.sun.jersey.multipart.FormDataParam;
 
 /**
  * 
- * @author liel.ran this class was integrated with the spring version of the report server by Eran.Golan, coding and
- *         business logic was made by Liel.Ran
+ * @author liel.ran this class was integrated with the spring version of the
+ *         report server by Eran.Golan, coding and business logic was made by
+ *         Liel.Ran
  * 
  */
 @Path("/")
@@ -73,12 +75,15 @@ public class UploadFileService {
 	@POST
 	@Path("/upload")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public Response uploadFile(@FormDataParam("file") InputStream uploadedInputStream,
-			@FormDataParam("file") FormDataContentDisposition fileDetail, @QueryParam("scenarioId") Integer scenarioId)
-			throws IOException {
+	public Response uploadFile(
+			@FormDataParam("file") InputStream uploadedInputStream,
+			@FormDataParam("file") FormDataContentDisposition fileDetail,
+			@QueryParam("scenarioId") Integer scenarioId) throws IOException {
 
-		// AbstractApplicationContext beanFactory = new ClassPathXmlApplicationContext("/applicationContext.xml");
-		// scenarioService = (ScenarioService) beanFactory.getBean("scenarioService");
+		// AbstractApplicationContext beanFactory = new
+		// ClassPathXmlApplicationContext("/applicationContext.xml");
+		// scenarioService = (ScenarioService)
+		// beanFactory.getBean("scenarioService");
 
 		log.info("----------------Upload Service------------------");
 
@@ -102,11 +107,13 @@ public class UploadFileService {
 		String fileName = fileDetail.getFileName();
 
 		// TODO: check if the scenario ID is valid
-		log.info("Upload file " + fileDetail.getFileName() + ", size=" + fileDetail.getSize());
+		log.info("Upload file " + fileDetail.getFileName() + ", size="
+				+ fileDetail.getSize());
 		long start = System.currentTimeMillis() / 1000;
 		log.info("time start=" + start);
 
-		String uploadedFileLocation = getUploadFileLocation(fileDetail, scenarioId);
+		String uploadedFileLocation = getUploadFileLocation(fileDetail,
+				scenarioId);
 		String realPath = servletContext.getRealPath(uploadedFileLocation);
 
 		// set the path of the incoming file
@@ -135,10 +142,12 @@ public class UploadFileService {
 
 		long end = System.currentTimeMillis() / 1000;
 		log.info("time end =" + end);
-		log.info("------------------------------server handle upload time is=" + (end - start)
+		log.info("------------------------------server handle upload time is="
+				+ (end - start)
 				+ " secs------------------------------------\n\n");
 
-		response = Response.status(HttpStatus.OK.value()).entity(uploadedFileLocation).build();
+		response = Response.status(HttpStatus.OK.value())
+				.entity(uploadedFileLocation).build();
 
 		try {
 			log.info("in set scenario log dir web service");
@@ -149,7 +158,8 @@ public class UploadFileService {
 				String url = getStorageServerUrl();
 				String contextPath = servletContext.getContextPath();
 
-				String htmlRelativeParh = url + contextPath + "/" + uploadedFileLocation + "/index.html";
+				String htmlRelativeParh = url + contextPath + "/"
+						+ uploadedFileLocation + "/index.html";
 				scenario.setHtmlDir(htmlRelativeParh);
 				scenarioService.update(scenario);
 
@@ -172,20 +182,22 @@ public class UploadFileService {
 		try {
 
 			String wanIp = "http://" + CheckIp.getMyWanIp() + ":8080";
-
-			Client client = new Client();
-			WebResource resource = client.resource(wanIp + "/report-service/index.html");
-			ClientResponse res = resource.accept(MediaType.TEXT_HTML_TYPE).get(ClientResponse.class);
-			if (res.getStatus() == HttpStatus.NOT_FOUND.value() || res.getStatus() == HttpStatus.BAD_REQUEST.value()
-					|| res.getStatus() == HttpStatus.UNSUPPORTED_MEDIA_TYPE.value()) {
-				// get Lan Ip
+			
+			WebResource resource = Client.create().resource(
+					wanIp + "/report-service/index.html");
+			ClientResponse res = resource.accept(MediaType.TEXT_HTML_TYPE).get(
+					ClientResponse.class);
+			if (res.getStatus() == HttpStatus.NOT_FOUND.value()
+					|| res.getStatus() == HttpStatus.BAD_REQUEST.value()
+					|| res.getStatus() == HttpStatus.UNSUPPORTED_MEDIA_TYPE
+							.value()) {
 				url = "http://" + CheckIp.getMyLanIp() + ":8080";
 			} else {
 				url = wanIp;
 			}
 
 		} catch (Exception e) {
-			// any other case return the url default value
+			log.error("error occured while trying to get wan/lan address, using localhost ");
 		}
 
 		return url;
@@ -199,7 +211,8 @@ public class UploadFileService {
 	 * @throws IOException
 	 * @throws ZipException
 	 */
-	private void uncompressOperation(String workingdir, String uploadedFileLocation) {
+	private void uncompressOperation(String workingdir,
+			String uploadedFileLocation) {
 
 		try {
 			File file = new File(uploadedFileLocation);
@@ -211,15 +224,18 @@ public class UploadFileService {
 				if (entry.isDirectory()) {
 					// Assume directories are stored parents first then
 					// children.
-					System.err.println("Extracting directory: " + entry.getName());
+					System.err.println("Extracting directory: "
+							+ entry.getName());
 					// This is not robust, just for demonstration purposes.
-					(new File(workingdir + File.separator + entry.getName())).mkdir();
+					(new File(workingdir + File.separator + entry.getName()))
+							.mkdir();
 					continue;
 				}
 
 				System.err.println("Extracting file: " + entry.getName());
-				copyInputStream(zipFile.getInputStream(entry), new BufferedOutputStream(new FileOutputStream(workingdir
-						+ File.separator + entry.getName())));
+				copyInputStream(zipFile.getInputStream(entry),
+						new BufferedOutputStream(new FileOutputStream(
+								workingdir + File.separator + entry.getName())));
 			}
 
 			zipFile.close();
@@ -235,7 +251,8 @@ public class UploadFileService {
 	 * @param zipFile
 	 * @param jiniHomeParentDir
 	 */
-	public static void unzipFileIntoDirectory(ZipFile zipFile, File jiniHomeParentDir) {
+	public static void unzipFileIntoDirectory(ZipFile zipFile,
+			File jiniHomeParentDir) {
 		Enumeration files = zipFile.entries();
 		File f = null;
 		FileOutputStream fos = null;
@@ -247,7 +264,8 @@ public class UploadFileService {
 				byte[] buffer = new byte[1024];
 				int bytesRead = 0;
 
-				f = new File(jiniHomeParentDir.getAbsolutePath() + File.separator + entry.getName());
+				f = new File(jiniHomeParentDir.getAbsolutePath()
+						+ File.separator + entry.getName());
 
 				if (entry.isDirectory()) {
 					f.mkdirs();
@@ -285,7 +303,8 @@ public class UploadFileService {
 		}
 	}
 
-	private final void copyInputStream(InputStream in, OutputStream out) throws IOException {
+	private final void copyInputStream(InputStream in, OutputStream out)
+			throws IOException {
 		byte[] buffer = new byte[2024];
 		int len;
 
@@ -296,7 +315,9 @@ public class UploadFileService {
 		out.close();
 	}
 
-	private String getUploadFileLocation(final FormDataContentDisposition fileDetail, final long logFolderName) {
+	private String getUploadFileLocation(
+			final FormDataContentDisposition fileDetail,
+			final long logFolderName) {
 
 		log = ReportLogger.getInstance().getLogger(this.getClass());
 		log.info("create folder for the upload");
@@ -321,9 +342,11 @@ public class UploadFileService {
 		if (!resultsDir.exists()) {
 
 			if (!resultsDir.mkdirs()) {
-				System.err.println("Failed to create the current upload  dir- " + resultsDir.getAbsolutePath());
+				System.err.println("Failed to create the current upload  dir- "
+						+ resultsDir.getAbsolutePath());
 			} else {
-				log.info("created a folder for the current upload =" + resultsDir);
+				log.info("created a folder for the current upload ="
+						+ resultsDir);
 				// logFolder = servletContext.getContextPath();
 			}
 		}
@@ -332,7 +355,8 @@ public class UploadFileService {
 	}
 
 	/**
-	 * TODO: will check the parameter from the DB is unZip/unrar (Uncompress) feature is on
+	 * TODO: will check the parameter from the DB is unZip/unrar (Uncompress)
+	 * feature is on
 	 * 
 	 * @return
 	 */
@@ -366,7 +390,8 @@ public class UploadFileService {
 	 * @throws IOException
 	 */
 	// save uploaded file to new location
-	private void writeToFile(InputStream uploadedInputStream, String zipFullPath) throws IOException {
+	private void writeToFile(InputStream uploadedInputStream, String zipFullPath)
+			throws IOException {
 		OutputStream out = null;
 		try {
 			int read = 0;
@@ -435,14 +460,17 @@ public class UploadFileService {
 // @Context
 // private ServletContext servletContext;
 //
-// // public public void uploadFile(@FormDataParam("file") InputStream uploadedInputStream,
+// // public public void uploadFile(@FormDataParam("file") InputStream
+// uploadedInputStream,
 // // @FormDataParam("file") FormDataContentDisposition fileDetail,
-// // @RequestParam(value = "scenarioId", required = true) List<String> queryParams) throws IOException {
+// // @RequestParam(value = "scenarioId", required = true) List<String>
+// queryParams) throws IOException {
 //
 // // @Consumes(MediaType.MULTIPART_FORM_DATA)
 // @RequestMapping(value = "/upload", method = RequestMethod.POST)
 // public void uploadFile(@RequestParam("file") InputStream uploadedInputStream,
-// @RequestParam("file") FormDataContentDisposition fileDetail, @RequestParam("scenarioId") Integer scenarioId)
+// @RequestParam("file") FormDataContentDisposition fileDetail,
+// @RequestParam("scenarioId") Integer scenarioId)
 // throws IOException {
 //
 // log.info("----------------Upload Service------------------");
@@ -463,7 +491,8 @@ public class UploadFileService {
 // String fileName = fileDetail.getFileName();
 //
 // // TODO: check if the scenario ID is valid
-// log.info("Upload file " + fileDetail.getFileName() + ", size=" + fileDetail.getSize());
+// log.info("Upload file " + fileDetail.getFileName() + ", size=" +
+// fileDetail.getSize());
 // long start = System.currentTimeMillis() / 1000;
 // log.info("time start=" + start);
 //
@@ -496,7 +525,8 @@ public class UploadFileService {
 //
 // long end = System.currentTimeMillis() / 1000;
 // log.info("time end =" + end);
-// log.info("------------------------------server handle upload time is=" + (end - start)
+// log.info("------------------------------server handle upload time is=" + (end
+// - start)
 // + " secs------------------------------------\n\n");
 //
 // try {
@@ -508,7 +538,8 @@ public class UploadFileService {
 // String url = getStorageServerUrl();
 // String contextPath = servletContext.getContextPath();
 //
-// String htmlRelativeParh = url + contextPath + "/" + uploadedFileLocation + "/index.html";
+// String htmlRelativeParh = url + contextPath + "/" + uploadedFileLocation +
+// "/index.html";
 // scenario.setHtmlDir(htmlRelativeParh);
 // scenarioService.update(scenario);
 //
@@ -536,7 +567,8 @@ public class UploadFileService {
 // * @throws IOException
 // * @throws ZipException
 // */
-// private void uncompressOperation(String workingdir, String uploadedFileLocation) {
+// private void uncompressOperation(String workingdir, String
+// uploadedFileLocation) {
 //
 // try {
 // File file = new File(uploadedFileLocation);
@@ -555,7 +587,8 @@ public class UploadFileService {
 // }
 //
 // System.err.println("Extracting file: " + entry.getName());
-// copyInputStream(zipFile.getInputStream(entry), new BufferedOutputStream(new FileOutputStream(workingdir
+// copyInputStream(zipFile.getInputStream(entry), new BufferedOutputStream(new
+// FileOutputStream(workingdir
 // + File.separator + entry.getName())));
 // }
 //
@@ -572,7 +605,8 @@ public class UploadFileService {
 // * @param zipFile
 // * @param jiniHomeParentDir
 // */
-// public static void unzipFileIntoDirectory(ZipFile zipFile, File jiniHomeParentDir) {
+// public static void unzipFileIntoDirectory(ZipFile zipFile, File
+// jiniHomeParentDir) {
 // Enumeration files = zipFile.entries();
 // File f = null;
 // FileOutputStream fos = null;
@@ -584,7 +618,8 @@ public class UploadFileService {
 // byte[] buffer = new byte[1024];
 // int bytesRead = 0;
 //
-// f = new File(jiniHomeParentDir.getAbsolutePath() + File.separator + entry.getName());
+// f = new File(jiniHomeParentDir.getAbsolutePath() + File.separator +
+// entry.getName());
 //
 // if (entry.isDirectory()) {
 // f.mkdirs();
@@ -622,7 +657,8 @@ public class UploadFileService {
 // }
 // }
 //
-// private final void copyInputStream(InputStream in, OutputStream out) throws IOException {
+// private final void copyInputStream(InputStream in, OutputStream out) throws
+// IOException {
 // byte[] buffer = new byte[2024];
 // int len;
 //
@@ -633,7 +669,8 @@ public class UploadFileService {
 // out.close();
 // }
 //
-// private String getUploadFileLocation(final FormDataContentDisposition fileDetail, final long logFolderName) {
+// private String getUploadFileLocation(final FormDataContentDisposition
+// fileDetail, final long logFolderName) {
 //
 // log = ReportLogger.getInstance().getLogger(this.getClass());
 // log.info("create folder for the upload");
@@ -647,7 +684,8 @@ public class UploadFileService {
 // // String resultsPath = path + File.separator + reportFolder;
 // String resultsPath = reportFolder;
 //
-// logFolder = String.valueOf(logFolderName);// +"/"+String.valueOf(System.currentTimeMillis());
+// logFolder = String.valueOf(logFolderName);//
+// +"/"+String.valueOf(System.currentTimeMillis());
 // // Don't change the '/' char to File.separator
 // // it's for URI Usage and NOT File path Usage
 // logFolder = reportFolder + "/" + logFolder;
@@ -658,7 +696,8 @@ public class UploadFileService {
 // if (!resultsDir.exists()) {
 //
 // if (!resultsDir.mkdirs()) {
-// System.err.println("Failed to create the current upload  dir- " + resultsDir.getAbsolutePath());
+// System.err.println("Failed to create the current upload  dir- " +
+// resultsDir.getAbsolutePath());
 // } else {
 // log.info("created a folder for the current upload =" + resultsDir);
 // // logFolder = servletContext.getContextPath();
@@ -669,7 +708,8 @@ public class UploadFileService {
 // }
 //
 // /**
-// * TODO: will check the parameter from the DB is unZip/unrar (Uncompress) feature is on
+// * TODO: will check the parameter from the DB is unZip/unrar (Uncompress)
+// feature is on
 // *
 // * @return
 // */
@@ -703,7 +743,8 @@ public class UploadFileService {
 // * @throws IOException
 // */
 // // save uploaded file to new location
-// private void writeToFile(InputStream uploadedInputStream, String zipFullPath) throws IOException {
+// private void writeToFile(InputStream uploadedInputStream, String zipFullPath)
+// throws IOException {
 // OutputStream out = null;
 // try {
 // int read = 0;

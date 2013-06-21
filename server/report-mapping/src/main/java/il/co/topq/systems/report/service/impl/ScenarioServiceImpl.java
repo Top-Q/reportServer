@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.access.annotation.Secured;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -61,7 +60,6 @@ public class ScenarioServiceImpl implements ScenarioService {
 		return scenarioDao.create(scenario);
 	}
 
-	@Secured(value = "ROLE_DELETE_SCENARIO")
 	@Override
 	public void delete(int id) {
 		scenarioDao.delete(id);

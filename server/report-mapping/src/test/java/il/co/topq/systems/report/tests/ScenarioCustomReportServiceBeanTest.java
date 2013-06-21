@@ -76,7 +76,7 @@ public class ScenarioCustomReportServiceBeanTest extends SpringBaseTest {
 			scenarioCustomReportService.update(scenarioCustomReportFromDB);
 			scenarioCustomReportFromDB = scenarioCustomReportService.get(customReportId);
 			String newName = scenarioCustomReportFromDB.getName();
-			Assert.assertNotEquals("Expecting custom report name to be updated", oldName, newName);
+			Assert.assertNotSame("Expecting custom report name to be updated", oldName, newName);
 			scenarioCustomReportService.delete(customReportId);
 		} catch (Exception e) {
 			log.error(e);

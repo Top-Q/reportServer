@@ -58,7 +58,10 @@ package il.co.topq.systems.report.controllers
 	import il.co.topq.systems.report.commands.testCustomReport.GetTestCustomReportByChunkCommand;
 	import il.co.topq.systems.report.commands.testCustomReport.GetTestCustomReportByIDCommand;
 	import il.co.topq.systems.report.commands.testCustomReport.GetTestCustomReportPropertiesValuesCommand;
+	import il.co.topq.systems.report.commands.user.CreateUserCommand;
+	import il.co.topq.systems.report.commands.user.DeleteUserCommand;
 	import il.co.topq.systems.report.commands.user.GetUsersCommand;
+	import il.co.topq.systems.report.commands.user.UpdateUserCommand;
 	import il.co.topq.systems.report.events.GetLegacyReportToolEvent;
 	import il.co.topq.systems.report.events.GetSummaryPageEvent;
 	import il.co.topq.systems.report.events.LoginEvent;
@@ -120,7 +123,10 @@ package il.co.topq.systems.report.controllers
 	import il.co.topq.systems.report.events.testCustomReport.GetTestCustomReportByIDEvent;
 	import il.co.topq.systems.report.events.testCustomReport.GetTestCustomReportPropertiesValuesEvent;
 	import il.co.topq.systems.report.events.testCustomReport.GetTestCustomReportSizeEvent;
+	import il.co.topq.systems.report.events.user.CreateUserEvent;
+	import il.co.topq.systems.report.events.user.DeleteUserEvent;
 	import il.co.topq.systems.report.events.user.GetUsersEvent;
+	import il.co.topq.systems.report.events.user.UpdateUserEvent;
 	
 
 
@@ -136,6 +142,9 @@ package il.co.topq.systems.report.controllers
 			
 			//Users
 			addCommand(GetUsersEvent.GET_USERS_EVENT,GetUsersCommand);
+			addCommand(UpdateUserEvent.UPDATE_USER_EVENT,UpdateUserCommand);
+			addCommand(CreateUserEvent.CREATE_USER_EVENT,CreateUserCommand);
+			addCommand(DeleteUserEvent.DELETE_USER_EVENT,DeleteUserCommand);
 			
 			//Configuration
 			addCommand(IsConfigAvailableEvent.IS_CONFIG_AVAILABLE_EVENT, IsConfigurationAvailableCommand);

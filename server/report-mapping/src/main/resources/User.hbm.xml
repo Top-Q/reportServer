@@ -15,6 +15,7 @@
 		<property name="password" column="PASSWORD" type="string" />
 		<property name="firstName" column="FIRST_NAME" type="string" />
 		<property name="lastName" column="LAST_NAME" type="string" />
+		<property name="email" column="EMAIL" type="string" />
 		<property name="permissions" column="PERMISSIONS" type="string" />
 		<property name="uiConfigurations" column="UI_CONFIGURATIONS"
 			type="string" length="65535" />

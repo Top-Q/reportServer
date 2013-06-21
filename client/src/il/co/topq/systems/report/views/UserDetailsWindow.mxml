@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+			   xmlns:s="library://ns.adobe.com/flex/spark"
+			   xmlns:mx="library://ns.adobe.com/flex/mx"
+			   xmlns:views="il.co.topq.systems.report.views.*"
+			   width="446" height="564" chromeColor="#D4E4FB" close="userDetailsClose(event)"
+			   color="#000000" contentBackgroundColor="#FFFFFF"
+			   creationComplete="userDetailsWindow_creationComplete(event)" title="User Details">
+	<s:layout>
+		<s:BasicLayout/>
+	</s:layout>
+	<fx:Script>
+		<![CDATA[
+			import il.co.topq.systems.report.models.valueobjects.User;
+			
+			import mx.controls.Alert;
+			import mx.events.CloseEvent;
+			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.validators.EmailValidator;
+			
+			[Bindable]
+			public var user:User;
+			
+			protected function userDetailsClose(event:CloseEvent):void
+			{	
+				PopUpManager.removePopUp(this);
+			}
+			
+			protected function userDetailsWindow_creationComplete(event:FlexEvent):void
+			{
+				focusManager.setFocus(firstName);
+//				this.moveArea.visible=false; //comment out if wish to make it not possible to move around
+			}
+			
+			protected function permissionCheckBox_changeHandler(event:Event):void
+			{
+				var checkBox:CheckBox = event.currentTarget as CheckBox;
+				if (checkBox.selected){
+					user.permissionsArr.addItem(checkBox.label as String);
+				}else {
+					user.permissionsArr.removeItemAt(user.permissionsArr.getItemIndex(checkBox.label as String));
+				}
+			}
+			
+		]]>
+	</fx:Script>
+	<s:BorderContainer left="0" right="0" top="0" bottom="0" backgroundColor="#4F81BD">
+		
+		<s:Label x="52" y="123" color="#FFFFFF" fontFamily="Calibri" fontSize="18"
+				 text="* First Name:"/>
+		<s:TextInput id="firstName" x="159" y="123" width="215" height="25"
+					 contentBackgroundColor="#FFFFFF" tabIndex="0" text="@{user.firstName}"/>
+		
+		<s:Label x="52" y="156" color="#FFFFFF" fontFamily="Calibri" fontSize="18"
+				 text="* Last Name:"/>
+		<s:TextInput id="lastName" x="159" y="156" width="215" height="25"
+					 contentBackgroundColor="#FFFFFF" text="@{user.lastName}"/>
+		
+		<s:Label x="52" y="190" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="* Username:"/>
+		<s:TextInput id="username" x="159" y="190" width="215" height="25"
+					 contentBackgroundColor="#FFFFFF" text="@{user.username}"/>
+
+		<s:Label x="58" y="223" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="* Password:"/>
+		<s:TextInput id="password" x="159" y="223" width="215" height="25"
+					 contentBackgroundColor="#FFFFFF" displayAsPassword="true"
+					 text="@{user.password}"/>
+	
+		<s:Label x="87" y="256" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="* Email:"/>
+		<s:TextInput id="email" x="159" y="256" width="215" height="25"
+					 contentBackgroundColor="#FFFFFF" text="@{user.email}"/>
+
+		<s:Label x="42" y="307" color="#FFFFFF" fontFamily="Calibri" fontSize="18"
+				 text="Permissions:"/>
+		<s:CheckBox x="159" y="307" label="User Manager"
+					click="permissionCheckBox_changeHandler(event)" color="#FFFFFF"
+					selected="{user.permissionsArr.contains('User Manager')}"/>
+		<s:CheckBox x="159" y="333" label="Delete Scenario"
+					click="permissionCheckBox_changeHandler(event)" color="#FFFFFF"
+					selected="{user.permissionsArr.contains('Delete Scenario')}"/>
+	
+		<s:Button id="saveUserBtn" x="295" y="448" width="79" height="31" label="Save"
+				  chromeColor="#254061" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+	</s:BorderContainer>
+	
+</s:TitleWindow>

@@ -36,9 +36,9 @@ Description: This is a component that holds all different states in order to nav
 		<s:State name="Users"/>
 	</s:states>
 	
+	<settings:Users includeIn="Users"/>
 	<settings:SystemConfig includeIn="SystemConfiguration"/>
 	<!--<settings:Preferences includeIn="Preferences"/>-->
-	<settings:Users includeIn="Users"/>
 	<settings:About includeIn="About"/>
 	
 </s:Group>

@@ -2,32 +2,50 @@
 <s:Group xmlns:fx="http://ns.adobe.com/mxml/2009"
 		 xmlns:s="library://ns.adobe.com/flex/spark"
 		 xmlns:mx="library://ns.adobe.com/flex/mx"
-		 width="100%" height="100%" creationComplete="creationComplete(event)" fontFamily="Calibri"
+		 width="100%" height="100%" creationComplete="creationComplete(event)" fontFamily="Calibri" 
 		 fontSize="16">
 	
 	<fx:Script>
 		<![CDATA[
 			import flash.sampler.getInvocationCount;
 			
+			import il.co.topq.systems.report.events.user.CreateUserEvent;
 			import il.co.topq.systems.report.events.user.GetUsersEvent;
+			import il.co.topq.systems.report.events.user.UpdateUserEvent;
 			import il.co.topq.systems.report.models.ReportModelLocator;
 			import il.co.topq.systems.report.models.valueobjects.User;
+			import il.co.topq.systems.report.views.UserDetailsWindow;
 			import il.co.topq.systems.report.xml_utils.UserXMLConverter;
 			
 			import mx.collections.ArrayCollection;
+			import mx.containers.TitleWindow;
+			import mx.controls.Alert;
+			import mx.core.UIComponent;
 			import mx.events.FlexEvent;
+			import mx.managers.PopUpManager;
+			import mx.messaging.messages.ErrorMessage;
 			import mx.rpc.events.FaultEvent;
 			import mx.rpc.events.ResultEvent;
+			
 			[Bindable]
 			private var users:ArrayCollection = new ArrayCollection();
-			private var currentUser:User = ReportModelLocator.getInstance().user;
+			[Bindable]
+			public var currentUser:User = ReportModelLocator.getInstance().user;
+			[Bindable]
+			public var userDetailsWindow:UserDetailsWindow = new UserDetailsWindow();
+			
+			public function createPopup():void{
+				PopUpManager.addPopUp(userDetailsWindow,UIComponent(this.parentApplication),false);
+				PopUpManager.centerPopUp(userDetailsWindow);
+			}
+			
 			protected function getUsersCallbackResult(data:ResultEvent): void
 			{
 				var evt:ResultEvent = data as ResultEvent;
 				var xmlList:XMLList = (new XML(evt.message.body)).users;
 				users = UserXMLConverter.fromXMLList(xmlList); 
 				
-
+				
 			}
 			protected function getUsersCallbackFault(info:Object): void
 			{
@@ -39,38 +57,84 @@
 			
 			protected function creationComplete(event:FlexEvent):void
 			{
+				getUsers();
+			}
+			
+			public function getUsers():void{
 				new GetUsersEvent(getUsersCallbackResult, getUsersCallbackFault).dispatch();
 			}
 			
+			protected function createNewUser(event:MouseEvent):void
+			{
+				createPopup();
+				userDetailsWindow.saveUserBtn.addEventListener(MouseEvent.CLICK,saveUserBtn_clickHandler);
+				userDetailsWindow.user = new User();
+			}
+			
+			protected function saveUserBtn_clickHandler(event:MouseEvent):void
+			{	
+				var u:User = userDetailsWindow.user;
+				if ((u.firstName.length > 0) && (u.lastName.length > 0) && (u.username.length > 0) && (u.password.length > 0) && (u.email.length > 0)){
+					new CreateUserEvent(createUserCallbackResult,createUserCallbackFault,userDetailsWindow.user).dispatch();
+				}else {
+					Alert.show("Missing mandatory fields","Error");
+				}
+			}
+			
+			public function editUserBtn_clickHandler(event:MouseEvent):void
+			{	
+				var u:User = userDetailsWindow.user;
+				if ((u.firstName.length > 0) && (u.lastName.length > 0) && (u.username.length > 0) && (u.password.length > 0) && (u.email.length > 0)){
+					new UpdateUserEvent(createUserCallbackResult, createUserCallbackFault, userDetailsWindow.user).dispatch();
+					PopUpManager.removePopUp(userDetailsWindow);			
+				}else {
+					Alert.show("Missing mandatory fields","Error");
+				}
+			}
+			
+			protected function createUserCallbackResult(data:ResultEvent): void
+			{
+				var msg:String = data.message.body as String;
+				if (msg.search("Error:") != -1){
+					Alert.show(msg,"Error");
+				}else {
+					PopUpManager.removePopUp(userDetailsWindow);
+					getUsers();
+				}
+			}
+			
+			protected function createUserCallbackFault(info:Object): void
+			{
+				Alert.show("Error occured, user was not created","Error");
+			}
+			
 		]]>
-	</fx:Script>
-	
-	
+	</fx:Script> 
 	<s:VGroup width="100%" height="100%" horizontalAlign="center" paddingTop="20"
 			  verticalAlign="middle">
 		<s:HGroup width="95%" horizontalAlign="left">
 			<s:Label fontSize="16" fontWeight="bold" text="Existing Users"/>
 		</s:HGroup>
-		<mx:DataGrid width="95%" height="80%" dataProvider="{users}">
-		<!--	<mx:ArrayCollection>
-				<fx:Object>
-					<fx:username>admin</fx:username>
-					<fx:name>admin</fx:name>
-					<fx:type>administrator</fx:type>
-					<fx:status>enabled</fx:status>
-				</fx:Object>
-				<fx:Object>
-					<fx:username>michael</fx:username>
-					<fx:name>Michael Oziransky</fx:name>
-					<fx:type>viewer</fx:type>
-					<fx:status>enabled</fx:status>
-				</fx:Object>
-				<fx:Object>
-					<fx:username>Itai</fx:username>
-					<fx:name>Itai Agmon</fx:name>
-					<fx:type>viewer</fx:type>
-					<fx:status>disabled</fx:status>
-				</fx:Object>
+		<mx:DataGrid id="usersGrid" width="95%" height="80%" dataProvider="{users}">
+			<!--	<mx:ArrayCollection>
+			<fx:Object>
+			<fx:username>admin</fx:username>
+			<fx:name>admin</fx:name>
+			<fx:type>administrator</fx:type>
+			<fx:status>enabled</fx:status>
+			</fx:Object>
+			<fx:Object>
+			<fx:username>michael</fx:username>
+			<fx:name>Michael Oziransky</fx:name>
+			<fx:type>viewer</fx:type>
+			<fx:status>enabled</fx:status>
+			</fx:Object>
+			<fx:Object>
+			<fx:username>Itai</fx:username>
+			<fx:name>Itai Agmon</fx:name>
+			<fx:type>viewer</fx:type>
+			<fx:status>disabled</fx:status>
+			</fx:Object>
 			</mx:ArrayCollection>-->
 			<mx:columns>
 				<mx:DataGridColumn dataField="firstName" headerText="First Name">
@@ -87,6 +151,13 @@
 						</fx:Component>
 					</mx:headerRenderer>	
 				</mx:DataGridColumn>
+				<mx:DataGridColumn dataField="email" headerText="Email">
+					<mx:headerRenderer>
+						<fx:Component>				   			
+							<mx:Label textAlign="center"/>
+						</fx:Component>
+					</mx:headerRenderer>	
+				</mx:DataGridColumn>
 				<mx:DataGridColumn dataField="permissions" headerText="Permissions">
 					<mx:headerRenderer>
 						<fx:Component>				   			
@@ -94,12 +165,12 @@
 						</fx:Component>
 					</mx:headerRenderer>	
 				</mx:DataGridColumn>
-			<!--	<mx:DataGridColumn dataField="status" headerText="Status">
-					<mx:headerRenderer>
-						<fx:Component>				   			
-							<mx:Label textAlign="center"/>
-						</fx:Component>
-					</mx:headerRenderer>	
+				<!--	<mx:DataGridColumn dataField="status" headerText="Status">
+				<mx:headerRenderer>
+				<fx:Component>				   			
+				<mx:Label textAlign="center"/>
+				</fx:Component>
+				</mx:headerRenderer>	
 				</mx:DataGridColumn>-->
 				<mx:DataGridColumn dataField="action" headerText="Action">
 					<mx:headerRenderer>
@@ -112,17 +183,51 @@
 							<mx:HBox width="100%" horizontalAlign="center" verticalAlign="middle">
 								<fx:Script>
 									<![CDATA[
+										import il.co.topq.systems.report.events.user.DeleteUserEvent;
 										import il.co.topq.systems.report.models.ReportModelLocator;
 										import il.co.topq.systems.report.models.valueobjects.User;
 										
-										private var currentUser:User = ReportModelLocator.getInstance().user;
+										import mx.controls.Alert;
+										import mx.core.UIComponent;
+										import mx.events.CloseEvent;
+										import mx.managers.PopUpManager;
+										import mx.rpc.events.ResultEvent;
+										
+										protected function editUser_clickHandler(event:MouseEvent):void
+										{
+											outerDocument.createPopup();
+											outerDocument.userDetailsWindow.user = (data as User).clone();
+											outerDocument.userDetailsWindow.saveUserBtn.addEventListener(MouseEvent.CLICK,outerDocument.editUserBtn_clickHandler);
+										}
+										
+										protected function deleteUser_clickHandler(event:MouseEvent):void{
+											var closeHandler:Function = function(closeEvent:CloseEvent):void {
+												new DeleteUserEvent(deleteUserCallbackResult, deleteUserCallbackFault, data as User).dispatch();
+											};
+											var alert:Alert = Alert.show('Are you sure you wish to delete this user, this operation is not reversable', 
+												'Delete User', Alert.YES | Alert.CANCEL, outerDocument.usersGrid, closeHandler, null, Alert.OK);
+											PopUpManager.centerPopUp(alert);
+										}
+										
+										protected function deleteUserCallbackResult(data:ResultEvent): void
+										{
+											outerDocument.getUsers();
+										}
+										
+										protected function deleteUserCallbackFault(info:Object): void
+										{
+											
+										}
+										
 									]]>
 								</fx:Script>
-								<mx:LinkButton enabled="{currentUser.permissions.search('User Manager') != -1}" label="Edit" rollOverColor="#2E44C7"
-											   textRollOverColor="#ffffff"/>
+								<mx:LinkButton label="Edit"
+											   enabled="{outerDocument.currentUser.permissionsArr.contains('User Manager')}"
+											   rollOverColor="#2E44C7" textRollOverColor="#ffffff" click="editUser_clickHandler(event)"/>
 								<s:Label text="|"/>
-								<mx:LinkButton enabled="{currentUser.permissions.search('User Manager') != -1}" label="Delete" rollOverColor="#2E44C7"
-											   textRollOverColor="#ffffff"/>
+								<mx:LinkButton label="Delete"
+											   enabled="{(outerDocument.currentUser.permissionsArr.contains('User Manager')) &amp;&amp; ((data as User).username != outerDocument.currentUser.username) &amp;&amp; ((data as User).password != outerDocument.currentUser.password)}" 
+											   click="deleteUser_clickHandler(event)" rollOverColor="#2E44C7" textRollOverColor="#ffffff"/>
 							</mx:HBox>
 						</fx:Component>
 					</mx:itemRenderer>
@@ -132,9 +237,11 @@
 		<s:HGroup width="95%" horizontalAlign="right" paddingBottom="20" paddingTop="20"
 				  verticalAlign="bottom">
 			<!--<s:Button label="getUser" chromeColor="#0A1E39" color="#FFFFFF" focusColor="#85AED4"
-					  fontWeight="bold"/>-->
-			<s:Button label="New User" visible = "{currentUser.permissions.search('User Manager') != -1}" chromeColor="#0A1E39" color="#FFFFFF" focusColor="#85AED4"
-					  fontWeight="bold"/>
+			fontWeight="bold"/>-->
+			<s:Button visible="{currentUser.permissionsArr.contains('User Manager')}"
+					  label="New User" chromeColor="#0A1E39" click="createNewUser(event)"
+					  color="#FFFFFF" focusColor="#85AED4" fontWeight="bold"/>
 		</s:HGroup>
 	</s:VGroup>
+	
 </s:Group>
