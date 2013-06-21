@@ -168,7 +168,7 @@ public class UploadFileService {
 
 	private String getStorageServerUrl() {
 		// TODO: create support for storage url that is not localhost
-		String url = "http://localhost:8080";
+		String url = "http://"+CheckIp.getMyLanIp()+":8080";
 		try {
 
 			String wanIp = "http://" + CheckIp.getMyWanIp() + ":8080";
