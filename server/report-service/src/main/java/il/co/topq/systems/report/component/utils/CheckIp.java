@@ -16,7 +16,7 @@ public class CheckIp {
 	private static Logger logger = ReportLogger.getInstance().getLogger(
 			CheckIp.class);
 
-	public static String getMyLanIp() throws Exception {
+	public static String getMyLanIp() {
 		logger.info("getting Lan ip");
 		String localhost = "127.0.0.1";
 		try {
@@ -36,6 +36,13 @@ public class CheckIp {
 		URL whatismyip = new URL("http://checkip.amazonaws.com");
 		BufferedReader in = null;
 		try {
+			try {
+				in = new BufferedReader(new InputStreamReader(
+						whatismyip.openStream()));
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+
 			in = new BufferedReader(new InputStreamReader(
 					whatismyip.openStream()));
 			String ip = in.readLine();

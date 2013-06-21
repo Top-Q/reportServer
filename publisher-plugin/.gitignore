@@ -1,3 +1,10 @@
+<<<<<<< HEAD
 /.settings
 /.project
 /target
+=======
+/target
+/*
+/.settings
+/.project
+>>>>>>> 6c510764741333f708822633e459cd00c0f60a7d

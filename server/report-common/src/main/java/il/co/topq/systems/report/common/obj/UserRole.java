@@ -4,9 +4,12 @@ import java.util.HashMap;
 import java.util.Map;
 
 /**
- * This ENUM will represent the different roles that may be assigned to a User
- * in the system.<br>
- * Role constant must begin with ROLE_XXX<br>
+ * <<<<<<< HEAD This ENUM will represent the different roles that may be
+ * assigned to a User in the system.<br>
+ * ======= This enum will represent the different roles that may be assigned to
+ * a User in the system.<br>
+ * >>>>>>> 6c510764741333f708822633e459cd00c0f60a7d Role constant must begin
+ * with ROLE_XXX<br>
  * the value of the user permission will be the enum name
  * 
  * @author eran_g
