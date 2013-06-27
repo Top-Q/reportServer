@@ -5,8 +5,6 @@ import il.co.topq.systems.report.utils.file.xml.PropertiesFileHandler;
 import il.co.topq.systems.report.utils.file.xml.PropertiesFileManager;
 
 import java.io.File;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import org.apache.log4j.Logger;
 
@@ -14,7 +12,7 @@ public abstract class Migrator {
 
 	protected String configurationDir = System.getenv("REPORT_SERVER_CONFIG");
 	protected final static String MIGRATION_PROPERTIES_FILE_NAME = "migration.properties";
-	private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
+	protected Logger log = ReportLogger.getInstance().getLogger(this.getClass());
 
 	protected PropertiesFileHandler propertiesFileHandler;
 
