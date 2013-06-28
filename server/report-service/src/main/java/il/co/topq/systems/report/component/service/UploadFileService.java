@@ -154,7 +154,7 @@ public class UploadFileService {
 			Scenario scenario = scenarioService.get(scenarioId);
 			if (scenario != null) {
 
-				String url = getStorageServerUrl();
+				String url = getHtmlLogsStorageUrl();
 				String contextPath = servletContext.getContextPath();
 
 				String htmlRelativeParh = url + contextPath + "/"
@@ -175,7 +175,7 @@ public class UploadFileService {
 
 	}
 
-	private String getStorageServerUrl() {
+	private String getHtmlLogsStorageUrl() {
 		// TODO: create support for storage url that is not localhost
 		String url = "http://" + CheckIp.getMyLanIp() + ":8080";
 		try {

@@ -34,6 +34,7 @@ public class DBMigrationServiceImpl implements DBMigrationService {
 	@PostConstruct
 	@Override
 	public void doMigrate() {
+		
 		new Thread(new Runnable() {
 
 			@Override

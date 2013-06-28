@@ -1,19 +1,16 @@
 package il.co.topq.systems.report.service.impl.migration.indexing;
 
-import il.co.topq.systems.report.common.infra.log.ReportLogger;
 import il.co.topq.systems.report.service.impl.migration.Migrator;
 import il.co.topq.systems.report.service.impl.migration.infra.MigratorTask;
 import il.co.topq.systems.report.service.infra.ScenarioService;
 import il.co.topq.systems.report.service.infra.TestService;
 import il.co.topq.systems.report.utils.file.xml.PropertiesFileHandler;
 
-import org.apache.log4j.Logger;
-
 public class IndexMigrator extends Migrator implements MigratorTask {
 	private final static String MIGRATE_SCENARIO_START_TIME = "migrate.scenario.startTime";
 	private final static String MIGRATE_TEST_START_TIME = "migrate.test.startTime";
 
-	private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
+	
 	private ScenarioService scenarioService;
 	private TestService testService;
 
