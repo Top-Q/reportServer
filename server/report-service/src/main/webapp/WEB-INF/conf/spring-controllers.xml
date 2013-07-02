@@ -42,6 +42,5 @@
 	<context:component-scan base-package="il.co.topq" />
 	<import resource="classpath:applicationContext.xml" />
 
-	<bean name="applicationUrlService" id="applicationUrlService"	class="il.co.topq.systems.report.component.service.ApplicationUrlService">
-	</bean>
+	
 </beans>
