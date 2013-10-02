@@ -10,9 +10,9 @@
 		class="org.springframework.beans.factory.config.PropertyPlaceholderConfigurer">
 		<property name="locations">
 			<list>
-				<value>classpath:configuration.properties</value>
-				<!-- <value>file:#{systemEnvironment['REPORT_SERVER_CONFIG']}/configuration.properties 
-					</value> -->
+				<!-- <value>classpath:configuration.properties</value> -->
+				<value>file:#{systemEnvironment['REPORT_SERVER_CONFIG']}/configuration.properties
+				</value>
 			</list>
 		</property>
 	</bean>
