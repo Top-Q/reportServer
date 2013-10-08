@@ -29,6 +29,7 @@ import javax.ws.rs.core.Response;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 
@@ -54,6 +55,8 @@ public class UploadFileService {
 
 	@Autowired
 	private ScenarioService scenarioService;
+	
+	private String serverPort;
 
 	private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
 
@@ -157,9 +160,9 @@ public class UploadFileService {
 				String url = getHtmlLogsStorageUrl();
 				String contextPath = servletContext.getContextPath();
 
-				String htmlRelativeParh = url + contextPath + "/"
+				String htmlRelativePath = url + contextPath + "/"
 						+ uploadedFileLocation + "/index.html";
-				scenario.setHtmlDir(htmlRelativeParh);
+				scenario.setHtmlDir(htmlRelativePath);
 				scenarioService.update(scenario);
 
 			} else {
@@ -177,10 +180,12 @@ public class UploadFileService {
 
 	private String getHtmlLogsStorageUrl() {
 		// TODO: create support for storage url that is not localhost
-		String url = "http://" + CheckIp.getMyLanIp() + ":8080";
+//		String url = "http://" + CheckIp.getMyLanIp() + ":8080";
+		String url = "http://" + CheckIp.getMyLanIp() + ":" + serverPort;
 		try {
 
-			String wanIp = "http://" + CheckIp.getMyWanIp() + ":8080";
+//			String wanIp = "http://" + CheckIp.getMyWanIp() + ":8080";
+			String wanIp = "http://" + CheckIp.getMyWanIp() + ":" + serverPort;
 
 			WebResource resource = Client.create().resource(
 					wanIp + "/report-service/index.html");
@@ -190,7 +195,8 @@ public class UploadFileService {
 					|| res.getStatus() == HttpStatus.BAD_REQUEST.value()
 					|| res.getStatus() == HttpStatus.UNSUPPORTED_MEDIA_TYPE
 							.value()) {
-				url = "http://" + CheckIp.getMyLanIp() + ":8080";
+//				url = "http://" + CheckIp.getMyLanIp() + ":8080";
+				url = "http://" + CheckIp.getMyLanIp() + ":" + serverPort;
 			} else {
 				url = wanIp;
 			}
@@ -412,5 +418,10 @@ public class UploadFileService {
 
 		}
 
+	}
+	
+	@Value("${server.port}") 
+	public void setServerPort(String serverPort) { 
+	    this.serverPort = serverPort;
 	}
 }
