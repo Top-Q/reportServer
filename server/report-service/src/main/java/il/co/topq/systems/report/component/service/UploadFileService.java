@@ -50,12 +50,14 @@ import com.sun.jersey.multipart.FormDataParam;
 @Controller
 public class UploadFileService {
 
+	// TODO: consider putting in const file in case being used more than once.
+	private static final String DEFAULT_SERVER_PORT = "8080";
 	private boolean uncompressOperation = true;
 	private String reportLogsFolder = "results";
 
 	@Autowired
 	private ScenarioService scenarioService;
-	
+
 	private String serverPort;
 
 	private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
@@ -180,11 +182,11 @@ public class UploadFileService {
 
 	private String getHtmlLogsStorageUrl() {
 		// TODO: create support for storage url that is not localhost
-//		String url = "http://" + CheckIp.getMyLanIp() + ":8080";
+		// String url = "http://" + CheckIp.getMyLanIp() + ":8080";
 		String url = "http://" + CheckIp.getMyLanIp() + ":" + serverPort;
 		try {
 
-//			String wanIp = "http://" + CheckIp.getMyWanIp() + ":8080";
+			// String wanIp = "http://" + CheckIp.getMyWanIp() + ":8080";
 			String wanIp = "http://" + CheckIp.getMyWanIp() + ":" + serverPort;
 
 			WebResource resource = Client.create().resource(
@@ -195,7 +197,7 @@ public class UploadFileService {
 					|| res.getStatus() == HttpStatus.BAD_REQUEST.value()
 					|| res.getStatus() == HttpStatus.UNSUPPORTED_MEDIA_TYPE
 							.value()) {
-//				url = "http://" + CheckIp.getMyLanIp() + ":8080";
+				// url = "http://" + CheckIp.getMyLanIp() + ":8080";
 				url = "http://" + CheckIp.getMyLanIp() + ":" + serverPort;
 			} else {
 				url = wanIp;
@@ -419,9 +421,13 @@ public class UploadFileService {
 		}
 
 	}
-	
-	@Value("${server.port}") 
-	public void setServerPort(String serverPort) { 
-	    this.serverPort = serverPort;
+
+	@Value("${server.port}")
+	public void setServerPort(String serverPort) {
+		if (serverPort != null && !serverPort.isEmpty()) {
+			this.serverPort = serverPort;
+		} else {
+			this.serverPort = DEFAULT_SERVER_PORT;
+		}
 	}
 }
