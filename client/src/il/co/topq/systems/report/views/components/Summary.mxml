@@ -20,6 +20,8 @@
             mimeType='application/x-font',
             embedAsCFF='false')] 
 		private var font2:Class;
+		
+		
 	</fx:Script>    
 	
 	<fx:Script>
@@ -85,6 +87,11 @@
 				
 //				var properties:String = ReportModelLocator.getInstance().uiConfigurations.summaryProperties.toString();
 //				new GetScenarioPropertiesValuesEvent(properties,this).dispatch();
+			}
+			
+			protected function refreshButtonClicked(event:MouseEvent):void
+			{
+				refreshData();				
 			}
 			
 			private function getHGroup():HGroup{
@@ -167,7 +174,10 @@
 			}
 			
 			public function comboBoxChanged(event:ListEvent):void{
-				
+				refreshData();			
+			}
+			
+			private function refreshData():void {
 				scenarioGridModel.scenarioQuery.scenarioProperties = new ArrayCollection();			
 				for (var i:int=0; i<comboBoxPropertyValueArr.length; i++){
 					var c:ComboBox = comboBoxPropertyValueArr[i] as ComboBox;
@@ -233,6 +243,10 @@
 									 click="addStatisticsProperties_click(event)"
 									 mouseChildren="false" text="Add Statistics Properties"
 									 textDecoration="underline" useHandCursor="true"/>
+							<s:Button x="468" y="221" buttonMode="true" click="refreshButtonClicked(event)"
+									  mouseChildren="false" visible="false"
+									  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"
+									  toolTip="Refresh" useHandCursor="true"/>
 						</s:VGroup>
 					</s:VGroup>
 					<s:VGroup width="313" height="100%" gap="15" paddingLeft="30" paddingTop="15">

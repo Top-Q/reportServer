@@ -11,11 +11,11 @@
 			[Bindable]
 			public var model:ReportModelLocator = ReportModelLocator.getInstance();
 			
-//			[Bindable]
-//			static public var domain:String = "";
-
 			[Bindable]
-			static public var domain:String = "http://localhost:8080";
+			static public var domain:String = "";
+
+//			[Bindable]
+//			static public var domain:String = "http://localhost:8080";
 			
 		]]>
 	</fx:Script>

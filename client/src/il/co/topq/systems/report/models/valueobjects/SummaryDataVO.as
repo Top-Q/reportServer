@@ -93,7 +93,7 @@ package il.co.topq.systems.report.models.valueobjects
 		
 		public function setExecutionStatisticsByTimeRange(scenarioStatisticsByTimeRange:XML):void{
 			this.scenarioStatisticsByTimeRange = new ArrayCollection();
-			var scenarios : XMLList = scenarioStatisticsByTimeRange.scenario as XMLList;
+			var scenarios : XMLList = scenarioStatisticsByTimeRange.scenarios as XMLList;
 			for (var i:int = 0; i< scenarios.length(); i++){
 				this.scenarioStatisticsByTimeRange.addItem(
 					{
