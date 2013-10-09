@@ -60,6 +60,8 @@ public class UploadFileService {
 
 	private String serverPort;
 
+	private String scenarioLogLocation;
+
 	private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
 
 	@Context
@@ -429,5 +431,24 @@ public class UploadFileService {
 		} else {
 			this.serverPort = DEFAULT_SERVER_PORT;
 		}
+	}
+
+	@Value("${scenario.log.location}")
+	public void setScenarioLogLocation(String scenarioLogLocation) {
+		if (scenarioLogLocation != null && !scenarioLogLocation.isEmpty()) {
+			this.scenarioLogLocation = scenarioLogLocation;
+		} else {
+			this.scenarioLogLocation = getDefaultScenarioLogLocation();
+		}
+	}
+
+	/**
+	 * This method will return the scenario default log folder location to be
+	 * saved in case one was not configured by the user in the properties file.
+	 * 
+	 * @return
+	 */
+	private String getDefaultScenarioLogLocation() {
+		return null;
 	}
 }
