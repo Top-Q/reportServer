@@ -41,9 +41,8 @@ import com.sun.jersey.multipart.FormDataParam;
 
 /**
  * 
- * @author liel.ran this class was integrated with the spring version of the
- *         report server by Eran.Golan, coding and business logic was made by
- *         Liel.Ran
+ * @author liel.ran this class was integrated with the spring version of the report server by Eran.Golan, coding and
+ *         business logic was made by Liel.Ran
  * 
  */
 @Path("/")
@@ -52,20 +51,18 @@ public class UploadFileService {
 
 	// TODO: consider putting in const file in case being used more than once.
 	private static final String DEFAULT_SERVER_PORT = "8080";
+	private static final String DEFAULT_REPORT_LOGS_FOLDER = "results";
 	private boolean uncompressOperation = true;
-	private String reportLogsFolder = "results";
 
 	@Autowired
 	private ScenarioService scenarioService;
 
+	@Context
+	private ServletContext servletContext;
 	private String serverPort;
-
 	private String scenarioLogLocation;
 
 	private Logger log = ReportLogger.getInstance().getLogger(this.getClass());
-
-	@Context
-	private ServletContext servletContext;
 
 	public UploadFileService() {
 		super();
@@ -81,15 +78,9 @@ public class UploadFileService {
 	@POST
 	@Path("/upload")
 	@Consumes(MediaType.MULTIPART_FORM_DATA)
-	public Response uploadFile(
-			@FormDataParam("file") InputStream uploadedInputStream,
-			@FormDataParam("file") FormDataContentDisposition fileDetail,
-			@QueryParam("scenarioId") Integer scenarioId) throws IOException {
-
-		// AbstractApplicationContext beanFactory = new
-		// ClassPathXmlApplicationContext("/applicationContext.xml");
-		// scenarioService = (ScenarioService)
-		// beanFactory.getBean("scenarioService");
+	public Response uploadFile(@FormDataParam("file") InputStream uploadedInputStream,
+			@FormDataParam("file") FormDataContentDisposition fileDetail, @QueryParam("scenarioId") Integer scenarioId)
+			throws IOException {
 
 		log.info("----------------Upload Service------------------");
 
@@ -108,26 +99,20 @@ public class UploadFileService {
 			}
 		}
 
-		log.info("-----------------------------------------------uploadFile ---------------------------------------------------");
+		log.info("-------------------------------------uploadFile----------------------------------------");
 
 		String fileName = fileDetail.getFileName();
 
-		// TODO: check if the scenario ID is valid
-		log.info("Upload file " + fileDetail.getFileName() + ", size="
-				+ fileDetail.getSize());
+		log.info("Upload file " + fileDetail.getFileName() + ", size=" + fileDetail.getSize());
 		long start = System.currentTimeMillis() / 1000;
 		log.info("time start=" + start);
 
-		String uploadedFileLocation = getUploadFileLocation(fileDetail,
-				scenarioId);
-		String realPath = servletContext.getRealPath(uploadedFileLocation);
-
-		// set the path of the incoming file
-		String zip = realPath + File.separator + fileName;
+		String uploadedFileLocation = getUploadFileLocation(fileDetail, scenarioId);
+		String realPath = uploadedFileLocation;
+		String zip = uploadedFileLocation + File.separator + fileName;
 
 		log.info("Save file into -" + uploadedFileLocation);
 
-		// save it
 		writeToFile(uploadedInputStream, zip);
 
 		if (isUncompressOperation()) {
@@ -148,24 +133,20 @@ public class UploadFileService {
 
 		long end = System.currentTimeMillis() / 1000;
 		log.info("time end =" + end);
-		log.info("------------------------------server handle upload time is="
-				+ (end - start)
+		log.info("------------------------------server handle upload time is=" + (end - start)
 				+ " secs------------------------------------\n\n");
 
-		response = Response.status(HttpStatus.OK.value())
-				.entity(uploadedFileLocation).build();
+		response = Response.status(HttpStatus.OK.value()).entity(uploadedFileLocation).build();
 
 		try {
 			log.info("in set scenario log dir web service");
-			boolean isLogDirSet = false;
 			Scenario scenario = scenarioService.get(scenarioId);
 			if (scenario != null) {
 
 				String url = getHtmlLogsStorageUrl();
 				String contextPath = servletContext.getContextPath();
 
-				String htmlRelativePath = url + contextPath + "/"
-						+ uploadedFileLocation + "/index.html";
+				String htmlRelativePath = url + contextPath + "/" + uploadedFileLocation + "/index.html";
 				scenario.setHtmlDir(htmlRelativePath);
 				scenarioService.update(scenario);
 
@@ -173,44 +154,31 @@ public class UploadFileService {
 				log.warn("the Scenario was not found,please check that the Scenario id is exist before using the upload API");
 			}
 
-			isLogDirSet = true;
 		} catch (Exception e) {
 			log.error(e);
 		}
 
 		return response;
-
 	}
 
 	private String getHtmlLogsStorageUrl() {
-		// TODO: create support for storage url that is not localhost
-		// String url = "http://" + CheckIp.getMyLanIp() + ":8080";
-		String url = "http://" + CheckIp.getMyLanIp() + ":" + serverPort;
 		try {
-
-			// String wanIp = "http://" + CheckIp.getMyWanIp() + ":8080";
+			String lan = "http://" + CheckIp.getMyLanIp() + ":" + serverPort;
 			String wanIp = "http://" + CheckIp.getMyWanIp() + ":" + serverPort;
-
-			WebResource resource = Client.create().resource(
-					wanIp + "/report-service/index.html");
-			ClientResponse res = resource.accept(MediaType.TEXT_HTML_TYPE).get(
-					ClientResponse.class);
-			if (res.getStatus() == HttpStatus.NOT_FOUND.value()
-					|| res.getStatus() == HttpStatus.BAD_REQUEST.value()
-					|| res.getStatus() == HttpStatus.UNSUPPORTED_MEDIA_TYPE
-							.value()) {
-				// url = "http://" + CheckIp.getMyLanIp() + ":8080";
-				url = "http://" + CheckIp.getMyLanIp() + ":" + serverPort;
-			} else {
-				url = wanIp;
+			WebResource resource = Client.create().resource(wanIp + "/report-service/index.html");
+			try {
+				resource.accept(MediaType.TEXT_HTML_TYPE).get(ClientResponse.class);
+				return wanIp;
+			} catch (Exception e) {
+				resource = Client.create().resource(lan + "/report-service/index.html");
+				resource.accept(MediaType.TEXT_HTML_TYPE).get(ClientResponse.class);
+				return lan;
 			}
 
 		} catch (Exception e) {
 			log.error("error occured while trying to get wan/lan address, using localhost ");
+			return "localhost";
 		}
-
-		return url;
-
 	}
 
 	/**
@@ -220,8 +188,7 @@ public class UploadFileService {
 	 * @throws IOException
 	 * @throws ZipException
 	 */
-	private void uncompressOperation(String workingdir,
-			String uploadedFileLocation) {
+	private void uncompressOperation(String workingdir, String uploadedFileLocation) {
 
 		try {
 			File file = new File(uploadedFileLocation);
@@ -233,18 +200,15 @@ public class UploadFileService {
 				if (entry.isDirectory()) {
 					// Assume directories are stored parents first then
 					// children.
-					System.err.println("Extracting directory: "
-							+ entry.getName());
+					System.err.println("Extracting directory: " + entry.getName());
 					// This is not robust, just for demonstration purposes.
-					(new File(workingdir + File.separator + entry.getName()))
-							.mkdir();
+					(new File(workingdir + File.separator + entry.getName())).mkdir();
 					continue;
 				}
 
 				System.err.println("Extracting file: " + entry.getName());
-				copyInputStream(zipFile.getInputStream(entry),
-						new BufferedOutputStream(new FileOutputStream(
-								workingdir + File.separator + entry.getName())));
+				copyInputStream(zipFile.getInputStream(entry), new BufferedOutputStream(new FileOutputStream(workingdir
+						+ File.separator + entry.getName())));
 			}
 
 			zipFile.close();
@@ -260,8 +224,7 @@ public class UploadFileService {
 	 * @param zipFile
 	 * @param jiniHomeParentDir
 	 */
-	public static void unzipFileIntoDirectory(ZipFile zipFile,
-			File jiniHomeParentDir) {
+	public static void unzipFileIntoDirectory(ZipFile zipFile, File jiniHomeParentDir) {
 		Enumeration files = zipFile.entries();
 		File f = null;
 		FileOutputStream fos = null;
@@ -273,8 +236,7 @@ public class UploadFileService {
 				byte[] buffer = new byte[1024];
 				int bytesRead = 0;
 
-				f = new File(jiniHomeParentDir.getAbsolutePath()
-						+ File.separator + entry.getName());
+				f = new File(jiniHomeParentDir.getAbsolutePath() + File.separator + entry.getName());
 
 				if (entry.isDirectory()) {
 					f.mkdirs();
@@ -312,8 +274,7 @@ public class UploadFileService {
 		}
 	}
 
-	private final void copyInputStream(InputStream in, OutputStream out)
-			throws IOException {
+	private final void copyInputStream(InputStream in, OutputStream out) throws IOException {
 		byte[] buffer = new byte[2024];
 		int len;
 
@@ -324,48 +285,69 @@ public class UploadFileService {
 		out.close();
 	}
 
-	private String getUploadFileLocation(
-			final FormDataContentDisposition fileDetail,
-			final long logFolderName) {
+	private String getUploadFileLocation(final FormDataContentDisposition fileDetail, final long logFolderName) {
 
-		log = ReportLogger.getInstance().getLogger(this.getClass());
-		log.info("create folder for the upload");
-		String logFolder = "";
-		String reportFolder = getReportLogsFolder();
-		String path = " ";
-		// TODO:configure this from outside parameter
+		String logPath;
 
-		path = servletContext.getContextPath();
+		if (this.scenarioLogLocation != null && !this.scenarioLogLocation.isEmpty()) {
+			try {
+				log.info("using scenario log location set from property file: " + this.scenarioLogLocation);
+				logPath = this.scenarioLogLocation;
+				logPath += "/" + logFolderName;
+				File resultsDir = new File(logPath);
 
-		// String resultsPath = path + File.separator + reportFolder;
-		String resultsPath = reportFolder;
+				if (!resultsDir.exists()) {
+					if (!resultsDir.mkdirs()) {
+						log.info("Failed to create the current upload directory - " + resultsDir.getAbsolutePath());
+					} else {
+						log.info("created a folder for the current upload = " + resultsDir);
+					}
+				}
+				return resultsDir.getAbsolutePath();
+			} catch (Exception e) {
+				log.error("failed creating log folder");
+			}
+		}
 
-		logFolder = String.valueOf(logFolderName);// +"/"+String.valueOf(System.currentTimeMillis());
-		// Don't change the '/' char to File.separator
-		// it's for URI Usage and NOT File path Usage
-		logFolder = reportFolder + "/" + logFolder;
-
-		String realResultsPath = servletContext.getRealPath(logFolder);
+		log.info("using default log folder: " + DEFAULT_REPORT_LOGS_FOLDER + " will saved in tomcat context");
+		logPath = DEFAULT_REPORT_LOGS_FOLDER;
+		logPath += "/" + logFolderName;
+		String realResultsPath = servletContext.getRealPath(logPath);
 		File resultsDir = new File(realResultsPath);
 
 		if (!resultsDir.exists()) {
-
 			if (!resultsDir.mkdirs()) {
-				System.err.println("Failed to create the current upload  dir- "
-						+ resultsDir.getAbsolutePath());
+				log.info("Failed to create the current upload directory - " + resultsDir.getAbsolutePath());
 			} else {
-				log.info("created a folder for the current upload ="
-						+ resultsDir);
-				// logFolder = servletContext.getContextPath();
+				log.info("created a folder for the current upload = " + resultsDir);
 			}
 		}
-		return logFolder;
 
+		return resultsDir.getAbsolutePath();
+
+		// String logFolder = "";
+		//
+		// logFolder = String.valueOf(logFolderName);
+		// // Don't change the '/' char to File.separator
+		// // it's for URI Usage and NOT File path Usage
+		// logFolder = getReportLogsFolder() + '/' + logFolder;
+		//
+		// String realResultsPath = servletContext.getRealPath(logFolder);
+		// File resultsDir = new File(realResultsPath);
+		//
+		// if (!resultsDir.exists()) {
+		//
+		// if (!resultsDir.mkdirs()) {
+		// log.info("Failed to create the current upload directory - " + resultsDir.getAbsolutePath());
+		// } else {
+		// log.info("created a folder for the current upload = " + resultsDir);
+		// }
+		// }
+		// return logFolder;
 	}
 
 	/**
-	 * TODO: will check the parameter from the DB is unZip/unrar (Uncompress)
-	 * feature is on
+	 * TODO: will check the parameter from the DB is unZip/unrar (Uncompress) feature is on
 	 * 
 	 * @return
 	 */
@@ -373,22 +355,8 @@ public class UploadFileService {
 		return uncompressOperation;
 	}
 
-	/**
-	 * 
-	 * TODO: change this function to return the root storage Path from the DB
-	 * 
-	 * @return root storage path
-	 */
-	private String getReportLogsFolder() {
-		return reportLogsFolder;
-	}
-
 	public void setUncompressOperation(boolean uncompressOperation) {
-		uncompressOperation = uncompressOperation;
-	}
-
-	public void setReportLogsFolder(String reportLogsFolder) {
-		this.reportLogsFolder = reportLogsFolder;
+		this.uncompressOperation = uncompressOperation;
 	}
 
 	/**
@@ -399,8 +367,7 @@ public class UploadFileService {
 	 * @throws IOException
 	 */
 	// save uploaded file to new location
-	private void writeToFile(InputStream uploadedInputStream, String zipFullPath)
-			throws IOException {
+	private void writeToFile(InputStream uploadedInputStream, String zipFullPath) throws IOException {
 		OutputStream out = null;
 		try {
 			int read = 0;
@@ -424,7 +391,7 @@ public class UploadFileService {
 
 	}
 
-	@Value("${server.port}")
+	@Value("${server.port:#{null}}")
 	public void setServerPort(String serverPort) {
 		if (serverPort != null && !serverPort.isEmpty()) {
 			this.serverPort = serverPort;
@@ -433,22 +400,10 @@ public class UploadFileService {
 		}
 	}
 
-	@Value("${scenario.log.location}")
+	// @Value("${scenario.log.location}")
+	@Value("${scenario.log.location:#{null}}")
 	public void setScenarioLogLocation(String scenarioLogLocation) {
-		if (scenarioLogLocation != null && !scenarioLogLocation.isEmpty()) {
-			this.scenarioLogLocation = scenarioLogLocation;
-		} else {
-			this.scenarioLogLocation = getDefaultScenarioLogLocation();
-		}
+		this.scenarioLogLocation = scenarioLogLocation;
 	}
 
-	/**
-	 * This method will return the scenario default log folder location to be
-	 * saved in case one was not configured by the user in the properties file.
-	 * 
-	 * @return
-	 */
-	private String getDefaultScenarioLogLocation() {
-		return null;
-	}
 }
