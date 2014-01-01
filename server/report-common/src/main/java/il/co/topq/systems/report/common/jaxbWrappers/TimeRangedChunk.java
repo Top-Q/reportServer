@@ -1,4 +1,4 @@
-package il.co.topq.systems.report.component.jaxbWrappers;
+package il.co.topq.systems.report.common.jaxbWrappers;
 
 import il.co.topq.systems.report.common.obj.Chunk;
 import il.co.topq.systems.report.common.obj.TimeRange;

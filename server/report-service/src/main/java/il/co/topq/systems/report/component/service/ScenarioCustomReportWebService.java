@@ -3,11 +3,11 @@ package il.co.topq.systems.report.component.service;
 import java.util.List;
 
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
+import il.co.topq.systems.report.common.jaxbWrappers.PropertyValuesWrapperList;
+import il.co.topq.systems.report.common.jaxbWrappers.ScenarioCustomReportList;
 import il.co.topq.systems.report.common.model.ReportProperty;
 import il.co.topq.systems.report.common.model.ScenarioCustomReport;
 import il.co.topq.systems.report.common.obj.ScenarioQuery;
-import il.co.topq.systems.report.component.jaxbWrappers.PropertyValuesWrapperList;
-import il.co.topq.systems.report.component.jaxbWrappers.ScenarioCustomReportList;
 import il.co.topq.systems.report.service.infra.CustomReportService;
 import il.co.topq.systems.report.service.infra.PropertyService;
 

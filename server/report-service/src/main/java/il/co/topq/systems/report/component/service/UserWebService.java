@@ -5,11 +5,11 @@ import java.util.ArrayList;
 import java.util.List;
 
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
+import il.co.topq.systems.report.common.jaxbWrappers.UserList;
+import il.co.topq.systems.report.common.jaxbWrappers.UserRoleList;
 import il.co.topq.systems.report.common.model.User;
 import il.co.topq.systems.report.common.obj.Chunk;
 import il.co.topq.systems.report.common.obj.UserRole;
-import il.co.topq.systems.report.component.jaxbWrappers.UserList;
-import il.co.topq.systems.report.component.jaxbWrappers.UserRoleList;
 import il.co.topq.systems.report.service.infra.UserService;
 
 import javax.servlet.ServletResponse;

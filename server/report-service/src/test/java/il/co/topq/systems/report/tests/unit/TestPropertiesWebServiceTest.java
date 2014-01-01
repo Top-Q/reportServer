@@ -1,8 +1,8 @@
 package il.co.topq.systems.report.tests.unit;
 
+import il.co.topq.systems.report.common.jaxbWrappers.PropertyList;
 import il.co.topq.systems.report.common.model.ReportProperty;
 import il.co.topq.systems.report.common.model.TestProperty;
-import il.co.topq.systems.report.component.jaxbWrappers.PropertyList;
 import il.co.topq.systems.report.component.utils.URLParts;
 import il.co.topq.systems.report.service.infra.PropertyService;
 import il.co.topq.systems.report.tests.infra.WebserviceBaseTest;

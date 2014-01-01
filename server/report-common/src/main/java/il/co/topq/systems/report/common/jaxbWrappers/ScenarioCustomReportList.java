@@ -1,4 +1,4 @@
-package il.co.topq.systems.report.component.jaxbWrappers;
+package il.co.topq.systems.report.common.jaxbWrappers;
 
 import il.co.topq.systems.report.common.model.ScenarioCustomReport;
 

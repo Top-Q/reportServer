@@ -1,9 +1,9 @@
 package il.co.topq.systems.report.component.service;
 
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
+import il.co.topq.systems.report.common.jaxbWrappers.PropertyList;
 import il.co.topq.systems.report.common.model.ReportProperty;
 import il.co.topq.systems.report.common.model.ScenarioProperty;
-import il.co.topq.systems.report.component.jaxbWrappers.PropertyList;
 import il.co.topq.systems.report.service.infra.PropertyService;
 
 import java.util.ArrayList;

@@ -2,6 +2,10 @@ package il.co.topq.systems.report.tests.unit;
 
 import static org.junit.Assert.assertEquals;
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
+import il.co.topq.systems.report.common.jaxbWrappers.ScenarioList;
+import il.co.topq.systems.report.common.jaxbWrappers.ScenarioStatistics;
+import il.co.topq.systems.report.common.jaxbWrappers.TestList;
+import il.co.topq.systems.report.common.jaxbWrappers.TestStatistics;
 import il.co.topq.systems.report.common.model.ReportProperty;
 import il.co.topq.systems.report.common.model.Scenario;
 import il.co.topq.systems.report.common.model.ScenarioProperty;
@@ -10,19 +14,20 @@ import il.co.topq.systems.report.common.obj.Chunk;
 import il.co.topq.systems.report.common.obj.ScenarioQuery;
 import il.co.topq.systems.report.common.obj.TestQuery;
 import il.co.topq.systems.report.common.obj.TimeRange;
-import il.co.topq.systems.report.component.jaxbWrappers.ScenarioList;
-import il.co.topq.systems.report.component.jaxbWrappers.ScenarioStatistics;
-import il.co.topq.systems.report.component.jaxbWrappers.TestList;
-import il.co.topq.systems.report.component.jaxbWrappers.TestStatistics;
 import il.co.topq.systems.report.component.utils.URLParts;
 import il.co.topq.systems.report.service.infra.ScenarioService;
 import il.co.topq.systems.report.tests.infra.WebserviceBaseTest;
 import il.co.topq.systems.report.utils.RandomData;
 
+import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 
+import javax.ws.rs.core.MediaType;
+
+import org.apache.commons.io.FileUtils;
 import org.apache.log4j.Logger;
 import org.junit.Assert;
 import org.junit.runner.RunWith;
@@ -52,12 +57,20 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 	/*
 	 * TODO: put in resources jsystem xml file.
 	 */
-	public void createScenarioFromXmlFile() {
+	@org.junit.Test
+	public void createScenarioFromXmlFile() throws IOException {
+		File f = new File(
+				"C:\\Users\\eran_g\\Downloads\\current\\reports.0.xml");
+		byte[] scenarioByteArr = FileUtils.readFileToByteArray(f);
+		getWebResource(URLParts.CREATE_SCENARIO_FROM_XML).post(String.class,
+				new byte[1024]);
 		// Client c = Client.create();
-		// WebResource r = c.resource("http://localhost:8080/report-service/report/scenario/reportXML/");
+		// WebResource r =
+		// c.resource("http://localhost:8080/report-service/report/scenario/reportXML/");
 		//
 		// try {
-		// ClientResponse clientResponse = r.accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_XML)
+		// ClientResponse clientResponse =
+		// r.accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_XML)
 		// .post(ClientResponse.class, new byte[1024]);
 		//
 		// if (clientResponse == null) {
@@ -72,9 +85,11 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 	// TESTED
 	@org.junit.Test
 	public void deleteScenario() throws Exception {
-		Scenario scenario = scenarioService.create(RandomData.getScenarioWithTests(3));
+		Scenario scenario = scenarioService.create(RandomData
+				.getScenarioWithTests(3));
 		Assert.assertNotNull(scenario);
-		Boolean isDeleted = Boolean.valueOf(getWebResource(URLParts.DELETE_SCENARIO_URL + scenario.getId()).get(
+		Boolean isDeleted = Boolean.valueOf(getWebResource(
+				URLParts.DELETE_SCENARIO_URL + scenario.getId()).get(
 				String.class));
 		Assert.assertTrue(isDeleted);
 	}
@@ -83,9 +98,12 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 	@org.junit.Test
 	public void getScenarioByID() throws Exception {
 
-		Scenario scenario = scenarioService.create(RandomData.getScenarioWithTests(3));
+		Scenario scenario = scenarioService.create(RandomData
+				.getScenarioWithTests(3));
 		Assert.assertNotNull(scenario);
-		Scenario scenarioFromDB = getWebResource(URLParts.GET_SCENARIO_URL + scenario.getId()).get(Scenario.class);
+		Scenario scenarioFromDB = getWebResource(
+				URLParts.GET_SCENARIO_URL + scenario.getId()).get(
+				Scenario.class);
 		scenarioService.delete(scenarioFromDB.getId());
 	}
 
@@ -100,15 +118,20 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 		int numOfTests = 3;
 		TestQuery testQuery = new TestQuery();
 		testQuery.setChunk(chunk);
-		Scenario scenario = scenarioService.create(RandomData.getScenarioWithTests(numOfTests));
+		Scenario scenario = scenarioService.create(RandomData
+				.getScenarioWithTests(numOfTests));
 		Assert.assertNotNull(scenario);
 		Integer scenarioTestsSize = Integer.valueOf(getWebResource(
-				URLParts.SIZE_OF_SCENARIO_TESTS_URL + scenario.getId()).post(String.class));
+				URLParts.SIZE_OF_SCENARIO_TESTS_URL + scenario.getId()).post(
+				String.class));
 
-		List<Test> tests = getWebResource(URLParts.SCENARIO_TESTS_URL + scenario.getId()).post(TestList.class,
-				testQuery).getTests();
-		Assert.assertTrue("expecting " + numOfTests + " in scenario", tests.size() == 3);
-		Assert.assertTrue("expecting " + numOfTests + " in scenario", scenarioTestsSize == 3);
+		List<Test> tests = getWebResource(
+				URLParts.SCENARIO_TESTS_URL + scenario.getId()).post(
+				TestList.class, testQuery).getTests();
+		Assert.assertTrue("expecting " + numOfTests + " in scenario",
+				tests.size() == 3);
+		Assert.assertTrue("expecting " + numOfTests + " in scenario",
+				scenarioTestsSize == 3);
 		scenarioService.delete(scenario.getId());
 	}
 
@@ -126,7 +149,8 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 
 		// Creates {numberOfScenarios}
 		for (int i = 0; i < numberOfScenarios; i++) {
-			ids.add(scenarioService.create(RandomData.getScenarioWithTests(3)).getId());
+			ids.add(scenarioService.create(RandomData.getScenarioWithTests(3))
+					.getId());
 		}
 
 		// Create the scenarioQuery: properties, timeRange
@@ -136,19 +160,21 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 		scenarioQuery.setTimeRange(timeRange);
 
 		// Gets the size of this query;
-		Integer sizeOfScenarioQuery = Integer.valueOf(getWebResource(URLParts.SIZE_OF_SCENARIO_QUERY_URL).post(
-				String.class, scenarioQuery));
+		Integer sizeOfScenarioQuery = Integer.valueOf(getWebResource(
+				URLParts.SIZE_OF_SCENARIO_QUERY_URL).post(String.class,
+				scenarioQuery));
 
 		// Gets the scenarioList
 		for (int i = 0; i <= (sizeOfScenarioQuery / chunkLength); i++) {
 			Chunk chunk = new Chunk(i * chunkLength, chunkLength);
 			scenarioQuery.setChunk(chunk);
-			List<Scenario> tempList = getWebResource(URLParts.GET_SCENARIO_URL).post(ScenarioList.class, scenarioQuery)
-					.getScenarios();
+			List<Scenario> tempList = getWebResource(URLParts.GET_SCENARIO_URL)
+					.post(ScenarioList.class, scenarioQuery).getScenarios();
 			counter += tempList.size();
 		}
 
-		Assert.assertEquals("expecting " + +sizeOfScenarioQuery + " scenarios", sizeOfScenarioQuery.intValue(), counter);
+		Assert.assertEquals("expecting " + +sizeOfScenarioQuery + " scenarios",
+				sizeOfScenarioQuery.intValue(), counter);
 
 		// Assertion for each scenario exist in list to verify date and
 		// properties
@@ -156,7 +182,9 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 
 			// Asserting the timeRange in scenario
 			long scenarioStartTime = scenario.getStartTime();
-			assertEquals("scenario start time not in query timeRange", true,
+			assertEquals(
+					"scenario start time not in query timeRange",
+					true,
 					((scenarioStartTime <= timeRange.getUpBoundDate()) && (scenarioStartTime >= timeRange
 							.getLowBoundDate())));
 		}
@@ -178,17 +206,22 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 		scenarioPropertyList.add(new ScenarioProperty("Version", ""));
 		scenarioQuery.setProperties(scenarioPropertyList);
 
-		scenarioList = scenarioService.getScenariosByFiltersWithSortingCol(scenarioQuery);
+		scenarioList = scenarioService
+				.getScenariosByFiltersWithSortingCol(scenarioQuery);
 		for (Scenario scenario : scenarioList) {
-			ScenarioStatistics scenarioStatistics = new ScenarioStatistics(scenario.getScenarioName(),
-					new TestStatistics(scenario.getFailTests(), scenario.getSuccessTests(), scenario.getWarningTests(),
-							scenario.getRunTest()));
+			ScenarioStatistics scenarioStatistics = new ScenarioStatistics(
+					scenario.getScenarioName(), new TestStatistics(
+							scenario.getFailTests(),
+							scenario.getSuccessTests(),
+							scenario.getWarningTests(), scenario.getRunTest()));
 			if (!scenarioStatisticsList.contains(scenarioStatistics)) {
 				scenarioStatisticsList.add(scenarioStatistics);
 			} else {
-				ScenarioStatistics scenarioStatisticsToUpdate = scenarioStatisticsList.get(scenarioStatisticsList
-						.indexOf(scenarioStatistics));
-				scenarioStatisticsToUpdate.updateTestStatistics(scenarioStatistics.getTestStatistics());
+				ScenarioStatistics scenarioStatisticsToUpdate = scenarioStatisticsList
+						.get(scenarioStatisticsList.indexOf(scenarioStatistics));
+				scenarioStatisticsToUpdate
+						.updateTestStatistics(scenarioStatistics
+								.getTestStatistics());
 				log.info("");
 			}
 		}
@@ -208,7 +241,8 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 
 		// Creates {numberOfScenarios}
 		for (int i = 0; i < numberOfScenarios; i++) {
-			ids.add(scenarioService.create(RandomData.getScenarioWithTests(3)).getId());
+			ids.add(scenarioService.create(RandomData.getScenarioWithTests(3))
+					.getId());
 		}
 
 		// Create the scenarioQuery: properties, timeRange
@@ -216,22 +250,25 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 		timeRange.setUpBoundDate(System.currentTimeMillis());
 		ScenarioQuery scenarioQuery = new ScenarioQuery();
 		scenarioQuery.setTimeRange(timeRange);
-		scenarioQuery.setProperties(RandomData.getRandomScenarioCustomReportProperties(4));
+		scenarioQuery.setProperties(RandomData
+				.getRandomScenarioCustomReportProperties(4));
 
 		// Gets the size of this query;
-		Integer sizeOfScenarioQuery = Integer.valueOf(getWebResource(URLParts.SIZE_OF_SCENARIO_QUERY_URL).post(
-				String.class, scenarioQuery));
+		Integer sizeOfScenarioQuery = Integer.valueOf(getWebResource(
+				URLParts.SIZE_OF_SCENARIO_QUERY_URL).post(String.class,
+				scenarioQuery));
 
 		// Gets the scenarioList
 		for (int i = 0; i <= (sizeOfScenarioQuery / chunkLength); i++) {
 			Chunk chunk = new Chunk(i * chunkLength, chunkLength);
 			scenarioQuery.setChunk(chunk);
-			List<Scenario> tempList = getWebResource(URLParts.GET_SCENARIO_URL).post(ScenarioList.class, scenarioQuery)
-					.getScenarios();
+			List<Scenario> tempList = getWebResource(URLParts.GET_SCENARIO_URL)
+					.post(ScenarioList.class, scenarioQuery).getScenarios();
 			counter += tempList.size();
 		}
 
-		Assert.assertEquals("expecting " + +sizeOfScenarioQuery + " scenarios", sizeOfScenarioQuery.intValue(), counter);
+		Assert.assertEquals("expecting " + +sizeOfScenarioQuery + " scenarios",
+				sizeOfScenarioQuery.intValue(), counter);
 
 		// Assertion for each scenario exist in list to verify date and
 		// properties
@@ -239,7 +276,9 @@ public class ScenarioWebServiceTest extends WebserviceBaseTest {
 
 			// Asserting the timeRange in scenario
 			long scenarioStartTime = scenario.getStartTime();
-			assertEquals("scenario start time not in query timeRange", true,
+			assertEquals(
+					"scenario start time not in query timeRange",
+					true,
 					((scenarioStartTime <= timeRange.getUpBoundDate()) && (scenarioStartTime >= timeRange
 							.getLowBoundDate())));
 		}

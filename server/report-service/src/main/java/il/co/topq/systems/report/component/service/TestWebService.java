@@ -1,13 +1,13 @@
 package il.co.topq.systems.report.component.service;
 
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
+import il.co.topq.systems.report.common.jaxbWrappers.TestList;
+import il.co.topq.systems.report.common.jaxbWrappers.TestSummaryList;
 import il.co.topq.systems.report.common.model.ReportProperty;
 import il.co.topq.systems.report.common.model.Scenario;
 import il.co.topq.systems.report.common.model.Test;
 import il.co.topq.systems.report.common.obj.TestQuery;
 import il.co.topq.systems.report.common.obj.TestSummaryQuery;
-import il.co.topq.systems.report.component.jaxbWrappers.TestList;
-import il.co.topq.systems.report.component.jaxbWrappers.TestSummaryList;
 import il.co.topq.systems.report.service.infra.PropertyService;
 import il.co.topq.systems.report.service.infra.TestService;
 

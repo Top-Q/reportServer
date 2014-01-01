@@ -4,7 +4,7 @@ public class URLParts {
 
 	// context
 	// public static final String URI = "http://localhost:9998/report-service";
-	public static final String URI = "http://localhost:8081/report-service/report";
+	public static final String URI = "http://localhost:8080/report-service/report";
 	public static final String APPLICATION_CONTEXT = "report-service";
 
 	// Authorization
@@ -27,6 +27,7 @@ public class URLParts {
 	public static final String SIZE_OF_SCENARIO_QUERY_URL = "/scenario/querySize/";
 	public static final String SIZE_OF_SCENARIO_TESTS_URL = "/scenario/scenarioTestsSize/";
 	public static final String SCENARIO_TESTS_URL = "/scenario/tests/";
+	public static final String CREATE_SCENARIO_FROM_XML = "/scenario/reportXML/";
 
 	// Test
 	public static final String GET_TEST_URL = "/test/";

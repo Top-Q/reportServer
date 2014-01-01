@@ -1,6 +1,8 @@
 package il.co.topq.systems.report.tests.unit;
 
 import static org.junit.Assert.assertEquals;
+import il.co.topq.systems.report.common.jaxbWrappers.PropertyValuesWrapperList;
+import il.co.topq.systems.report.common.jaxbWrappers.TestCustomReportList;
 import il.co.topq.systems.report.common.model.ReportProperty;
 import il.co.topq.systems.report.common.model.TestCustomReport;
 import il.co.topq.systems.report.common.model.TestProperty;
@@ -8,8 +10,6 @@ import il.co.topq.systems.report.common.obj.Chunk;
 import il.co.topq.systems.report.common.obj.PropertyValuesWrapper;
 import il.co.topq.systems.report.common.obj.TestQuery;
 import il.co.topq.systems.report.common.obj.TimeRange;
-import il.co.topq.systems.report.component.jaxbWrappers.PropertyValuesWrapperList;
-import il.co.topq.systems.report.component.jaxbWrappers.TestCustomReportList;
 import il.co.topq.systems.report.component.utils.URLParts;
 import il.co.topq.systems.report.service.infra.CustomReportService;
 import il.co.topq.systems.report.service.infra.PropertyService;

@@ -1,9 +1,9 @@
 package il.co.topq.systems.report.tests.unit;
 
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
+import il.co.topq.systems.report.common.jaxbWrappers.UserList;
+import il.co.topq.systems.report.common.jaxbWrappers.UserRoleList;
 import il.co.topq.systems.report.common.model.User;
-import il.co.topq.systems.report.component.jaxbWrappers.UserList;
-import il.co.topq.systems.report.component.jaxbWrappers.UserRoleList;
 import il.co.topq.systems.report.component.utils.URLParts;
 import il.co.topq.systems.report.service.infra.UserService;
 import il.co.topq.systems.report.tests.infra.WebserviceBaseTest;

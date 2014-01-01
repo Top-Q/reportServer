@@ -1,6 +1,12 @@
 package il.co.topq.systems.report.component.service;
 
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
+import il.co.topq.systems.report.common.jaxbWrappers.PropertyValuesWrapperList;
+import il.co.topq.systems.report.common.jaxbWrappers.ScenarioList;
+import il.co.topq.systems.report.common.jaxbWrappers.ScenarioStatistics;
+import il.co.topq.systems.report.common.jaxbWrappers.ScenarioStatisticsList;
+import il.co.topq.systems.report.common.jaxbWrappers.TestList;
+import il.co.topq.systems.report.common.jaxbWrappers.TestStatistics;
 import il.co.topq.systems.report.common.model.ReportProperty;
 import il.co.topq.systems.report.common.model.Scenario;
 import il.co.topq.systems.report.common.model.ScenarioProperty;
@@ -8,12 +14,6 @@ import il.co.topq.systems.report.common.model.Test;
 import il.co.topq.systems.report.common.obj.ScenarioComparator;
 import il.co.topq.systems.report.common.obj.ScenarioQuery;
 import il.co.topq.systems.report.common.obj.TestQuery;
-import il.co.topq.systems.report.component.jaxbWrappers.PropertyValuesWrapperList;
-import il.co.topq.systems.report.component.jaxbWrappers.ScenarioList;
-import il.co.topq.systems.report.component.jaxbWrappers.ScenarioStatistics;
-import il.co.topq.systems.report.component.jaxbWrappers.ScenarioStatisticsList;
-import il.co.topq.systems.report.component.jaxbWrappers.TestList;
-import il.co.topq.systems.report.component.jaxbWrappers.TestStatistics;
 import il.co.topq.systems.report.component.utils.FileUtils;
 import il.co.topq.systems.report.component.utils.converters.XmlToScenarioConverter;
 import il.co.topq.systems.report.service.infra.PropertyService;

@@ -1,13 +1,13 @@
 package il.co.topq.systems.report.tests.unit;
 
 import static org.junit.Assert.assertEquals;
+import il.co.topq.systems.report.common.jaxbWrappers.TestList;
 import il.co.topq.systems.report.common.model.ReportProperty;
 import il.co.topq.systems.report.common.model.Scenario;
 import il.co.topq.systems.report.common.model.Test;
 import il.co.topq.systems.report.common.obj.Chunk;
 import il.co.topq.systems.report.common.obj.TestQuery;
 import il.co.topq.systems.report.common.obj.TimeRange;
-import il.co.topq.systems.report.component.jaxbWrappers.TestList;
 import il.co.topq.systems.report.component.utils.URLParts;
 import il.co.topq.systems.report.service.infra.ScenarioService;
 import il.co.topq.systems.report.service.infra.TestService;

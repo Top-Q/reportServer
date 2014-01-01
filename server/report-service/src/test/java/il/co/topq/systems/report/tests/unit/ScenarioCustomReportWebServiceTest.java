@@ -1,5 +1,7 @@
 package il.co.topq.systems.report.tests.unit;
 
+import il.co.topq.systems.report.common.jaxbWrappers.PropertyValuesWrapperList;
+import il.co.topq.systems.report.common.jaxbWrappers.ScenarioCustomReportList;
 import il.co.topq.systems.report.common.model.ReportProperty;
 import il.co.topq.systems.report.common.model.ScenarioCustomReport;
 import il.co.topq.systems.report.common.model.ScenarioProperty;
@@ -7,8 +9,6 @@ import il.co.topq.systems.report.common.obj.Chunk;
 import il.co.topq.systems.report.common.obj.PropertyValuesWrapper;
 import il.co.topq.systems.report.common.obj.ScenarioQuery;
 import il.co.topq.systems.report.common.obj.TimeRange;
-import il.co.topq.systems.report.component.jaxbWrappers.PropertyValuesWrapperList;
-import il.co.topq.systems.report.component.jaxbWrappers.ScenarioCustomReportList;
 import il.co.topq.systems.report.component.utils.URLParts;
 import il.co.topq.systems.report.service.infra.CustomReportService;
 import il.co.topq.systems.report.service.infra.PropertyService;

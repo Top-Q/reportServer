@@ -1,4 +1,4 @@
-package il.co.topq.systems.report.component.jaxbWrappers;
+package il.co.topq.systems.report.common.jaxbWrappers;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
