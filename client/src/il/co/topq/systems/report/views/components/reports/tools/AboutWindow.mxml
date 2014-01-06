@@ -38,7 +38,7 @@
 	</fx:Declarations>
 	<s:Image x="0" y="0" width="176" height="159" source="assets/images/logo.jpg"/>
 	<s:TextArea x="37" y="167" width="328" height="53" borderVisible="false" color="#000000" editable="false"
-				fontSize="18" text="Top-Q Report System&#xd;Version: 2.02"
+				fontSize="18" text="Top-Q Report System&#xd;Version: 2.04"
 				verticalAlign="middle"/>
 	<components:Footer x="0" y="249" width="100%" verticalAlign="top"/>
 </s:TitleWindow>
