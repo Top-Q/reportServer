@@ -1,17 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
-<s:TitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
+<grid:ResizableTitleWindow xmlns:fx="http://ns.adobe.com/mxml/2009"
 			   xmlns:s="library://ns.adobe.com/flex/spark"
 			   xmlns:mx="library://ns.adobe.com/flex/mx"
 			   xmlns:grid="il.co.topq.systems.report.models.grid.*"
 			   width="938" height="604" chromeColor="#D4E4FB"  color="#000000" contentBackgroundColor="#FFFFFF" title="Compared Executions"
-			   close="cancel_clickHandler(event)" creationComplete="comparedScenarios_creationCompleteHandler(event)">
+			   close="cancel_clickHandler(event)" creationComplete="comparedScenarios_creationCompleteHandler(event)" showCloseButton="true" >
 	
 	<fx:Script>
 		<![CDATA[
 			import il.co.topq.systems.report.models.ReportModelLocator;
 			import il.co.topq.systems.report.models.grid.ComparedScenariosGridColumn;
 			import il.co.topq.systems.report.renderers.ComparedScenarioColumnGridItemRenderer;
-			
+			import il.co.topq.systems.report.models.grid.ResizableTitleWindow;
 			import mx.containers.HBox;
 			import mx.controls.Alert;
 			import mx.controls.Image;
@@ -112,4 +112,4 @@
 		
 		</mx:columns>
 	</mx:DataGrid>
-</s:TitleWindow>
+</grid:ResizableTitleWindow>
