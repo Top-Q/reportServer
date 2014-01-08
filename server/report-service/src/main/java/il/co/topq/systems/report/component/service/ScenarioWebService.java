@@ -31,7 +31,6 @@ import java.util.List;
 import javax.servlet.ServletContext;
 import javax.servlet.ServletRequest;
 import javax.servlet.ServletResponse;
-import javax.ws.rs.core.Context;
 
 import org.apache.log4j.Logger;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -59,8 +58,8 @@ public class ScenarioWebService {
 	@Autowired
 	private PropertyService<ReportProperty> scenarioPropertyService;
 
-	@Context
-	private static ServletContext servletContext;
+	@Autowired
+	private ServletContext servletContext;
 
 	/**
 	 * This method gets Scenario id and return the matching Scenario from
@@ -216,7 +215,7 @@ public class ScenarioWebService {
 							log.info("Deleted successfully");
 						}
 					} else {
-						log.error("Log dir could not be deleted, failed to construct path correctly");
+						log.error("Log dir could not be deleted, failed to construct path correctly, path may not exist");
 					}
 				}
 			}
@@ -226,24 +225,14 @@ public class ScenarioWebService {
 		}
 	}
 
-	/**
-	 * This method will check if results folder exists.
-	 * 
-	 * @return
-	 */
-	private boolean isLogFolderExist() {
-		try {
-			return new File(getResultsPath()).exists();
-		} catch (Exception e) {
-			return false;
-		}
-	}
-
 	private String getResultsPath() throws Exception {
 		File configFile = new File(servletContext.getRealPath(""), "");
 
-		if (new File(configFile + File.separator + "results").exists()) {
-			return configFile + File.separator + "results" + File.separator;
+		if (new File(configFile + File.separator
+				+ UploadFileService.DEFAULT_REPORT_LOGS_FOLDER).exists()) {
+			return configFile + File.separator
+					+ UploadFileService.DEFAULT_REPORT_LOGS_FOLDER
+					+ File.separator;
 		} else {
 			throw new Exception("results path does not exist in webapps scope");
 		}
