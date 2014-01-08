@@ -63,17 +63,15 @@
 		<!-- General Services -->
 		
 		<!--USER-->
-		<s:HTTPService id="getUsers"  method="GET" resultFormat="xml"
-					   showBusyCursor="false" url="{domain}/report-service/report/user/allUsers"
-					   useProxy="false" />
-		<s:HTTPService id="createUser" contentType="application/xml" method="POST"
-					   resultFormat="xml" showBusyCursor="false"
-					   url="{domain}/report-service/report/user/create" useProxy="false"/>
-		<s:HTTPService id="updateUser" contentType="application/xml" method="POST"
-					   resultFormat="xml" showBusyCursor="false"
-					   url="{domain}/report-service/report/user/update" useProxy="false"/>	
-		<s:HTTPService id="deleteUser" method="delete"
-					   resultFormat="xml" showBusyCursor="false"
+		<s:HTTPService id="getUsers" method="GET" resultFormat="xml" showBusyCursor="false"
+					   url="{domain}/report-service/report/user/allUsers" useProxy="false"/>
+		<s:HTTPService id="createUser" contentType="application/xml" method="POST" resultFormat="xml"
+					   showBusyCursor="false" url="{domain}/report-service/report/user/create"
+					   useProxy="false"/>
+		<s:HTTPService id="updateUser" contentType="application/xml" method="POST" resultFormat="xml"
+					   showBusyCursor="false" url="{domain}/report-service/report/user/update"
+					   useProxy="false"/>	
+		<s:HTTPService id="deleteUser" method="delete" resultFormat="xml" showBusyCursor="false"
 					   url="{domain}/report-service/report/user/delete/" useProxy="false"/>	
 		<!--TESTS-->
 		<s:HTTPService id="deleteTestOrphanProperties" method="get" resultFormat="xml"
