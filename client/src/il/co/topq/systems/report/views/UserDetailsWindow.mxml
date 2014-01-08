@@ -45,42 +45,47 @@
 			
 		]]>
 	</fx:Script>
-	<s:BorderContainer left="0" right="0" top="0" bottom="0" backgroundColor="#4F81BD">
+	<s:BorderContainer left="0" right="0" top="0" bottom="0" backgroundColor="#4F81BD"
+					   tabEnabled="true">
 		
 		<s:Label x="52" y="123" color="#FFFFFF" fontFamily="Calibri" fontSize="18"
 				 text="* First Name:"/>
 		<s:TextInput id="firstName" x="159" y="123" width="215" height="25"
-					 contentBackgroundColor="#FFFFFF" tabIndex="0" text="@{user.firstName}"/>
+					 contentBackgroundColor="#FFFFFF" tabEnabled="true" tabIndex="1"
+					 text="@{user.firstName}"/>
 		
 		<s:Label x="52" y="156" color="#FFFFFF" fontFamily="Calibri" fontSize="18"
 				 text="* Last Name:"/>
 		<s:TextInput id="lastName" x="159" y="156" width="215" height="25"
-					 contentBackgroundColor="#FFFFFF" text="@{user.lastName}"/>
+					 contentBackgroundColor="#FFFFFF" tabEnabled="true" tabIndex="2"
+					 text="@{user.lastName}"/>
 		
 		<s:Label x="52" y="190" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="* Username:"/>
 		<s:TextInput id="username" x="159" y="190" width="215" height="25"
-					 contentBackgroundColor="#FFFFFF" text="@{user.username}"/>
+					 contentBackgroundColor="#FFFFFF" tabEnabled="true" tabIndex="3"
+					 text="@{user.username}"/>
 
 		<s:Label x="58" y="223" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="* Password:"/>
 		<s:TextInput id="password" x="159" y="223" width="215" height="25"
-					 contentBackgroundColor="#FFFFFF" displayAsPassword="true"
-					 text="@{user.password}"/>
+					 contentBackgroundColor="#FFFFFF" displayAsPassword="true" tabEnabled="true"
+					 tabIndex="4" text="@{user.password}"/>
 	
 		<s:Label x="87" y="256" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="* Email:"/>
 		<s:TextInput id="email" x="159" y="256" width="215" height="25"
-					 contentBackgroundColor="#FFFFFF" text="@{user.email}"/>
+					 contentBackgroundColor="#FFFFFF" tabEnabled="true" text="@{user.email}" />
 
 		<s:Label x="42" y="307" color="#FFFFFF" fontFamily="Calibri" fontSize="18"
 				 text="Permissions:"/>
 		<s:CheckBox x="159" y="307" label="User Manager"
 					click="permissionCheckBox_changeHandler(event)" color="#FFFFFF"
-					selected="{user.permissionsArr.contains('User Manager')}"/>
+					selected="{user.permissionsArr.contains('User Manager')}" tabEnabled="true"/>
 		<s:CheckBox x="159" y="333" label="Delete Scenario"
 					click="permissionCheckBox_changeHandler(event)" color="#FFFFFF"
-					selected="{user.permissionsArr.contains('Delete Scenario')}"/>
+					selected="{user.permissionsArr.contains('Delete Scenario')}" tabEnabled="true"/>
 	
 		<s:Button id="saveUserBtn" x="295" y="448" width="79" height="31" label="Save"
-				  chromeColor="#254061" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+				  chromeColor="#254061" color="#FFFFFF" fontFamily="Calibri" fontSize="18"
+				  tabEnabled="true"/>
 	</s:BorderContainer>
 	
 </s:TitleWindow>
