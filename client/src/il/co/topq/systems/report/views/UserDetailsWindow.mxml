@@ -70,7 +70,7 @@
 					 contentBackgroundColor="#FFFFFF" displayAsPassword="true" tabEnabled="true"
 					 tabIndex="4" text="@{user.password}"/>
 	
-		<s:Label x="87" y="256" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="* Email:"/>
+		<s:Label x="100" y="256" color="#FFFFFF" fontFamily="Calibri" fontSize="18" text="Email:"/>
 		<s:TextInput id="email" x="159" y="256" width="215" height="25"
 					 contentBackgroundColor="#FFFFFF" tabEnabled="true" text="@{user.email}" />
 

@@ -74,7 +74,8 @@
 			protected function saveUserBtn_clickHandler(event:MouseEvent):void
 			{	
 				var u:User = userDetailsWindow.user;
-				if ((u.firstName.length > 0) && (u.lastName.length > 0) && (u.username.length > 0) && (u.password.length > 0) && (u.email.length > 0)){
+//				if ((u.firstName.length > 0) && (u.lastName.length > 0) && (u.username.length > 0) && (u.password.length > 0) && (u.email.length > 0)){
+				if ((u.firstName.length > 0) && (u.lastName.length > 0) && (u.username.length > 0) && (u.password.length > 0)){
 					new CreateUserEvent(createUserCallbackResult,createUserCallbackFault,userDetailsWindow.user).dispatch();
 				}else {
 					Alert.show("Missing mandatory fields","Error");
