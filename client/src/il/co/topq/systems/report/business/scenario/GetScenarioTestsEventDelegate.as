@@ -18,9 +18,8 @@ package il.co.topq.systems.report.business.scenario
 		}
 		public function getScenarioTests(id:String,testQuery:TestQuery):void{
 			var service:HTTPService = ServiceLocator.getInstance()
-				.getHTTPService("getScenariosTests");	
-			 
-			service.url = ReportServiceLocator.domain + "/report-service/report/scenario/tests/" + id;
+				.getHTTPService("getScenariosTests");				 
+			service.url += id;
 			service.request = testQuery.toXML();
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;

@@ -18,7 +18,7 @@
 		<url-pattern>/report/*</url-pattern>
 	</servlet-mapping>
 	<welcome-file-list>
-		<welcome-file>report-service/bin-release/index.html</welcome-file>
+		<welcome-file>report-server/index.html</welcome-file>
 	</welcome-file-list>
 	<filter>
 		<filter-name>httpMethodFilter</filter-name>

@@ -37,7 +37,7 @@ public class TestWebService {
 	private PropertyService<ReportProperty> testPropertyService;
 
 	/**
-	 * This method counts all the Tests in the DB. URL:http://host:port/report-service/report/test/count Method: GET
+	 * This method counts all the Tests in the DB. URL:http://host:port/contextPath/report/test/count Method: GET
 	 * 
 	 * @return Long - number of Tests in DB see the <a href="{@docRoot} /doc-files/long.xml">Produced XML file</a>.
 	 * @throws Exception
@@ -78,7 +78,7 @@ public class TestWebService {
 
 	/**
 	 * This method gets a TestQuery and return List of Tests from Database according to TestQuery.
-	 * URL:http://host:port/report-service/report/test Method: POST
+	 * URL:http://host:port/contextPath/report/test Method: POST
 	 * 
 	 * @param testQuery
 	 *            -
@@ -98,7 +98,7 @@ public class TestWebService {
 
 	/**
 	 * This method gets a TestQuery and return the size of its resultSet; URL:
-	 * http://host:port/report-service/report/test/querySize Method: POST
+	 * http://host:port/contextPath/report/test/querySize Method: POST
 	 * 
 	 * @param testQuery
 	 *            -
@@ -150,7 +150,7 @@ public class TestWebService {
 
 	/**
 	 * This method will get a Scenario id and deletes the matching Scenario from Database.
-	 * URL:http://host:port/report-service/report/scenario/delete/scenarioId Method: GET
+	 * URL:http://host:port/contextPath/report/scenario/delete/scenarioId Method: GET
 	 * 
 	 * @param testId
 	 *            -

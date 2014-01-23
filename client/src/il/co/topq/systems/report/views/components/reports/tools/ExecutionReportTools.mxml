@@ -19,11 +19,6 @@
 			[Bindable]
 			public var model:ReportModelLocator = ReportModelLocator.getInstance();
 
-			[Bindable]
-			[Embed(source='/assets/images/warning.gif')]
-			
-			private var Icon:Class;
-			
 
 		]]>
 	</fx:Script>

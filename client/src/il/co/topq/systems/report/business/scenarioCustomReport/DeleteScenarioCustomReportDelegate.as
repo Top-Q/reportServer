@@ -27,7 +27,7 @@ package il.co.topq.systems.report.business.scenarioCustomReport
 		{  			
 			var service:HTTPService = 
 				ServiceLocator.getInstance().getHTTPService("deleteScenarioCustomReport");
-			service.url = ReportServiceLocator.domain + "/report-service/report/scenarioCustomReport/delete/"  + id;  
+			service.url += id;  
 			service.request = new Date();//used to break the chaching of the get request.
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;

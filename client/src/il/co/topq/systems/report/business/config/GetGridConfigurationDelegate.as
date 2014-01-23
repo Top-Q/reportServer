@@ -20,7 +20,8 @@ package il.co.topq.systems.report.business.config
 		
 		public function getGridConfiguration(type:TypeEnum, id:int):void{
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("getGridConfiguration");
-			service.url = ReportServiceLocator.domain + "/report-service/report/settings/system/getGridConfiguration/"  + type.valueOf() + "/" + id;  
+			service.url +=  type.valueOf() + "/" + id;  
+//			service.url = ReportServiceLocator.domain + "/report-service/report/settings/system/getGridConfiguration/"  + type.valueOf() + "/" + id;  
 			service.request = new Date();//used to break the chaching of the get request.
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;

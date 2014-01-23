@@ -19,7 +19,8 @@ package il.co.topq.systems.report.business.scenario
 		}
 		public function compareScenarios(comparedScenarios:String):void{
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("compareScenarios");
-			service.url = ReportServiceLocator.domain + "/report-service/report/scenario/compareScenarios/"  + comparedScenarios;  
+			service.url += comparedScenarios;  
+//			service.url = ReportServiceLocator.domain + "/report-service/report/scenario/compareScenarios/"  + comparedScenarios;  
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;
 		}

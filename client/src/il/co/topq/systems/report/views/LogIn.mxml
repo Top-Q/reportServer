@@ -12,7 +12,7 @@
 				   xmlns:mx="library://ns.adobe.com/flex/mx"
 				   xmlns:tools="il.co.topq.systems.report.views.components.reports.tools.*"
 				   x="430" y="251" width="450" height="336" backgroundColor="#4F81BD"
-				   cornerRadius="50" creationComplete="init()" defaultButton="{username}">
+				   cornerRadius="50" creationComplete="init()" defaultButton="{username}" keyDown="login_keyDownHandler(event)">
 
 	<fx:Script>
 		
@@ -112,6 +112,12 @@
 				PopUpManager.centerPopUp(disc);	
 			}
 			
+			protected function login_keyDownHandler(event:KeyboardEvent):void
+			{
+				if (event.keyCode == Keyboard.ENTER)
+					login.dispatchEvent(new MouseEvent(MouseEvent.CLICK));
+			}
+			
 		]]>
 	</fx:Script>
 	
@@ -130,7 +136,7 @@
 	<s:Label x="50" y="32" color="#FFFFFF" fontFamily="Calibri" fontSize="28" text="Login"/>
 	
 	<s:Button id="login" x="51" y="210" width="62" height="31" label="Login" chromeColor="#254061"
-			  click="handleLoginRequest(event)" color="#FFFFFF" fontFamily="Calibri" fontSize="18"/>
+			  click="handleLoginRequest(event)" color="#FFFFFF" fontFamily="Calibri" fontSize="18" keyDown="login_keyDownHandler(event)"/>
 	<!--<s:Button id="login0" x="51" y="249" width="155" height="31" label="Create a new user"
 			  chromeColor="#254061" click="handleLoginRequest(event)" color="#FFFFFF"
 			  fontFamily="Calibri" fontSize="18"/>-->

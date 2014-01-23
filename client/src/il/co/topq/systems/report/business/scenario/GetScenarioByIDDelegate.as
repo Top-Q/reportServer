@@ -20,7 +20,7 @@ package il.co.topq.systems.report.business.scenario
 		public function getScenario(scenarioID: String) : void
 		{  			
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("getScenarioByID");
-			service.url = ReportServiceLocator.domain + "/report-service/report/scenario/"  + scenarioID;  
+			service.url += scenarioID;  
 			service.request = new Date();//used to break the chaching of the get request.
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;

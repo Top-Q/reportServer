@@ -31,7 +31,8 @@ package il.co.topq.systems.report.business.authorization
 		public function login(username:String,password:String) : void
 		{  
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("isUserAuthorized");
-			service.url = ReportServiceLocator.domain + "/report-service/report/authorization/" +username+ "?password="+password;
+			service.url +=  username + "?password=" + password;
+//			service.url = ReportServiceLocator.domain + "/report-service/report/authorization/" +username+ "?password="+password;
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;
 		}

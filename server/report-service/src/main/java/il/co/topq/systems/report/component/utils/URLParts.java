@@ -4,8 +4,8 @@ public class URLParts {
 
 	// context
 	// public static final String URI = "http://localhost:9998/report-service";
-	public static final String URI = "http://localhost:8080/report-service/report";
-	public static final String APPLICATION_CONTEXT = "report-service";
+	public static final String URI = "http://localhost:8080/report-server/report";
+	public static final String APPLICATION_CONTEXT = "report-server";
 
 	// Authorization
 	public static final String LOGIN_URL = "/authorization/login";

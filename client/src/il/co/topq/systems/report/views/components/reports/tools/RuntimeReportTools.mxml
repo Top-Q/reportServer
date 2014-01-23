@@ -6,32 +6,28 @@
             change="changeHandler(event)">
 	<fx:Script>
 		<![CDATA[
-        import il.co.topq.systems.report.models.ReportModelLocator;
-
-        import mx.controls.Alert;
-
-        import spark.events.IndexChangeEvent;
+			import il.co.topq.systems.report.models.ReportModelLocator;
+			import il.co.topq.systems.report.util.Resource;
+			
+			import mx.controls.Alert;
+			
+			import spark.events.IndexChangeEvent;
 
         [Bindable]
         public var model:ReportModelLocator = ReportModelLocator.getInstance();
-
-        [Bindable]
-        [Embed(source='/assets/images/warning.gif')]
-
-        private var Icon:Class;
 
 
         protected function changeHandler(event:IndexChangeEvent):void {
             var data:String = (event.currentTarget as RuntimeReportTools).selectedItem as String;
             if (data == "Export to Excel") {
-                Alert.show("Exporting to Excel is not available in the beta version", "Beta Version", 4, null, null, Icon);
+                Alert.show("Exporting to Excel is not available in the beta version", "Beta Version", 4, null, null, Resource.WARNING);
             }
             else if (data == "Export to Pdf") {
-                Alert.show("Exporting to Pdf is not available in the beta version", "Beta Version", 4, null, null, Icon);
+                Alert.show("Exporting to Pdf is not available in the beta version", "Beta Version", 4, null, null, Resource.WARNING);
             }
             else if (data == "Filter") {
                 //	Alert.show("Open Filter");
-                Alert.show("This feature is not available for beta version", "Beta Version", 4, null, null, Icon);
+                Alert.show("This feature is not available for beta version", "Beta Version", 4, null, null, Resource.WARNING);
             }
             selectedItem = "Tools"
 

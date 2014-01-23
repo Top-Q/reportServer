@@ -19,7 +19,7 @@ package il.co.topq.systems.report.business.test
 		}
 		public function getTestScenario(testID:String) : void {
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("getTestScenario");
-			service.url = ReportServiceLocator.domain + "/report-service/report/test/testScenario/"  + testID;  
+			service.url += testID;  
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;
 		}

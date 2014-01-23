@@ -3,6 +3,8 @@ package il.co.topq.systems.report.renderers
 	import flash.events.Event;
 	import flash.events.MouseEvent;
 	
+	import il.co.topq.systems.report.util.Resource;
+	
 	import mx.containers.Canvas;
 	import mx.containers.HBox;
 	import mx.controls.Alert;
@@ -23,10 +25,6 @@ package il.co.topq.systems.report.renderers
 		private var img:Image;
 		private var imgTooltip:String = "Remove Column";
 		private var text:Label; //header text;
-		
-		[Embed(source="/assets/images/removeColumnIcon.png")]
-		[Bindable]
-		public var removeColumn:Class;
 		
 		public function get headerImg():Image {
 			return img;
@@ -61,7 +59,7 @@ package il.co.topq.systems.report.renderers
 		
 		private function initImg():void{
 			img = new Image();
-			img.source = removeColumn;
+			img.source = Resource.REMOVE_COLUMN;
 			img.toolTip = imgTooltip;
 			img.autoLoad = true;
 			img.maintainAspectRatio = true;

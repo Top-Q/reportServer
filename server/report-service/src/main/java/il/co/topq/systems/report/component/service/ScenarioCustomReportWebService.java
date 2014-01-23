@@ -36,7 +36,7 @@ public class ScenarioCustomReportWebService {
 
 	/**
 	 * This method creates a ScenarioCustomReport in Database. URL:
-	 * http://host:port/report-service/report/scenarioCustomReport Method: POST
+	 * http://host:port/contextPath/report/scenarioCustomReport Method: POST
 	 * 
 	 * @param scenarioCustomReport
 	 *            -
@@ -58,7 +58,7 @@ public class ScenarioCustomReportWebService {
 
 	/**
 	 * This method gets a ScenarioCustomReport id and returns the matching ScenarioCustomReport from Database. URL:
-	 * http://host:port//report-service/ report/scenarioCustomReport/scenarioCustomReportId Method: GET
+	 * http://host:port//contextPath/ report/scenarioCustomReport/scenarioCustomReportId Method: GET
 	 * 
 	 * @param scenarioCustomReportId
 	 *            -
@@ -79,7 +79,7 @@ public class ScenarioCustomReportWebService {
 
 	/**
 	 * This method gets a ScenarioCustomReport id and returns all of its property key values; URL:
-	 * http://host:port/report-service/report/scenarioCustomReport /values/scenarioCustomReportId Method: GET
+	 * http://host:port/contextPath/report/scenarioCustomReport /values/scenarioCustomReportId Method: GET
 	 * 
 	 * @param scenarioCustomReportId
 	 *            -
@@ -102,7 +102,7 @@ public class ScenarioCustomReportWebService {
 
 	/**
 	 * This method gets a Chunk of ScenarioCustomReport from Database by descending creation time. and timeRange URL:
-	 * http://host:port/report-service/report/scenarioCustomReport/chunk Method: POST
+	 * http://host:port/contextPath/report/scenarioCustomReport/chunk Method: POST
 	 * <p/>
 	 * rep chunk, timeRange, Prop = null
 	 * 
@@ -146,7 +146,7 @@ public class ScenarioCustomReportWebService {
 
 	/**
 	 * This method will get a ScenarioCustomReport and will Update it in Database. URL:
-	 * http://host:port//report-service/report/scenarioCustomReport/update Method: POST
+	 * http://host:port//contextPath/report/scenarioCustomReport/update Method: POST
 	 * 
 	 * @param scenarioCustomReport
 	 *            -
@@ -163,7 +163,7 @@ public class ScenarioCustomReportWebService {
 
 	/**
 	 * This method gets the size of the request of ScenarioCustomReport from Database. filters date received in
-	 * ScenarioQuery. timeRange. URL:http://host:port/report-service/report/scenarioCustomReport/querySize Method:POST
+	 * ScenarioQuery. timeRange. URL:http://host:port/contextPath/report/scenarioCustomReport/querySize Method:POST
 	 * 
 	 * @param scenarioQuery
 	 *            -

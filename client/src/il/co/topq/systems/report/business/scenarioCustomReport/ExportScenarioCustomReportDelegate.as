@@ -13,7 +13,7 @@ package il.co.topq.systems.report.business.scenarioCustomReport
 	
 	public class ExportScenarioCustomReportDelegate
 	{
-		public const FILE_URL:String = ReportServiceLocator.domain+"/report-service/export-service/export/scenarioCustomReport/";	
+		public const FILE_URL:String = ReportServiceLocator.domain +"/" + ReportServiceLocator.appName + "/export-service/export/scenarioCustomReport/";	
 		private var fileRef:FileReference;
 		private var urlReq:URLRequest;		
 		private var urlVars:URLVariables;		

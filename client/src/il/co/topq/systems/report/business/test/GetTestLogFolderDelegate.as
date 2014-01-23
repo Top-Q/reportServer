@@ -19,7 +19,7 @@ package il.co.topq.systems.report.business.test
 		
 		public function getTestLogFolder(testId:String):void {
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("getTestLogFolder");
-			service.url = ReportServiceLocator.domain + "/report-service/report/test/testLogFolder/"  + testId;  
+			service.url += testId;  
 			var token:AsyncToken = service.send();
 			token.addResponder(responder);
 		}

@@ -1,13 +1,16 @@
 package il.co.topq.systems.report.service.impl.migration.log;
 
-import java.util.List;
-
 import il.co.topq.systems.report.common.model.Scenario;
+import il.co.topq.systems.report.common.utils.ServerMetadataHolder;
 import il.co.topq.systems.report.service.impl.migration.Migrator;
 import il.co.topq.systems.report.service.impl.migration.infra.MigratorTask;
 import il.co.topq.systems.report.service.infra.ScenarioService;
+import il.co.topq.systems.report.utils.file.xml.PropertiesFileHandler;
 
-public class LogMigrator extends Migrator  implements MigratorTask {
+import java.util.List;
+
+public class LogMigrator extends Migrator implements MigratorTask {
+	private static final String MIGRATE_LOG = "migrate.log";
 
 	private ScenarioService scenarioService;
 
@@ -18,46 +21,83 @@ public class LogMigrator extends Migrator  implements MigratorTask {
 
 	@Override
 	public void migrate() {
+
+		log.info("running log migration");
 		try {
 			super.loadPropertiesFile();
+			if (super.shouldMigrate(MIGRATE_LOG)) {
+				while (!isApplicationDeployed()) {
+					long sleepTime = 5000;
+					System.out.println("log migration could not be started before application deployed, sleep for "
+							+ sleepTime);
+					Thread.sleep(sleepTime);
+				}
+				migrateScenariosHtmlDir();
+				super.propertiesFileHandler.setProperty(MIGRATE_LOG, PropertiesFileHandler.FALSE);
+			}
+			super.propertiesFileHandler.close();
 		} catch (Exception e) {
 			this.log.error("failure in LogMigrator: " + e.getMessage());
+		} finally {
+			log.info("LogMigrator migration completed");
 		}
-		
 	}
-	
-	private void migrateHtmlDir(){
-		
+
+	private boolean isApplicationDeployed() {
+		return ServerMetadataHolder.getApplicationContextPath() != null;
+	}
+
+	private void migrateScenariosHtmlDir() {
+
 		List<Scenario> allSenarios = scenarioService.getAll();
 		for (Scenario scenario : allSenarios) {
 			String htmlDir = scenario.getHtmlDir();
-			
-			// the pattern with only the TS of the upload (report-server V1.0) 
-			//e.g. '1370352093303'
 
-			boolean isHtmlDirInOldPattern = false; 
-			try {
-				Integer.parseInt(htmlDir);
-				isHtmlDirInOldPattern=true;
-			} catch (NumberFormatException e) {
-				// in case of not number
+			if (htmlDir == null) {
+				continue;
 			}
-			
-			if(isHtmlDirInOldPattern){
-				
-				
-				
-			}else{
-				
-				
+
+			log.info("html dir from DB before migration: " + htmlDir);
+			if (isOldHtmlDir(htmlDir)) {
+				// String newHtmlDir = "http://" + ServerMetadataHolder.getServerIP() + ":"
+				// + ServerMetadataHolder.getServersPort() + ServerMetadataHolder.getApplicationContextPath()
+				// + "/" + ServerMetadataHolder.getScenarioLogFolder() + "/" + htmlDir + "/index.html";
+				String newHtmlDir = "http://" + ServerMetadataHolder.getServerIP() + ":"
+						+ ServerMetadataHolder.getServersPort() + "/" + ServerMetadataHolder.getScenarioLogFolder()
+						+ "/" + htmlDir + "/index.html";
+
+				log.info("new html dir: " + newHtmlDir);
+				scenario.setHtmlDir(newHtmlDir);
+				try {
+					log.info("attempting to update scenario's html dir to: " + newHtmlDir);
+					scenarioService.update(scenario);
+				} catch (Exception e) {
+					log.error("failed to update scenario" + e.getMessage());
+				}
+			} else {
+				log.info("html dir: " + htmlDir + " does not require migration");
 			}
-			
-			
+			// the pattern with only the TS of the upload (report-server V1.0)
+			// e.g. '1370352093303'
+
+			// boolean isHtmlDirInOldPattern = false;
+			// try {
+			// Integer.parseInt(htmlDir);
+			// isHtmlDirInOldPattern = true;
+			// } catch (NumberFormatException e) {
+			// // in case of not number
+			// }
+			//
+			// if (isHtmlDirInOldPattern) {
+			//
+			// } else {
+			//
+			// }
+
 		}
-		
 	}
-	
-	
-	
 
+	private boolean isOldHtmlDir(String htmlDir) {
+		return !htmlDir.contains(ServerMetadataHolder.getServerIP());
+	}
 }

@@ -23,7 +23,7 @@ package il.co.topq.systems.report.business.scenarioCustomReport
 		public function getScenarioCustomReportPropertiesValues(id : String):void{
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("getScenarioCustomReportPropertiesValues");
 			
-			service.url = ReportServiceLocator.domain + "/report-service/report/scenarioCustomReport/values/"  + id;
+			service.url += id;
 			service.request = new Date();//will prevent caching the request;
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;

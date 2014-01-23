@@ -19,7 +19,7 @@ package il.co.topq.systems.report.business.scenarioCustomReport
 		public function getScenarioCustomReportByID(id: String):void{
 			var service:HTTPService = ServiceLocator.getInstance()
 				.getHTTPService("getScenarioCustomReportByID");
-			service.url = ReportServiceLocator.domain + "/report-service/report/scenarioCustomReport/"  + id;  
+			service.url += id;  
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;
 		}

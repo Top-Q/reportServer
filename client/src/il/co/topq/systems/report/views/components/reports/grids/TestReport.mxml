@@ -13,6 +13,7 @@
 			import il.co.topq.systems.report.events.general.SelectAllCheckBoxClickedEvent;
 			import il.co.topq.systems.report.events.test.GetGroupTestsEvent;
 			import il.co.topq.systems.report.events.test.GetGroupTestsSizeEvent;
+			import il.co.topq.systems.report.util.Resource;
 			
 			import mx.collections.ArrayList;
 			import mx.events.CloseEvent;
@@ -47,10 +48,6 @@
 			import mx.managers.PopUpManager;
 			
 			import spark.events.IndexChangeEvent;
-			
-			[Embed(source="/assets/images/recycle.png")]
-			[Bindable]
-			protected var deleteImgSource:Class;
 			
 			[Bindable]
 			private var model:ReportModelLocator = ReportModelLocator.getInstance();
@@ -506,9 +503,9 @@
 					<s:Spacer x="242" y="15" width="42" height="36"/>
 					<s:CheckBox id="checkBoxTestGrouping" label="Test Grouping" change="checkBoxTestGrouping_changeHandler(event)" visible="true"/>
 					<s:HGroup width="200" height="40%" horizontalAlign="right">
-						<!--<s:Image id="deleteImg" height="100%" buttonMode="true" 
+<!--						<s:Image id="deleteImg" height="100%" buttonMode="true" 
 								 click="deleteImg_clickHandler(event)" fillMode="scale"
-								 mouseChildren="false" scaleMode="stretch" source="{deleteImgSource}"
+								 mouseChildren="false" scaleMode="stretch" source="{Resource.DELETE_IMG_SOURCE}"
 								 toolTip="Delete Execution" useHandCursor="true"/>-->
 						<s:Button buttonMode="true" click="refreshButtonClicked(event)" mouseChildren="false"
 								  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"

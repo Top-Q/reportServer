@@ -33,8 +33,8 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
 /**
- * this class was integrated with the spring version of the report server by
- * Eran.Golan, coding and business logic was made by Liel.Ran
+ * this class was integrated with the spring version of the report server by Eran.Golan, coding and business logic was
+ * made by Liel.Ran
  * 
  * @author liel.ran
  * 
@@ -68,12 +68,9 @@ public class UploadFileServiceTest {
 			// Iterator<File> i = FileUtils.iterateFiles(srcFolder, new String
 			// []{"xcf"}, true);
 			/*
-			 * public static Iterator<File> iterateFiles(File directory,
-			 * String[] extensions, boolean recursive) directory - the directory
-			 * to search in extensions - an array of extensions, ex.
-			 * {"java","xml"}. If this parameter is null, all files are
-			 * returned. recursive - if true all subdirectories are searched as
-			 * well
+			 * public static Iterator<File> iterateFiles(File directory, String[] extensions, boolean recursive)
+			 * directory - the directory to search in extensions - an array of extensions, ex. {"java","xml"}. If this
+			 * parameter is null, all files are returned. recursive - if true all subdirectories are searched as well
 			 */
 
 			zipFile.createNewFile();
@@ -125,7 +122,7 @@ public class UploadFileServiceTest {
 		final String dirName = "tempDir" + currentTimeMillis;
 		final String htmlName = "tempHtmlLogFile.html";
 		final int randomSize = (int) (5 + (Math.random() * (15 - 5)));
-		String url = "http://localhost:8080/report-service/file/upload/?scenarioId=" + currentTimeMillis / 1000;
+		String url = "http://localhost:8080/report-server/file/upload/?scenarioId=" + currentTimeMillis / 1000;
 		File dirToDelete = null;
 
 		System.out.println(url);
@@ -154,7 +151,8 @@ public class UploadFileServiceTest {
 			log.info("The Log html file with random size =" + randomSize);
 
 			html = RandomData.generateRandomFile(randomSize, html);
-			Assert.assertTrue("the HTML file(inside the log folder) was not created with data - test failed", html.exists());
+			Assert.assertTrue("the HTML file(inside the log folder) was not created with data - test failed",
+					html.exists());
 
 			long htmlFileLength = html.length();
 
@@ -189,7 +187,7 @@ public class UploadFileServiceTest {
 			log.info("UPLOAD TOOK =" + (end - start) + " Secs");
 			log.info(response);
 
-			url = "http://localhost:8080/report-service/" + response + "/" + logFolderName + "/" + htmlName;
+			url = "http://localhost:8080/report-server/" + response + "/" + logFolderName + "/" + htmlName;
 			client = new DefaultHttpClient();
 			client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
 
@@ -211,8 +209,8 @@ public class UploadFileServiceTest {
 					statusLine.getStatusCode() == 200);
 
 			long contentLength = getResponse.getEntity().getContentLength();
-			Assert.assertEquals("the created html len=" + htmlFileLength + ", and the uploaded html on the server len=" + contentLength
-					+ ",Test failed!", htmlFileLength, contentLength);
+			Assert.assertEquals("the created html len=" + htmlFileLength + ", and the uploaded html on the server len="
+					+ contentLength + ",Test failed!", htmlFileLength, contentLength);
 			log.info("the Html Files are the same sizes");
 
 		} catch (Exception e) {
@@ -222,7 +220,8 @@ public class UploadFileServiceTest {
 			// Delete//
 			deleteFiles(dirToDelete);
 
-			Assert.assertFalse("The Temp Dir folder was not deleted after the delete temp folder funcation", dirToDelete.exists());
+			Assert.assertFalse("The Temp Dir folder was not deleted after the delete temp folder funcation",
+					dirToDelete.exists());
 		}
 	}
 

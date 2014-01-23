@@ -18,7 +18,7 @@ package il.co.topq.systems.report.business.scenario
 		
 		public function getScenarioTestsSize(id: String) : void{
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("getScenariosTestsSize");
-			service.url = ReportServiceLocator.domain + "/report-service/report/scenario/scenarioTestsSize/"  + id;  
+			service.url += id;  
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;
 		}

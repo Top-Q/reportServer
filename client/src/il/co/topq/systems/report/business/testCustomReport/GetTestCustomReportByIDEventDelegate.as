@@ -19,7 +19,7 @@ package il.co.topq.systems.report.business.testCustomReport
 		public function getTestCustomReportByID(id: String):void{
 			var service:HTTPService = ServiceLocator.getInstance()
 				.getHTTPService("getTestCustomReportByID");
-			service.url = ReportServiceLocator.domain + "/report-service/report/testCustomReport/"  + id;  
+			service.url += id;  
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;
 		}

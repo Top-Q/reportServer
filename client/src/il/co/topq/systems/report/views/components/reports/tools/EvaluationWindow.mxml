@@ -14,6 +14,8 @@
 	
 	<fx:Script>
 		<![CDATA[
+			import il.co.topq.systems.report.util.Resource;
+			
 			import mx.collections.ArrayList;
 			import mx.controls.Alert;
 			import mx.controls.DateField;
@@ -21,14 +23,6 @@
 			import mx.formatters.DateFormatter;
 			import mx.managers.PopUpManager;
 			
-			[Embed(source="/assets/images/valid.png")]
-			[Bindable]
-			public var valid:Class;				
-			
-			[Embed(source="/assets/images/invalid.png")]
-			[Bindable]
-			public var invalid:Class;
-	
 			private var deployedDate:Date = new Date(2012,9,31);//the date of deployment
 			private var evaluationDays:Number = 31;
 			public const MS_IN_DAYS:Number = 1000 * 60 * 60 * 24 ; 
@@ -67,9 +61,9 @@
 			protected function evaluationStatus():Class{
 				
 				if (validateEvaluation()){
-					return valid;
+					return Resource.VALID;
 				}else{
-					return invalid;
+					return Resource.INVALID;
 				}
 			}
 			

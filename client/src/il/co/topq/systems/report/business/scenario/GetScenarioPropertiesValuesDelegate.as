@@ -20,7 +20,7 @@ package il.co.topq.systems.report.business.scenario
 		public function getScenarioPropertiesValues(scenarioProperties:String):void{
 			if (scenarioProperties != null && scenarioProperties.length > 0){
 				var service:HTTPService = ServiceLocator.getInstance().getHTTPService("getScenarioPropertiesValues");
-				service.url = ReportServiceLocator.domain + "/report-service/report/scenario/propertyValues/"  + scenarioProperties;  
+				service.url += scenarioProperties;  
 				var token:AsyncToken = service.send();
 				token.addResponder(responder) ;
 			}

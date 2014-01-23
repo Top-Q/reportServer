@@ -7,6 +7,7 @@ package il.co.topq.systems.report.renderers
 	import il.co.topq.systems.report.models.ReportModelLocator;
 	import il.co.topq.systems.report.models.grid.ComparedScenariosGridColumn;
 	import il.co.topq.systems.report.models.valueobjects.Test;
+	import il.co.topq.systems.report.util.Resource;
 	import il.co.topq.systems.report.views.components.reports.common.TestDetailsViewModel;
 	import il.co.topq.systems.report.views.components.reports.tools.TestDetail;
 	
@@ -26,18 +27,6 @@ package il.co.topq.systems.report.renderers
 		private var hbox:HBox;
 		private var img:Image;
 		private var imgTooltip:String;
-		
-		[Embed(source="/assets/images/pass.png")]
-		[Bindable]
-		public var pass:Class;
-		
-		[Embed(source="/assets/images/fail.gif")]
-		[Bindable]
-		public var fail:Class;
-		
-		[Embed(source="/assets/images/warning.png")]
-		[Bindable]
-		public var warning:Class;
 		
 		protected override function createChildren():void{
 			super.createChildren();
@@ -147,13 +136,13 @@ package il.co.topq.systems.report.renderers
 					
 					if (status == 0) {
 						this.imgTooltip = "Passed";
-						return pass;
+						return Resource.PASS;
 					}else if (status == 1){ 
 						this.imgTooltip = "Failed";
-						return fail;
+						return Resource.FAIL;
 					}else if (status == 2){
 						this.imgTooltip = "Warned";
-						return warning;
+						return Resource.WARNING;
 					}
 				}
 			}

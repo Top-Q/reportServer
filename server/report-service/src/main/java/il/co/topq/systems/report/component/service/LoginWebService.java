@@ -3,12 +3,16 @@ package il.co.topq.systems.report.component.service;
 import il.co.topq.systems.report.common.exception.ErrorMessage;
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
 import il.co.topq.systems.report.common.model.User;
+import il.co.topq.systems.report.common.utils.ServerMetadataHolder;
 import il.co.topq.systems.report.security.SecurityContextHandler;
 import il.co.topq.systems.report.service.infra.ScenarioService;
 import il.co.topq.systems.report.service.infra.UserService;
 
+import java.io.File;
 import java.io.IOException;
 
+import javax.annotation.PostConstruct;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletResponse;
 
 import org.apache.log4j.Logger;
@@ -36,6 +40,17 @@ public class LoginWebService {
 	@Autowired
 	UserService userService;
 
+	@Autowired
+	ServletContext context;
+
+	// TODO: move to some base controller
+	@PostConstruct
+	private void setAppContextToServerMetadataHolder() {
+		String contextPath = context.getContextPath();
+		ServerMetadataHolder.setApplicationContextPath(contextPath);
+		ServerMetadataHolder.setTomcatWebappsFolder(new File(context.getRealPath("")).getParent());
+	}
+
 	@RequestMapping(value = "isAlive", method = RequestMethod.GET)
 	public void isAlive(ServletResponse response) {
 		log.info("in login service is alive method");
@@ -43,8 +58,7 @@ public class LoginWebService {
 
 	@RequestMapping(value = "/{username}", method = RequestMethod.POST)
 	public @ResponseBody
-	User login(ServletResponse response,
-			@PathVariable("username") String username,
+	User login(ServletResponse response, @PathVariable("username") String username,
 			@RequestParam("password") String password) throws Exception {
 		log.info("in isAuthorized web service");
 		User user = this.userService.getUser(username, password);
@@ -54,16 +68,13 @@ public class LoginWebService {
 		} else {
 			throw new Exception(ErrorMessage.INVALID_USER_PERMISSIONS);
 		}
-
 	}
 
 	@RequestMapping(value = "/configuration", method = RequestMethod.GET)
-	public void getUIConfigurations(ServletResponse response)
-			throws IOException {
-		Authentication authentication = SecurityContextHolder.getContext()
-				.getAuthentication();
-		User currentUser = this.userService.getUser(authentication.getName(),
-				authentication.getCredentials().toString());
+	public void getUIConfigurations(ServletResponse response) throws IOException {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.getUser(authentication.getName(), authentication.getCredentials()
+				.toString());
 		if (currentUser != null) {
 			String uiConfigurations = currentUser.getUiConfigurations();
 			if (uiConfigurations != null) {
@@ -75,12 +86,10 @@ public class LoginWebService {
 	}
 
 	@RequestMapping(value = "/set-configuration", method = RequestMethod.POST)
-	public void updateUIConfigurations(ServletResponse response,
-			@RequestBody String uiConfigurations) throws Exception {
-		Authentication authentication = SecurityContextHolder.getContext()
-				.getAuthentication();
-		User currentUser = this.userService.getUser(authentication.getName(),
-				authentication.getCredentials().toString());
+	public void updateUIConfigurations(ServletResponse response, @RequestBody String uiConfigurations) throws Exception {
+		Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+		User currentUser = this.userService.getUser(authentication.getName(), authentication.getCredentials()
+				.toString());
 		if (currentUser != null) {
 			currentUser.setUiConfigurations(uiConfigurations);
 			userService.update(currentUser);

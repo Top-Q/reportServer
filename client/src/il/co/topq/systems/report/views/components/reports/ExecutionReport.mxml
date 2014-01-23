@@ -17,6 +17,7 @@
 			import il.co.topq.systems.report.events.scenario.DeleteScenarioByScenarioQueryEvent;
 			import il.co.topq.systems.report.models.valueobjects.GridConfiguration;
 			import il.co.topq.systems.report.models.valueobjects.TypeEnum;
+			import il.co.topq.systems.report.util.Resource;
 			import il.co.topq.systems.report.util.Util;
 			import il.co.topq.systems.report.views.components.reports.grids.ExecutionReportGrid;
 			
@@ -57,10 +58,6 @@
 			import org.as3commons.collections.framework.IIterator;
 			
 			import spark.events.IndexChangeEvent;
-			
-			[Embed(source="/assets/images/recycle.png")]
-			[Bindable]
-			protected var deleteImgSource:Class;
 			
 			[Bindable]
 			private var reportTitle:String = "Execution Report";
@@ -407,7 +404,7 @@
 					<s:HGroup width="200" height="40%" horizontalAlign="right">
 						<s:Image id="deleteImg" height="100%" buttonMode="true" visible="{ReportModelLocator.getInstance().user.permissionsArr.contains('Delete Scenario')}"
 								 click="deleteImg_clickHandler(event)" fillMode="scale"
-								 mouseChildren="false" scaleMode="stretch" source="{deleteImgSource}"
+								 mouseChildren="false" scaleMode="stretch" source="{Resource.DELETE_IMG_SOURCE}"
 								 toolTip="Delete Execution" useHandCursor="true"/>
 						<s:Button buttonMode="true" click="refreshButtonClicked(event)" mouseChildren="false"
 								  skinClass="il.co.topq.systems.report.views.skin.RefreshButtonSkin"

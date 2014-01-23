@@ -19,7 +19,7 @@ package il.co.topq.systems.report.business.test
 		
 		public function getScenarioByTestId(testId:String):void {
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("scenarioOfTest");
-			service.url = ReportServiceLocator.domain + "/report-service/report/test/scenarioOfTest/"  + testId;  
+			service.url += testId;  
 			service.request = new Date();//used to break the chaching of the get request.
 			var token:AsyncToken = service.send();
 			token.addResponder(responder);

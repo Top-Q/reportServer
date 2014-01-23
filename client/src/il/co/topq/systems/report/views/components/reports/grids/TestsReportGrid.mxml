@@ -475,26 +475,15 @@
 					<mx:HBox horizontalAlign="center" verticalAlign="middle">
 						<fx:Script>
 							<![CDATA[
-								
-								[Embed(source="/assets/images/pass.png")]
-								[Bindable]
-								public var pass:Class;
-								
-								[Embed(source="/assets/images/fail.gif")]
-								[Bindable]
-								public var fail:Class;
-								
-								[Embed(source="/assets/images/warning.png")]
-								[Bindable]
-								public var warning:Class;
+								import il.co.topq.systems.report.util.Resource;
 								
 								private function getImage(status:Number):Class {
 									if (status == 0) {
-										return pass;
+										return Resource.PASS;
 									}else if (status == 1){ 
-										return fail;
+										return Resource.FAIL;
 									}else if (status == 2){
-										return warning;
+										return Resource.WARNING;
 									}
 									return null;
 								}

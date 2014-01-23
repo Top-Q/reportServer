@@ -20,11 +20,6 @@
 			[Bindable]
 			public var model:ReportModelLocator = ReportModelLocator.getInstance();
 			
-			[Bindable]
-			[Embed(source='/assets/images/warning.gif')]
-			
-			private var Icon:Class;
-			
 			public function getTimeRange():TimeRangeChooser{
 				return timeRangeChooser;
 			}

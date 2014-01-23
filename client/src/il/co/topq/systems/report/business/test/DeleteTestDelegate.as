@@ -26,7 +26,7 @@ package il.co.topq.systems.report.business.test
 		public function deleteTest(id: String) : void
 		{  			
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("deleteTest");
-			service.url = ReportServiceLocator.domain +"/report-service/report/test/delete/"  + id;  
+			service.url += id;  
 			var token:AsyncToken = service.send();
 			token.addResponder(responder);
 		}

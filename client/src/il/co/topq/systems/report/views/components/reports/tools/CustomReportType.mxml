@@ -22,12 +22,6 @@
 			[Bindable]
 			public var model:ReportModelLocator = ReportModelLocator.getInstance();
 			
-			[Bindable]
-			[Embed(source='/assets/images/warning.gif')]
-			
-			private var Icon:Class;
-			
-			
 			protected function changeHandler(event:IndexChangeEvent):void
 			{
 				var data:String = (event.currentTarget as CustomReportType).selectedItem as String;

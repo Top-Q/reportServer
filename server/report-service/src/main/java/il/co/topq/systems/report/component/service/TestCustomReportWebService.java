@@ -33,7 +33,7 @@ public class TestCustomReportWebService {
 	private PropertyService<ReportProperty> testPropertyService;
 
 	/**
-	 * This method creates a TestCustomReport in Database. URL: http://host:port/report-service/report/testCustomReport.
+	 * This method creates a TestCustomReport in Database. URL: http://host:port/contextPath/report/testCustomReport.
 	 * Method: POST
 	 * 
 	 * @param testCustomReport
@@ -56,7 +56,7 @@ public class TestCustomReportWebService {
 
 	/**
 	 * This method gets a TestCustomReport object from DB by the given ID URL: http
-	 * ://host:port/report-service/report/testCustomReport/{testCustomReportId} Method: GET
+	 * ://host:port/contextPath/report/testCustomReport/{testCustomReportId} Method: GET
 	 * 
 	 * @param testCustomReportId
 	 *            -
@@ -81,7 +81,7 @@ public class TestCustomReportWebService {
 
 	/**
 	 * This method gets a testCustomReport id and returns all of its property key values; URL:
-	 * http://host:port/report-service/report/testCustomReport/values /testCustomReportId Method: GET
+	 * http://host:port/contextPath/report/testCustomReport/values /testCustomReportId Method: GET
 	 * 
 	 * @param testCustomReportId
 	 *            -
@@ -106,7 +106,7 @@ public class TestCustomReportWebService {
 
 	/**
 	 * This method will get a TestCustomReport ID and will delete the matching TestCustomReport from Database; URL:
-	 * http://host:port//report-service/report /testCustomReport/delete/customReportId Method: GET
+	 * http://host:port//contextPath/report /testCustomReport/delete/customReportId Method: GET
 	 * 
 	 * @param customReportId
 	 *            -
@@ -127,7 +127,7 @@ public class TestCustomReportWebService {
 
 	/**
 	 * This method will get a TestCustomReport and will Update it in Database. URL:
-	 * http://host:port//report-service/report/testCustomReport/update Method: POST
+	 * http://host:port//contextPath/report/testCustomReport/update Method: POST
 	 * 
 	 * @param testCustomReport
 	 *            -
@@ -145,7 +145,7 @@ public class TestCustomReportWebService {
 	/**
 	 * This method gets a Chunk of TestCustomReport from Database by descending creation time. and between timeRange in
 	 * case timeRange!= null within testQuery object received. URL:
-	 * http://host:port/report-service/report/testCustomReport/chunk Method: POST
+	 * http://host:port/contextPath/report/testCustomReport/chunk Method: POST
 	 * 
 	 * @param testQuery
 	 *            -
@@ -166,7 +166,7 @@ public class TestCustomReportWebService {
 
 	/**
 	 * This method gets the size of the request of TestCustomReport from Database. filters date received in
-	 * TestQuery.timeRange. URL:http://host:port/report-service/report/testCustomReport/querySize Method:POST
+	 * TestQuery.timeRange. URL:http://host:port/contextPath/report/testCustomReport/querySize Method:POST
 	 * 
 	 * @param testQuery
 	 *            -

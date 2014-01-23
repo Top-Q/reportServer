@@ -3,6 +3,7 @@ package il.co.topq.systems.report.service.impl.migration;
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
 import il.co.topq.systems.report.service.impl.migration.indexing.IndexMigrator;
 import il.co.topq.systems.report.service.impl.migration.infra.MigratorTask;
+import il.co.topq.systems.report.service.impl.migration.log.LogMigrator;
 import il.co.topq.systems.report.service.impl.migration.properties.PropertiesMigrator;
 import il.co.topq.systems.report.service.impl.migration.user.UserMigrator;
 import il.co.topq.systems.report.service.infra.DBMigrationService;
@@ -34,7 +35,7 @@ public class DBMigrationServiceImpl implements DBMigrationService {
 	@PostConstruct
 	@Override
 	public void doMigrate() {
-		
+
 		new Thread(new Runnable() {
 
 			@Override
@@ -51,6 +52,8 @@ public class DBMigrationServiceImpl implements DBMigrationService {
 					indexMigrator.migrate();
 					MigratorTask propertiesMigrator = new PropertiesMigrator(scenarioService, testService);
 					propertiesMigrator.migrate();
+					MigratorTask logMigratorTask = new LogMigrator(scenarioService);
+					logMigratorTask.migrate();
 				}
 			}
 		}).start();

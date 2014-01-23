@@ -20,9 +20,8 @@ import org.apache.http.util.EntityUtils;
 import org.apache.log4j.Logger;
 
 /**
- * use this class to upload log files to http server (instead of ftp server)
- * Object of this class create zip file from log directory and after that send
- * multipart request to http server
+ * use this class to upload log files to http server (instead of ftp server) Object of this class create zip file from
+ * log directory and after that send multipart request to http server
  */
 public class JsystemHtmlLogsUploader implements FileUploaderInterface, Callable<Boolean> {
 
@@ -38,7 +37,6 @@ public class JsystemHtmlLogsUploader implements FileUploaderInterface, Callable<
 
 	private File logDir;
 
-
 	/**
 	 * 
 	 * @param logDir
@@ -49,7 +47,7 @@ public class JsystemHtmlLogsUploader implements FileUploaderInterface, Callable<
 		super();
 		this.logDir = logDir;
 		this.scenarioId = scenarioId;
-		this.serverUrl = "http://" + serverUrl + "/report-service/file/upload/";
+		this.serverUrl = "http://" + serverUrl + "/report-server/file/upload/";
 	}
 
 	/**
@@ -76,25 +74,22 @@ public class JsystemHtmlLogsUploader implements FileUploaderInterface, Callable<
 	}
 
 	private String zipLogFolder() throws IOException {
-		
-		
+
 		/**
 		 * zip log directory
 		 */
 		zipFilePath = System.getProperty("user.dir") + File.separator + scenarioId + ".zip";
 
-		log.info("Zip folder - "+logDir );
-		
+		log.info("Zip folder - " + logDir);
+
 		FileUtils.zipDirectory(logDir.getAbsolutePath(), null, zipFilePath);
-		
+
 		return zipFilePath;
-		
+
 	}
 
 	/**
-	 * String url =
-	 * "http://localhost:8080/report-service/report/file/upload/?scenarioId=1234"
-	 * ;
+	 * String url = "http://localhost:8080/report-server/report/file/upload/?scenarioId=1234" ;
 	 * 
 	 * @throws Exception
 	 */
@@ -106,13 +101,13 @@ public class JsystemHtmlLogsUploader implements FileUploaderInterface, Callable<
 			HttpClient client = new DefaultHttpClient();
 
 			client.getParams().setParameter(CoreProtocolPNames.PROTOCOL_VERSION, HttpVersion.HTTP_1_1);
-			String uploadUrl =this.serverUrl + "?scenarioId=" + scenarioId;
-			log.info("Upload url is "+uploadUrl);
+			String uploadUrl = this.serverUrl + "?scenarioId=" + scenarioId;
+			log.info("Upload url is " + uploadUrl);
 			HttpPost post = new HttpPost(uploadUrl);
 			MultipartEntity entity = new MultipartEntity(HttpMultipartMode.BROWSER_COMPATIBLE);
 
 			File zipFile = new File(zipFilePath);
-			
+
 			// For File parameters
 			entity.addPart("file", new FileBody((zipFile), "application/zip"));
 

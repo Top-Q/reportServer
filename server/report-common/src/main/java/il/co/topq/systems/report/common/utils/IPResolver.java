@@ -1,4 +1,4 @@
-package il.co.topq.systems.report.component.utils;
+package il.co.topq.systems.report.common.utils;
 
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
 
@@ -9,11 +9,41 @@ import java.net.InetAddress;
 import java.net.URL;
 import java.net.UnknownHostException;
 
+import javax.ws.rs.core.MediaType;
+
 import org.apache.log4j.Logger;
 
-public class CheckIp {
+import com.sun.jersey.api.client.Client;
+import com.sun.jersey.api.client.ClientResponse;
+import com.sun.jersey.api.client.WebResource;
 
-	private static Logger logger = ReportLogger.getInstance().getLogger(CheckIp.class);
+public class IPResolver {
+
+	private static Logger logger = ReportLogger.getInstance().getLogger(IPResolver.class);
+
+	public static String getServerIP() {
+		try {
+			String lanIp = getMyLanIp();
+			String lanHostAndPort = "http://" + lanIp + ":" + ServerMetadataHolder.getServersPort();
+			String wanIp = getMyWanIp();
+			String wanHostAndPort = "http://" + wanIp + ":" + ServerMetadataHolder.getServersPort();
+			WebResource resource = Client.create().resource(
+					wanHostAndPort + ServerMetadataHolder.getApplicationContextPath() + "/index.html");
+			try {
+				resource.accept(MediaType.TEXT_HTML_TYPE).get(ClientResponse.class);
+				return wanIp;
+			} catch (Exception e) {
+				resource = Client.create().resource(
+						lanHostAndPort + ServerMetadataHolder.getApplicationContextPath() + "/index.html");
+				resource.accept(MediaType.TEXT_HTML_TYPE).get(ClientResponse.class);
+				return lanIp;
+			}
+
+		} catch (Exception e) {
+			logger.error("error occured while trying to get wan/lan address, using localhost ");
+			return "localhost";
+		}
+	}
 
 	public static String getMyLanIp() {
 		logger.info("getting Lan ip");

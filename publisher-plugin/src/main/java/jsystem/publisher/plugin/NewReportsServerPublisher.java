@@ -24,8 +24,6 @@ import javax.xml.parsers.DocumentBuilder;
 
 import jsystem.framework.FrameworkOptions;
 import jsystem.framework.JSystemProperties;
-import jsystem.framework.report.ListenerstManager;
-import jsystem.framework.report.Reporter;
 import jsystem.publisher.plugin.model.JsystemHtmlLogsUploader;
 import jsystem.runner.agent.publisher.Publisher;
 import jsystem.runner.agent.publisher.PublisherException;
@@ -43,8 +41,8 @@ import com.sun.jersey.core.util.MultivaluedMapImpl;
 public class NewReportsServerPublisher implements Publisher {
 
 	private static final String REPORT_FILE_NAME = "report_server_summary.pdf";
+	private static final String APP_CONTEXT_PATH = "report-server";
 
-	private static final Reporter report = ListenerstManager.getInstance();
 	/**
 	 * DOM object used to parse the xml report file;
 	 */
@@ -60,41 +58,9 @@ public class NewReportsServerPublisher implements Publisher {
 	UploadRunner uploader;
 
 	/**
-	 * the directory contains the log files.(Not full path)
-	 */
-	// private String logDir;
-
-	/**
 	 * Will save the scenarioID after created in DB.
 	 */
 	Integer scenarioID;
-
-	// /**
-	// * This method will assign the scenario Log Directory to the scenario.
-	// *
-	// * @assumption Scenario was already published and it ID is available.<br>
-	// * logDir is initialized;
-	// */
-	// private void setScenarioLogDir() {
-	//
-	// System.out.println("Setting scenario log directory");
-	//
-	// Client c = Client.create();
-	// WebResource r;
-	// ClientResponse response;
-	// GenericType<JAXBElement<Boolean>> genericType = new GenericType<JAXBElement<Boolean>>() {
-	// };
-	//
-	// r = c.resource(getReportsServerURL() + "/report/scenario/setLogDir/" + "?logDir=" + logDir + "&scenarioID="
-	// + scenarioID);
-	//
-	// response = r.accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_XML).get(ClientResponse.class);
-	//
-	// if (!(response.getEntity(genericType).getValue())) {
-	// System.out.println("Failed to set log directory to scenario");
-	// }
-	//
-	// }
 
 	private long getFolderSize(final File... selectedDirectories) {
 		long foldersize = 0;
@@ -251,9 +217,6 @@ public class NewReportsServerPublisher implements Publisher {
 			assertXmlFileExists();
 			scenarioID = sendPublishData();// send the report0.xml
 
-			// logDir = String.valueOf(System.currentTimeMillis());
-			// Assert.assertNotNull("Failed to assign log dir name", logDir);
-
 			if (uploadLogs) {
 				upload();
 			}
@@ -277,11 +240,7 @@ public class NewReportsServerPublisher implements Publisher {
 
 	private Map<String, String> createPublisherReturnMap() {
 		Map<String, String> returnMap = new HashMap<String, String>();
-		// if (logDir == null) {
-		// Log.error("Log dir is null");
-		// return null;
-		// }
-		returnMap.put("HTML Reports", String.format("http://%s:%s/report-service/results/%s/index.html",
+		returnMap.put("HTML Reports", String.format("http://%s:%s/" + APP_CONTEXT_PATH + "/results/%s/index.html",
 				JSystemProperties.getInstance().getPreferenceOrDefault(FrameworkOptions.REPORTS_PUBLISHER_HOST),
 				JSystemProperties.getInstance().getPreferenceOrDefault(FrameworkOptions.REPORTS_PUBLISHER_PORT),
 				scenarioID));
@@ -368,11 +327,7 @@ public class NewReportsServerPublisher implements Publisher {
 		Client c = Client.create();
 		WebResource r = c.resource(getReportsServerURL() + "/report/scenario/reportXML/");
 
-		GenericType<JAXBElement<Integer>> integerGenericType = new GenericType<JAXBElement<Integer>>() {
-		};
 		final File xmlReportFile = new File(getCurrentLogFolder(), "reports.0.xml");
-		// ClientResponse response = r.accept(MediaType.APPLICATION_XML).type(MediaType.APPLICATION_XML)
-		// .post(ClientResponse.class, toByteArray(xmlReportFile));
 
 		String result = r.post(String.class, toByteArray(xmlReportFile));
 		if (result != null) {
@@ -380,26 +335,18 @@ public class NewReportsServerPublisher implements Publisher {
 		} else {
 			Log.info("create scenario returned null");
 		}
-
-		// if (response.getClientResponseStatus().getStatusCode() != 200) {
-		// throw new Exception("Failed to publish results\n returned code "
-		// + response.getClientResponseStatus().getStatusCode() + "\n Reason: "
-		// + response.getClientResponseStatus().toString());
-		// }
-		//
-		// return response.getEntity(integerGenericType).getValue();
 		return Integer.valueOf(result);
 	}
 
 	/**
 	 * 
-	 * @return Reports server URL path. For example: http://localhost:8080/report-service
+	 * @return Reports server URL path. For example: http://localhost:8080/report-server
 	 */
 	private String getReportsServerURL() {
 		return "http://"
 				+ JSystemProperties.getInstance().getPreferenceOrDefault(FrameworkOptions.REPORTS_PUBLISHER_HOST) + ":"
-				+ JSystemProperties.getInstance().getPreferenceOrDefault(FrameworkOptions.REPORTS_PUBLISHER_PORT)
-				+ "/report-service";
+				+ JSystemProperties.getInstance().getPreferenceOrDefault(FrameworkOptions.REPORTS_PUBLISHER_PORT) + "/"
+				+ APP_CONTEXT_PATH;
 
 	}
 

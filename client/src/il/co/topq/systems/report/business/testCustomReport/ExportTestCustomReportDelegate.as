@@ -14,7 +14,7 @@ package il.co.topq.systems.report.business.testCustomReport
 	public class ExportTestCustomReportDelegate
 	{
 
-		public const FILE_URL:String = ReportServiceLocator.domain+"/report-service/export-service/export/testCustomReport/";
+		public const FILE_URL:String = ReportServiceLocator.domain + "/" + ReportServiceLocator.appName + "/export-service/export/testCustomReport/";
 		
 		private var fileRef:FileReference;
 		private var urlReq:URLRequest;

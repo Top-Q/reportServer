@@ -20,7 +20,7 @@ package il.co.topq.systems.report.business.testCustomReport
 		public function getTestCustomReportPropertiesValues(id : String):void{
 			var service:HTTPService = ServiceLocator.getInstance().getHTTPService("getTestCustomReportPropertiesValues");
 			
-			service.url = ReportServiceLocator.domain + "/report-service/report/testCustomReport/values/"  + id;  
+			service.url += id;  
 			service.request = new Date(); //will prevent caching the request;
 			var token:AsyncToken = service.send();
 			token.addResponder(responder) ;

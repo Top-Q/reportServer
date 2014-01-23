@@ -9,6 +9,7 @@
 	<fx:Script>
 		<![CDATA[
 			import il.co.topq.systems.report.events.scenario.DeleteOrphanPropertiesEvent;
+			import il.co.topq.systems.report.util.Resource;
 			[Event(name="saveTestPropertyEvent", type="il.co.topq.systems.report.events.local.SaveTestPropertyEvent")]
 			
 			import il.co.topq.systems.report.events.general.UpdateEvent;
@@ -46,18 +47,6 @@
 			
 			[Bindable]
 			private var isTestDetailsChanged:Boolean = false;//will inidicate if a change made to data.
-			
-			[Embed(source="/assets/images/add.png")]
-			[Bindable]
-			protected var add:Class;
-			
-			[Embed(source="/assets/images/delete.png")]
-			[Bindable]
-			protected var remove:Class;
-			
-			[Embed(source="/assets/images/edit.png")]
-			[Bindable]
-			protected var edit:Class;
 			
 			[Bindable]
 			protected var testTime:String;//format: start - end
@@ -299,16 +288,16 @@
 							<s:HGroup height="100%">
 								<s:Image id="addImg" buttonMode="true" click="addNewProperty(event)"
 										 fillMode="scale" mouseChildren="false" scaleMode="stretch"
-										 source="{add}" toolTip="Add" useHandCursor="true"/>
+										 source="{Resource.ADD}" toolTip="Add" useHandCursor="true"/>
 								<s:Image id="removeImg" buttonMode="true"
 										 click="removeProperty(event)"
 										 enabled="{testPropertyList.selectedIndex != -1}"
 										 fillMode="scale" mouseChildren="false" scaleMode="stretch"
-										 source="{remove}" toolTip="Remove" useHandCursor="true"/>
+										 source="{Resource.REMOVE}" toolTip="Remove" useHandCursor="true"/>
 								<s:Image id="editImg" buttonMode="true" click="editProperty(event)"
 										 enabled="{testPropertyList.selectedIndex != -1}"
 										 fillMode="scale" mouseChildren="false" scaleMode="stretch"
-										 source="{edit}" toolTip="Edit" useHandCursor="true"/>
+										 source="{Resource.EDIT}" toolTip="Edit" useHandCursor="true"/>
 							</s:HGroup>
 						</s:HGroup>
 						<s:List id="testPropertyList" width="100%" height="161" borderAlpha="0.5"
