@@ -59,21 +59,11 @@ public class LogMigrator extends Migrator implements MigratorTask {
 
 			log.info("html dir from DB before migration: " + htmlDir);
 			if (isOldHtmlDir(htmlDir)) {
-				// String newHtmlDir = "http://" + ServerMetadataHolder.getServerIP() + ":"
-				// + ServerMetadataHolder.getServersPort() + ServerMetadataHolder.getApplicationContextPath()
-				// + "/" + ServerMetadataHolder.getScenarioLogFolder() + "/" + htmlDir + "/index.html";
-				String newHtmlDir = "http://" + ServerMetadataHolder.getServerIP() + ":"
-						+ ServerMetadataHolder.getServersPort() + "/" + ServerMetadataHolder.getScenarioLogFolder()
-						+ "/" + htmlDir + "/index.html";
-
-				log.info("new html dir: " + newHtmlDir);
-				scenario.setHtmlDir(newHtmlDir);
-				try {
-					log.info("attempting to update scenario's html dir to: " + newHtmlDir);
-					scenarioService.update(scenario);
-				} catch (Exception e) {
-					log.error("failed to update scenario" + e.getMessage());
-				}
+				updateScenarioHtmlDir(scenario, htmlDir);
+			} else if (isNewUnderAppFolder(htmlDir)) {
+				String[] url = htmlDir.split("/");
+				String resultFolder = url[url.length - 2];
+				updateScenarioHtmlDir(scenario, resultFolder);
 			} else {
 				log.info("html dir: " + htmlDir + " does not require migration");
 			}
@@ -97,7 +87,33 @@ public class LogMigrator extends Migrator implements MigratorTask {
 		}
 	}
 
+	private void updateScenarioHtmlDir(Scenario scenario, String htmlDir) {
+		String newHtmlDir = constructNewHtmlDir(htmlDir);
+
+		scenario.setHtmlDir(newHtmlDir);
+		try {
+			log.info("attempting to update scenario's html dir to: " + newHtmlDir);
+			scenarioService.update(scenario);
+		} catch (Exception e) {
+			log.error("failed to update scenario" + e.getMessage());
+		}
+	}
+
+	private String constructNewHtmlDir(String htmlDirName) {
+		String newHtmlDir = "http://" + ServerMetadataHolder.getServerIP() + ":"
+				+ ServerMetadataHolder.getServersPort() + "/" + ServerMetadataHolder.getScenarioLogFolder() + "/"
+				+ htmlDirName + "/index.html";
+		log.info("new html dir: " + newHtmlDir);
+		return newHtmlDir;
+	}
+
 	private boolean isOldHtmlDir(String htmlDir) {
 		return !htmlDir.contains(ServerMetadataHolder.getServerIP());
+	}
+
+	private boolean isNewUnderAppFolder(String htmlDir) {
+		String oldAppContext = "report-service";
+		return htmlDir.contains(oldAppContext + "/"
+				+ ServerMetadataHolder.getScenarioLogFolder());
 	}
 }
