@@ -3,7 +3,6 @@ package il.co.topq.systems.report.component.service;
 import il.co.topq.systems.report.common.infra.log.ReportLogger;
 import il.co.topq.systems.report.common.model.Scenario;
 import il.co.topq.systems.report.common.utils.ServerMetadataHolder;
-import il.co.topq.systems.report.component.utils.CheckIp;
 import il.co.topq.systems.report.service.infra.ScenarioService;
 
 import java.io.BufferedOutputStream;
@@ -33,9 +32,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Controller;
 
-import com.sun.jersey.api.client.Client;
-import com.sun.jersey.api.client.ClientResponse;
-import com.sun.jersey.api.client.WebResource;
 import com.sun.jersey.core.header.FormDataContentDisposition;
 import com.sun.jersey.multipart.FormDataParam;
 
@@ -48,15 +44,6 @@ import com.sun.jersey.multipart.FormDataParam;
 @Path("/")
 @Controller
 public class UploadFileService {
-
-	// // TODO: consider putting in const file in case being used more than once.
-	// private static final String DEFAULT_SERVER_PORT = "8080";
-
-	/**
-	 * TODO:<br>
-	 * need to move this to a different class as it is consumed by other classes and this is not a correct logic wise
-	 * place to be held.
-	 **/
 
 	private boolean uncompressOperation = true;
 
@@ -111,8 +98,6 @@ public class UploadFileService {
 		log.info("Upload file " + fileDetail.getFileName() + ", size=" + fileDetail.getSize());
 		long start = System.currentTimeMillis() / 1000;
 		log.info("time start=" + start);
-		//03-5143544 0089491
-		// String uploadedFileLocation = getUploadFileLocation(fileDetail, scenarioId);
 		Long scenarioLogFolderName = System.currentTimeMillis();
 		String uploadedFileLocation = getUploadFileLocation(fileDetail, scenarioLogFolderName);
 		String realPath = uploadedFileLocation;
@@ -152,13 +137,6 @@ public class UploadFileService {
 						+ ServerMetadataHolder.getServersPort() + "/" + ServerMetadataHolder.getScenarioLogFolder()
 						+ "/" + scenarioLogFolderName + "/index.html";
 				log.info(htmlDir);
-				// String url = getHtmlLogsStorageUrl();
-				// log.info("server's ip and port retrieved: " + url);
-				// String contextPath = servletContext.getContextPath();
-				// log.info("context: " + contextPath);
-				// String htmlRelativePath = url + contextPath + "/" + getRelativeScenarioLogPath(scenarioId)
-				// + "/index.html";
-				// log.info("constructed html log dir: " + htmlRelativePath);
 				scenario.setHtmlDir(htmlDir);
 				scenarioService.update(scenario);
 
@@ -173,28 +151,28 @@ public class UploadFileService {
 		return response;
 	}
 
-	private String getHtmlLogsStorageUrl() {
-		return "http://" + ServerMetadataHolder.getServerIP() + ":" + ServerMetadataHolder.getServersPort();
-		// try {
-		// String lan = "http://" + CheckIp.getMyLanIp() + ":" + ServerMetadataHolder.getServersPort();
-		// String wanIp = "http://" + CheckIp.getMyWanIp() + ":" + ServerMetadataHolder.getServersPort();
-		// WebResource resource = Client.create().resource(
-		// wanIp + ServerMetadataHolder.getApplicationContextPath() + "/index.html");
-		// try {
-		// resource.accept(MediaType.TEXT_HTML_TYPE).get(ClientResponse.class);
-		// return wanIp;
-		// } catch (Exception e) {
-		// resource = Client.create().resource(
-		// lan + ServerMetadataHolder.getApplicationContextPath() + "/index.html");
-		// resource.accept(MediaType.TEXT_HTML_TYPE).get(ClientResponse.class);
-		// return lan;
-		// }
-		//
-		// } catch (Exception e) {
-		// log.error("error occured while trying to get wan/lan address, using localhost ");
-		// return "localhost";
-		// }
-	}
+	// private String getHtmlLogsStorageUrl() {
+	// return "http://" + ServerMetadataHolder.getServerIP() + ":" + ServerMetadataHolder.getServersPort();
+	// // try {
+	// // String lan = "http://" + CheckIp.getMyLanIp() + ":" + ServerMetadataHolder.getServersPort();
+	// // String wanIp = "http://" + CheckIp.getMyWanIp() + ":" + ServerMetadataHolder.getServersPort();
+	// // WebResource resource = Client.create().resource(
+	// // wanIp + ServerMetadataHolder.getApplicationContextPath() + "/index.html");
+	// // try {
+	// // resource.accept(MediaType.TEXT_HTML_TYPE).get(ClientResponse.class);
+	// // return wanIp;
+	// // } catch (Exception e) {
+	// // resource = Client.create().resource(
+	// // lan + ServerMetadataHolder.getApplicationContextPath() + "/index.html");
+	// // resource.accept(MediaType.TEXT_HTML_TYPE).get(ClientResponse.class);
+	// // return lan;
+	// // }
+	// //
+	// // } catch (Exception e) {
+	// // log.error("error occured while trying to get wan/lan address, using localhost ");
+	// // return "localhost";
+	// // }
+	// }
 
 	/**
 	 * TODO: change this function into thread
