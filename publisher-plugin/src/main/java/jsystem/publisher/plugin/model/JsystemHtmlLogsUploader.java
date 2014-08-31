@@ -3,6 +3,7 @@ package jsystem.publisher.plugin.model;
 import java.io.File;
 import java.io.IOException;
 import java.util.concurrent.Callable;
+import java.util.logging.Logger;
 
 import jsystem.utils.FileUtils;
 import junit.framework.Assert;
@@ -17,7 +18,6 @@ import org.apache.http.entity.mime.content.FileBody;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.params.CoreProtocolPNames;
 import org.apache.http.util.EntityUtils;
-import org.apache.log4j.Logger;
 
 /**
  * use this class to upload log files to http server (instead of ftp server) Object of this class create zip file from
@@ -62,7 +62,7 @@ public class JsystemHtmlLogsUploader implements FileUploaderInterface, Callable<
 			deleteZip(zipFile);
 		} catch (Exception e) {
 			upload = false;
-			log.error(e.getMessage());
+			log.warning(e.getMessage());
 		}
 		return upload;
 	}
@@ -126,7 +126,7 @@ public class JsystemHtmlLogsUploader implements FileUploaderInterface, Callable<
 			log.info("End upload =" + end);
 			log.info("UPLOAD TOOK =" + (end - start) + " Secs");
 		} catch (Exception e) {
-			log.error(e);
+			log.warning(e.getMessage());
 			throw new Exception("The Upload action failed", e);
 		}
 
