@@ -3,7 +3,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>il.co.topq.jsystem</groupId>
 	<artifactId>publisher-plugin</artifactId>
-	<version>6.0.02-rc-3-SNAPSHOT</version>
+	<version>6.1.04</version>
 	<name>Commercial Publisher Plugin</name>
 	<description>Commercial Publisher Plugin</description>
 	
@@ -34,7 +34,7 @@
 		<dependency>
 			<groupId>org.jsystemtest</groupId>
 			<artifactId>jsystemApp</artifactId>
-			<version>6.1.00</version>
+			<version>6.1.04</version>
 			<scope>provided</scope>
 		</dependency>
 		<dependency>

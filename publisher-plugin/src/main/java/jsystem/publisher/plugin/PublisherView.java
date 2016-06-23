@@ -42,6 +42,7 @@ import jsystem.treeui.error.ErrorPanel;
 import jsystem.treeui.images.ImageCenter;
 import jsystem.treeui.interfaces.JSystemTab;
 import jsystem.treeui.publisher.ElementNode;
+import jsystem.treeui.teststable.TestsTableController;
 
 import org.w3c.dom.Element;
 
@@ -1217,5 +1218,11 @@ public class PublisherView extends JPanel implements JSystemTab, ActionListener,
 		paramsString = paramsString.replaceAll("\n", "/SEP/");
 		testParameters = StringUtils.stringToProperties(paramsString);
 		updateParameters();
+	}
+
+	@Override
+	public void setTestsTableController(TestsTableController testsTableController) {
+		// TODO Auto-generated method stub
+		
 	}
 }

@@ -16,7 +16,7 @@ import java.awt.event.ItemEvent;
 import javax.swing.JPanel;
 
 import jsystem.treeui.interfaces.JSystemTab;
-
+import jsystem.treeui.teststable.TestsTableController;
 import jsystem.framework.report.Reporter;
 /**
  *
@@ -495,5 +495,11 @@ public class InfoPanel extends javax.swing.JPanel implements JSystemTab{
     private javax.swing.JTabbedPane testTabView;
     private javax.swing.JLabel testTimeField;
     // End of variables declaration//GEN-END:variables
+
+	@Override
+	public void setTestsTableController(TestsTableController testsTableController) {
+		// TODO Auto-generated method stub
+		
+	}
 
 }
